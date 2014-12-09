@@ -1,4 +1,4 @@
-# BHS IPM Round 10 -- no marrays; ewe-age- and disease-status-specific reproduction; ewe-age- and disease-status-specific sls
+# BHS IPM Round 11 -- no marrays; ewe-age- and disease-status-specific reproduction; ewe-age- and disease-status-specific sls
 # November 11, 2014
 
 # 0. Load required packages
@@ -208,10 +208,10 @@ cat("
     } #t
     } #i
     
-        for(r in 1:n.repros){
-        logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
-        # reproduction needs to be in its own loop, over number of repros (not number of ewes)
-        } #r
+    for(r in 1:n.repros){
+    logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
+    # reproduction needs to be in its own loop, over number of repros (not number of ewes)
+    } #r
     
     for(w in 1:n.weans){
     logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
@@ -392,12 +392,11 @@ ipm11.inits <- function(){
 
 # parameters to monitor
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
-#ipm11.params <- c("beta.adsurv", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
-ni <- 2000
+ni <- 20000
 nt <- 3
-nb <- 1000
+nb <- 10000
 nc <- 3
 
 # MAY NEED TO REINITIALIZE A NUMBER OF TIMES TO GET APPROPRIATE INITIAL VALUES. 
