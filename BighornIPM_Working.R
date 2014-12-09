@@ -224,7 +224,7 @@ cat("
     logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
     for(a in 1:n.ages){
     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
-        logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
+    logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
     #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
     } #a
@@ -234,7 +234,7 @@ cat("
     # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
     for(t in 1:(n.years)){
     time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
-        time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
+    time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
     time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
     time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
     }
@@ -243,7 +243,7 @@ cat("
     beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
     for(a in 1:n.age.classes){
     beta.adsurv[d , a] ~ dnorm(0, 0.01)T(-10, 10)
-        beta.repro[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+    beta.repro[d , a] ~ dnorm(0, 0.01)T(-10, 10)
     beta.wean[d , a] ~ dnorm(0, 0.01)T(-10, 10)
     }
     }
@@ -253,9 +253,9 @@ cat("
     tau.time.adsurv <- pow(sigma.time.adsurv, -2)
     sigma.time2.adsurv <- pow(sigma.time.adsurv, 2)
     
-       sigma.time.repro ~ dunif(0, 10)
-       tau.time.repro <- pow(sigma.time.repro, -2)
-       sigma.time2.repro <- pow(sigma.time.repro, 2)   
+    sigma.time.repro ~ dunif(0, 10)
+    tau.time.repro <- pow(sigma.time.repro, -2)
+    sigma.time2.repro <- pow(sigma.time.repro, 2)   
     
     sigma.time.wean ~ dunif(0, 10)
     tau.time.wean <- pow(sigma.time.wean, -2)
@@ -280,7 +280,6 @@ cat("
     for(a in 2:18){
         Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
         Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
-    #Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t - 1, a - 1], N[j, t - 1, a - 1]) 
     # Note: Weaning updates are from last year in this version of the model
     }
     N[j, t, 1] <- sum(Nwean[j, t, 2:18])
@@ -353,11 +352,11 @@ ipm11.data <- list(z = ch,
                    age.class.ind = age.class.ind,
                    popyr.dis.status = popyr.dis.status,
                    ewe.pop.ind.num = ewe.pop.ind.num,
-                                      ewe.prod.pop = ewe.prod.pop,
-                                      ewe.prod.age = ewe.prod.age,
-                                      ewe.prod.year = ewe.prod.year,
-                                     z.repro = ewe.prod.success,
-                                     n.repros = dim(age.spec.ewe.prod)[1],
+                   ewe.prod.pop = ewe.prod.pop,
+                   ewe.prod.age = ewe.prod.age,
+                   ewe.prod.year = ewe.prod.year,
+                   z.repro = ewe.prod.success,
+                   n.repros = dim(age.spec.ewe.prod)[1],
                    ewe.wean.pop = ewe.wean.pop,
                    ewe.wean.age = ewe.wean.age,
                    ewe.wean.year = ewe.wean.year,
