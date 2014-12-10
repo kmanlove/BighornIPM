@@ -51,6 +51,8 @@ ewes.with.teeth <- subset(ewes.with.teeth, is.na(END_Population) == F)
 factor.list <- list(compd.data$Pop, compd.data$year)
 Oad <- tapply(compd.data$Ewes, factor.list, sum)
 Ojuv <- tapply(compd.data$Lambs, factor.list, sum)
+compd.data$NoFemRem.nonas <- ifelse(is.na(compd.data$NoFemRem) == T, 0, compd.data$NoFemRem)
+RemovedEwes <- tapply(compd.data$NoFemRem.nonas, factor.list, sum)
 n.years <- 2012 - 1997
 
 # pop counts 
@@ -286,7 +288,7 @@ cat("
     for(a in 2:18){
     N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t - 1, a - 1], N[j, t - 1, a - 1])
     } #a
-    Nad[j, t] <- sum(N[j, t, 2:18])
+    Nad[j, t] <- sum(N[j, t, 2:18]) - RemovedEwes[j, t]
     Nfall[j, t] <- sum(Nwean[j, t, 2:18])
     Njuv[j, t] ~ dbin(phi.popyr.overwinter[j, t], Nfall[j, t])
     Ntot[j, t] <- Nad[j, t] + Njuv[j, t]
@@ -363,7 +365,8 @@ ipm11.data <- list(z = ch,
                    z.wean = ewe.wean.success,
                    n.weans = dim(age.spec.ewe.wean)[1],
                    Ojuv = Ojuv,
-                   Oad = Oad
+                   Oad = Oad,
+                   RemovedEwes = RemovedEwes
 )
 
 
@@ -394,9 +397,9 @@ ipm11.inits <- function(){
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
-ni <- 20000
+ni <- 2000
 nt <- 3
-nb <- 10000
+nb <- 1000
 nc <- 3
 
 # MAY NEED TO REINITIALIZE A NUMBER OF TIMES TO GET APPROPRIATE INITIAL VALUES. 
