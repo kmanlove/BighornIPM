@@ -1,44 +1,65 @@
 #---------------------------------------------#
 #-- Code for recruitment vs. adult survival --#
 #---------------------------------------------#
-require(rjags)
-require(runjags)
+# require(rjags)
+# require(runjags)
 require(popbio)
 require(Matrix)
-
-
-studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/RevisedData_11Sept2013/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
-# check for new studysheep
-lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
-compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
-# call compd.data from Dropbox -> BHS -> Data -> Compiled Data -> Current. 15 Sept 2014 vsn!!
-
-#---------------------------------------------#
-#-- 1) Age-specific reproduction -------------#
-#---------------------------------------------#
-#-- 1) build data. Use Festa-Bianchet 2006 stages: lamb, yearling, 2-7, 8-13, >13 --#
-#-- keep each year cohort distinct from the others --#
-#----- m-array runs from 1995 - 2010 --#
-#-- data --#
-
-ewes.with.teeth <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
-lambs.with.dam.age <- subset(lambs, EWEID %in% levels(factor(ewes.with.teeth$ID)))
-ewes.with.teeth$END_Population <- ifelse(
-  ewes.with.teeth$END_Population == "AS", "Asotin", ifelse(
-    ewes.with.teeth$END_Population == "BC", "BigCanyon", ifelse(
-      ewes.with.teeth$END_Population == "BB", "BlackButte", ifelse(
-        ewes.with.teeth$END_Population == "IM", "Imnaha", ifelse(
-          ewes.with.teeth$END_Population == "LO", "Lostine", ifelse(
-            ewes.with.teeth$END_Population == "UHCOR", "UHCOR", ifelse(
-              ewes.with.teeth$END_Population == "RB", "Redbird", ifelse(
-                ewes.with.teeth$END_Population == "WE", "Wenaha", ifelse(
-                  ewes.with.teeth$END_Population == "SM", "SheepMountain", ifelse(
-                    ewes.with.teeth$END_Population == "SC", "UpperSaddle", ifelse(
-                      ewes.with.teeth$END_Population == "BRC", "BearCreek", ifelse(
-                        ewes.with.teeth$END_Population == "MU", "MuirCreek", ifelse(
-                          ewes.with.teeth$END_Population == "MY", "MyersCreek", NA)))))))))))))
-
-
+# 
+# 
+# studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/RevisedData_11Sept2013/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
+# # check for new studysheep
+# lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
+# compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
+# # call compd.data from Dropbox -> BHS -> Data -> Compiled Data -> Current. 15 Sept 2014 vsn!!
+# 
+# #---------------------------------------------#
+# #-- 1) Age-specific reproduction -------------#
+# #---------------------------------------------#
+# #-- 1) build data. Use Festa-Bianchet 2006 stages: lamb, yearling, 2-7, 8-13, >13 --#
+# #-- keep each year cohort distinct from the others --#
+# #----- m-array runs from 1995 - 2010 --#
+# #-- data --#
+# 
+# ewes.with.teeth <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
+# lambs.with.dam.age <- subset(lambs, EWEID %in% levels(factor(ewes.with.teeth$ID)))
+# ewes.with.teeth$END_Population <- ifelse(
+#   ewes.with.teeth$END_Population == "AS", "Asotin", ifelse(
+#     ewes.with.teeth$END_Population == "BC", "BigCanyon", ifelse(
+#       ewes.with.teeth$END_Population == "BB", "BlackButte", ifelse(
+#         ewes.with.teeth$END_Population == "IM", "Imnaha", ifelse(
+#           ewes.with.teeth$END_Population == "LO", "Lostine", ifelse(
+#             ewes.with.teeth$END_Population == "UHCOR", "UHCOR", ifelse(
+#               ewes.with.teeth$END_Population == "RB", "Redbird", ifelse(
+#                 ewes.with.teeth$END_Population == "WE", "Wenaha", ifelse(
+#                   ewes.with.teeth$END_Population == "SM", "SheepMountain", ifelse(
+#                     ewes.with.teeth$END_Population == "SC", "UpperSaddle", ifelse(
+#                       ewes.with.teeth$END_Population == "BRC", "BearCreek", ifelse(
+#                         ewes.with.teeth$END_Population == "MU", "MuirCreek", ifelse(
+#                           ewes.with.teeth$END_Population == "MY", "MyersCreek", NA)))))))))))))
+# 
+# 
+# # #-- fill in ewes who didn't reproduce --#
+# # ewe.list <- vector("list", dim(ewes.with.teeth)[1])
+# # for(i in 1:length(ewe.list)){
+# #   k <- subset(ewes.with.teeth, ID == levels(factor(ewes.with.teeth$ID))[i])
+# #   years <- seq(k$ENTRY_BIOYR, k$END_BIOYR)
+# #   ewe.age <- seq(floor(as.numeric(as.character(k$AENTRY))), k$Tooth_Age)
+# #   lamb.status <- pn.status <- rep(NA, length(years))
+# #   pop.name <- rep(as.character(k$Population[1]), length(years))
+# #   for(j in 1:length(years)){
+# #     #    pop <- subset(compd.data, as.character(Pop) == as.character(k$Population)[1] & year == years[j])
+# #     pop <- subset(compd.data, as.character(Pop) == as.character(k$END_Population)[1] & year == years[j])
+# #     lamb.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
+# #     lamb.status[j] <- ifelse(dim(lamb.year)[1] == 0, 2, lamb.year$CENSOR2 + 1)
+# #     #  CENSOR2 == 1 when lamb DIES/ CENSOR2 == 0 when lamb survives
+# #     #  Code no lamb as dead lamb. 
+# #     pn.status[j] <- ifelse(dim(pop)[1] == 0, NA, as.character(pop$CLASS[1]))
+# #   }
+# #   ewe.list[[i]] <- data.frame(cbind(years, ewe.age, lamb.status, pn.status, pop.name))
+# # }
+# 
+# 
 # #-- fill in ewes who didn't reproduce --#
 # ewe.list <- vector("list", dim(ewes.with.teeth)[1])
 # for(i in 1:length(ewe.list)){
@@ -51,976 +72,955 @@ ewes.with.teeth$END_Population <- ifelse(
 #     #    pop <- subset(compd.data, as.character(Pop) == as.character(k$Population)[1] & year == years[j])
 #     pop <- subset(compd.data, as.character(Pop) == as.character(k$END_Population)[1] & year == years[j])
 #     lamb.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
-#     lamb.status[j] <- ifelse(dim(lamb.year)[1] == 0, 2, lamb.year$CENSOR2 + 1)
+#     lamb.status[j] <- ifelse(dim(lamb.year)[1] == 0, NA, lamb.year$CENSOR2 + 1)
 #     #  CENSOR2 == 1 when lamb DIES/ CENSOR2 == 0 when lamb survives
 #     #  Code no lamb as dead lamb. 
 #     pn.status[j] <- ifelse(dim(pop)[1] == 0, NA, as.character(pop$CLASS[1]))
 #   }
 #   ewe.list[[i]] <- data.frame(cbind(years, ewe.age, lamb.status, pn.status, pop.name))
 # }
-
-
-#-- fill in ewes who didn't reproduce --#
-ewe.list <- vector("list", dim(ewes.with.teeth)[1])
-for(i in 1:length(ewe.list)){
-  k <- subset(ewes.with.teeth, ID == levels(factor(ewes.with.teeth$ID))[i])
-  years <- seq(k$ENTRY_BIOYR, k$END_BIOYR)
-  ewe.age <- seq(floor(as.numeric(as.character(k$AENTRY))), k$Tooth_Age)
-  lamb.status <- pn.status <- rep(NA, length(years))
-  pop.name <- rep(as.character(k$Population[1]), length(years))
-  for(j in 1:length(years)){
-    #    pop <- subset(compd.data, as.character(Pop) == as.character(k$Population)[1] & year == years[j])
-    pop <- subset(compd.data, as.character(Pop) == as.character(k$END_Population)[1] & year == years[j])
-    lamb.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
-    lamb.status[j] <- ifelse(dim(lamb.year)[1] == 0, NA, lamb.year$CENSOR2 + 1)
-    #  CENSOR2 == 1 when lamb DIES/ CENSOR2 == 0 when lamb survives
-    #  Code no lamb as dead lamb. 
-    pn.status[j] <- ifelse(dim(pop)[1] == 0, NA, as.character(pop$CLASS[1]))
-  }
-  ewe.list[[i]] <- data.frame(cbind(years, ewe.age, lamb.status, pn.status, pop.name))
-}
-
-#compd.data.subset <- subset(compd.data, select = c("Pop", "year", "CLASS", "CLASS_SUSP", "SumLambSurv", "Recr", "RadEwes", "RadEwesWLambs"), year >= 1995)
-#compd.data.subset[1:10, ]
-
-age.spec.ewe.prod.data.orig <- do.call(rbind, ewe.list)
-age.spec.ewe.prod.dat.small <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & is.na(lamb.status) == F)
-#table(age.spec.ewe.prod.dat.small$pop.name, age.spec.ewe.prod.dat.small$pn.status, age.spec.ewe.prod.dat.small$years)
-repro.array <- table(as.numeric(as.character(age.spec.ewe.prod.dat.small$ewe.age)), age.spec.ewe.prod.dat.small$lamb.status)
-age.spec.prod.pn <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & (pn.status == "LAMBS" | pn.status == "ALL_AGE" | pn.status == "ADULTS"))
-repro.array.pn <- rbind(table(as.numeric(as.character(age.spec.prod.pn$ewe.age)), age.spec.prod.pn$lamb.status)[-1, ], c(0, 0), c(0, 0))
-
-#age.spec.prod.he <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & (pn.status == "ADULTS" | pn.status == "HEALTHY"))
-age.spec.prod.he <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & (pn.status == "HEALTHY"))
-repro.array.he <- rbind(table(as.numeric(as.character(age.spec.prod.he$ewe.age)), age.spec.prod.he$lamb.status), c(0, 0))
-
-#-- how many ewe-years in each age-class in each PN state? --#
-young.prime.pn <- table(as.numeric(as.character(age.spec.prod.pn$ewe.age)) <= 7, age.spec.prod.pn$lamb.status)
-prime.pn <- table(as.numeric(as.character(age.spec.prod.pn$ewe.age)) >= 8 & as.numeric(as.character(age.spec.prod.pn$ewe.age)) <= 12, age.spec.prod.pn$lamb.status)
-old.pn <- table(as.numeric(as.character(age.spec.prod.pn$ewe.age)) >= 13, age.spec.prod.pn$lamb.status)
-
-young.prime.he <- table(as.numeric(as.character(age.spec.prod.he$ewe.age)) <= 7, age.spec.prod.he$lamb.status)
-prime.he <- table(as.numeric(as.character(age.spec.prod.he$ewe.age)) >= 8 & as.numeric(as.character(age.spec.prod.he$ewe.age)) <= 12, age.spec.prod.he$lamb.status)
-old.he <- table(as.numeric(as.character(age.spec.prod.he$ewe.age)) >= 13, age.spec.prod.he$lamb.status)
-
-aso.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "Asotin")
-imn.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "Imnaha" & years %in% c("1998", "1999", "2000", "2001","2002", "1997"))
-bcan.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "BigCanyon" & years %in% c("1998", "1999"))
-muir.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "MuirCreek" & years %in% c("1998", "1999"))
-
-movi.neg.repro <- as.data.frame(rbind(aso.repro.dat, imn.repro.dat, bcan.repro.dat, muir.repro.dat))
-repro.array.premovi <- rbind(c(0, 0), table(movi.neg.repro$ewe.age, movi.neg.repro$lamb.status))
-table(movi.neg.repro$ewe.age, movi.neg.repro$pn.status)
-
-movi.young.prime.he <- table(as.numeric(as.character(movi.neg.repro$ewe.age)) <= 7, movi.neg.repro$lamb.status)
-movi.prime.he <- table(as.numeric(as.character(movi.neg.repro$ewe.age)) >= 8 & as.numeric(as.character(movi.neg.repro$ewe.age)) <= 12, movi.neg.repro$lamb.status)
-movi.old.he <- table(as.numeric(as.character(movi.neg.repro$ewe.age)) >= 13, movi.neg.repro$lamb.status)
-
-#-- calculate number of lambs produced (in aggregate) by each age class --#
-n.ages <- dim(repro.array)[1]
-r <- r.pn <- r.he <- r.premovi <- rep(NA, n.ages)
-for(a in 1:n.ages){
-  r[a] <- sum(repro.array[a, ])
-  r.pn[a] <- sum(repro.array.pn[a, ])
-  r.he[a] <- sum(repro.array.he[a, ])
-  r.premovi[a] <- sum(repro.array.premovi[a, ])
-}
-
-#-- MODEL --#
-
-
-sink("sheep.agespecrepro.binom.bug")
-cat("
-    model{
-    
-    #----------------#
-    #-- Parameters --#
-    #----------------#
-    #-- wean.<i> = ewes in ith age class who weaned a lamb
-    
-    #----------------#
-    #-- Priors ------#
-    #----------------#    
-    
-    wean.1 ~ dunif(0, 1)
-    wean.2 ~ dunif(0, 1)
-    wean.3 ~ dunif(0, 1)
-    wean.4 ~ dunif(0, 1)
-    wean.5 ~ dunif(0, 1)
-    
-    #------------------#
-    #-- Likelihood ----#  
-    #------------------#
-    for(a in 1:n.ages){
-      repro.vec[a] ~ dbinom(lamb.pr[a], r[a])
-    }
-    
-    #-- define cell probabilities --#
-    # yearlings
-    lamb.pr[1] <-  wean.1     # probability lamb is weaned
-    # lamb.pr[1, 3] <-  nolamb.1   # probability no lamb is observed
-    # 2-year-olds
-    lamb.pr[2] <-  wean.2     # probability lamb is weaned
-    # 3-7 year-olds
-    for(a in 3:7){
-      lamb.pr[a] <-  wean.3     # probability lamb is weaned
-    } #a
-    # 8 - 13 year-olds
-    for(a in 8:13){
-      lamb.pr[a] <-  wean.4     # probability lamb is weaned
-    } #a  
-    # > 13 year-olds
-    for(a in 14:19){
-      lamb.pr[a] <-  wean.5     # probability lamb is weaned
-    } #a  
-    }
-    ", fill = T)
-sink()
-
-#-- pneumonia-years only 
-sheep.agespecrepro.data.pn <- list(n.ages = n.ages,
-                                   r = r.pn, 
-                                   repro.vec = repro.array.pn[ , 1]
-)
-
-sheep.agespecrepro.data.he <- list(n.ages = n.ages,
-                                   r = r.he, 
-                                   repro.vec = repro.array.he[ , 1]
-)
-
-# initial values
-sheep.agespecrepro.inits <- function(){
-  list(
-    wean.1 = runif(0, 1),
-    wean.2 = runif(0, 1),
-    wean.3 = runif(0, 1),
-    wean.4 = runif(0, 1),
-    wean.5 = runif(0, 1)
-  )
-}
-
-# parameters monitored
-sheep.agespecrepro.parameters <- c(
-  "wean.1", "wean.2", "wean.3", "wean.4", "wean.5"
-)
-
-# MCMC settings
-ni <- 20000
-nt <- 3
-nb <- 10000
-nc <- 3
-
-#-- Pneumonia-year model
-# call JAGS from R
-sheep.agespecrepro.pn <- jags.model("sheep.agespecrepro.binom.bug",
-                                    data = sheep.agespecrepro.data.pn,
-                                    inits = sheep.agespecrepro.inits,
-                                    n.chains = nc,
-                                    n.adapt = nb
-)
-
-update(sheep.agespecrepro.pn, ni)
-
-coda.samples.sheep.agespecrepro.pn <- coda.samples(sheep.agespecrepro.pn,
-                                                   sheep.agespecrepro.parameters,
-                                                   ni)
-
-#-- Healthy-year model
-# call JAGS from R
-sheep.agespecrepro.he <- jags.model("sheep.agespecrepro.binom.bug",
-                                    data = sheep.agespecrepro.data.he,
-                                    inits = sheep.agespecrepro.inits,
-                                    n.chains = nc,
-                                    n.adapt = nb
-)
-
-update(sheep.agespecrepro.he, ni)
-
-coda.samples.sheep.agespecrepro.he <- coda.samples(sheep.agespecrepro.he,
-                                                   sheep.agespecrepro.parameters,
-                                                   ni)
-
-#-- Pre-Movi-year model
-# call JAGS from R
-sheep.agespecrepro.data.premovi <- list(n.ages = n.ages,
-                                        r = r.premovi, 
-                                        repro.vec = repro.array.premovi[ , 1]
-)
-
-sheep.agespecrepro.premovi <- jags.model("sheep.agespecrepro.binom.bug",
-                                         data = sheep.agespecrepro.data.premovi,
-                                         inits = sheep.agespecrepro.inits,
-                                         n.chains = nc,
-                                         n.adapt = nb
-)
-
-update(sheep.agespecrepro.premovi, ni)
-
-coda.samples.sheep.agespecrepro.premovi <- coda.samples(sheep.agespecrepro.premovi,
-                                                        sheep.agespecrepro.parameters,
-                                                        ni)
-
-premovi.repro <- rbind(coda.samples.sheep.agespecrepro.premovi[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[3]][1001:2000, ])
-he.repro <- rbind(coda.samples.sheep.agespecrepro.he[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.he[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.he[[3]][1001:2000, ])
-pn.repro <- rbind(coda.samples.sheep.agespecrepro.pn[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.pn[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.pn[[3]][1001:2000, ])
-
-#write.csv(he.repro, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/HealthyReproPost_30Sept2014.csv")
-#write.csv(pn.repro, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/PNReproPost_30Sept2014.csv")
-
-#-- summaries of MCMC outputs --#
-
-summary(coda.samples.sheep.agespecrepro.pn)[[2]]
-summary(coda.samples.sheep.agespecrepro.he)[[2]]
-summary(coda.samples.sheep.agespecrepro.premovi)[[2]]
-
-gelman.diag(coda.samples.sheep.agespecrepro.pn)
-gelman.diag(coda.samples.sheep.agespecrepro.he)
-gelman.diag(coda.samples.sheep.agespecrepro.premovi)
-
-#-- plot intervals over time --#
-par(cex.main = .8, mfrow = c(1, 1))
-plot(xlim = c(1.5, 5.5), xaxt = "n", ylim = c(0, 1), x = -1, y = 1, main = "95% credible intervals for age-specific reproduction", xlab = "age class", ylab = "P(weans a lamb)")
-for(i in 2:5){ 
-  segments(x0 = i, x1 = i, y0 = summary(coda.samples.sheep.agespecrepro.pn)[[2]][i, 1], y1 = summary(coda.samples.sheep.agespecrepro.pn)[[2]][i, 5], col = "red", lwd = 2)
-  segments(x0 = i + 0.25, x1 = i + 0.25, y0 = summary(coda.samples.sheep.agespecrepro.he)[[2]][i, 1], y1 = summary(coda.samples.sheep.agespecrepro.he)[[2]][i, 5], col = "grey30", lwd = 2, lty = 2)
-  segments(x0 = i + 0.15, x1 = i + 0.15, y0 = summary(coda.samples.sheep.agespecrepro.premovi)[[2]][i, 1], y1 = summary(coda.samples.sheep.agespecrepro.premovi)[[2]][i, 5], col = "grey60", lwd = 2, lty = 3)
-}
-axis(side = 1, at = 2:5, labels = c("<2.5", "2.5-7", "8-13", ">13"))
-legend("topright", c("lamb disease years", "lamb healthy years", "pre-Movi years"), lty = c(1, 2, 3), col = c("red", "grey30", "grey60"), lwd = c(2, 2, 2), bty = "n")
-
-
-
-# #-----------------------------------------------#
-# #-- 2) Age-specific survival PN vs. Healthy ----#
-# #-----------------------------------------------#
-# #-- 1) build data. Use Festa-Bianchet 2006 stages: lamb, yearling, 2-7, 8-13, >13 --#
-# #-- keep each year cohort distinct from the others --#
-# #----- m-array runs from 1995 - 2010 --#
-# ewes <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
-# ewe.m.array <- matrix(NA, nrow = length(levels(factor(ewes$ID))), ncol = 2011 - 1995)
-# stage.entry <- rep(NA, length(levels(factor(ewes$ID))))
-# for(i in 1:dim(ewe.m.array)[1]){
-#   k <- subset(ewes, ID == levels(factor(ewes$ID))[i])
-#   ewe.m.array[i, 1 : (k$ENTRY_BIOYR - 1994)] <- 0
-#   ewe.m.array[i, (k$ENTRY_BIOYR - 1994)] <- k$AENTRY
-#   ewe.m.array[i, (min(k$ENTRY_BIOYR - 1994 + 1, dim(ewe.m.array)[2]) : min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]))] <- k$AENTRY + (1 : length((min(k$ENTRY_BIOYR - 1994 + 1, dim(ewe.m.array)[2]) : min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]))))
-#   ewe.m.array[i, (min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]) : min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]))] <- 0
+# 
+# #compd.data.subset <- subset(compd.data, select = c("Pop", "year", "CLASS", "CLASS_SUSP", "SumLambSurv", "Recr", "RadEwes", "RadEwesWLambs"), year >= 1995)
+# #compd.data.subset[1:10, ]
+# 
+# age.spec.ewe.prod.data.orig <- do.call(rbind, ewe.list)
+# age.spec.ewe.prod.dat.small <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & is.na(lamb.status) == F)
+# #table(age.spec.ewe.prod.dat.small$pop.name, age.spec.ewe.prod.dat.small$pn.status, age.spec.ewe.prod.dat.small$years)
+# repro.array <- table(as.numeric(as.character(age.spec.ewe.prod.dat.small$ewe.age)), age.spec.ewe.prod.dat.small$lamb.status)
+# age.spec.prod.pn <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & (pn.status == "LAMBS" | pn.status == "ALL_AGE" | pn.status == "ADULTS"))
+# repro.array.pn <- rbind(table(as.numeric(as.character(age.spec.prod.pn$ewe.age)), age.spec.prod.pn$lamb.status)[-1, ], c(0, 0), c(0, 0))
+# 
+# #age.spec.prod.he <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & (pn.status == "ADULTS" | pn.status == "HEALTHY"))
+# age.spec.prod.he <- subset(age.spec.ewe.prod.data.orig, is.na(pn.status) == F & (pn.status == "HEALTHY"))
+# repro.array.he <- rbind(table(as.numeric(as.character(age.spec.prod.he$ewe.age)), age.spec.prod.he$lamb.status), c(0, 0))
+# 
+# #-- how many ewe-years in each age-class in each PN state? --#
+# young.prime.pn <- table(as.numeric(as.character(age.spec.prod.pn$ewe.age)) <= 7, age.spec.prod.pn$lamb.status)
+# prime.pn <- table(as.numeric(as.character(age.spec.prod.pn$ewe.age)) >= 8 & as.numeric(as.character(age.spec.prod.pn$ewe.age)) <= 12, age.spec.prod.pn$lamb.status)
+# old.pn <- table(as.numeric(as.character(age.spec.prod.pn$ewe.age)) >= 13, age.spec.prod.pn$lamb.status)
+# 
+# young.prime.he <- table(as.numeric(as.character(age.spec.prod.he$ewe.age)) <= 7, age.spec.prod.he$lamb.status)
+# prime.he <- table(as.numeric(as.character(age.spec.prod.he$ewe.age)) >= 8 & as.numeric(as.character(age.spec.prod.he$ewe.age)) <= 12, age.spec.prod.he$lamb.status)
+# old.he <- table(as.numeric(as.character(age.spec.prod.he$ewe.age)) >= 13, age.spec.prod.he$lamb.status)
+# 
+# aso.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "Asotin")
+# imn.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "Imnaha" & years %in% c("1998", "1999", "2000", "2001","2002", "1997"))
+# bcan.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "BigCanyon" & years %in% c("1998", "1999"))
+# muir.repro.dat <- subset(age.spec.ewe.prod.dat.small, pop.name == "MuirCreek" & years %in% c("1998", "1999"))
+# 
+# movi.neg.repro <- as.data.frame(rbind(aso.repro.dat, imn.repro.dat, bcan.repro.dat, muir.repro.dat))
+# repro.array.premovi <- rbind(c(0, 0), table(movi.neg.repro$ewe.age, movi.neg.repro$lamb.status))
+# table(movi.neg.repro$ewe.age, movi.neg.repro$pn.status)
+# 
+# movi.young.prime.he <- table(as.numeric(as.character(movi.neg.repro$ewe.age)) <= 7, movi.neg.repro$lamb.status)
+# movi.prime.he <- table(as.numeric(as.character(movi.neg.repro$ewe.age)) >= 8 & as.numeric(as.character(movi.neg.repro$ewe.age)) <= 12, movi.neg.repro$lamb.status)
+# movi.old.he <- table(as.numeric(as.character(movi.neg.repro$ewe.age)) >= 13, movi.neg.repro$lamb.status)
+# 
+# #-- calculate number of lambs produced (in aggregate) by each age class --#
+# n.ages <- dim(repro.array)[1]
+# r <- r.pn <- r.he <- r.premovi <- rep(NA, n.ages)
+# for(a in 1:n.ages){
+#   r[a] <- sum(repro.array[a, ])
+#   r.pn[a] <- sum(repro.array.pn[a, ])
+#   r.he[a] <- sum(repro.array.he[a, ])
+#   r.premovi[a] <- sum(repro.array.premovi[a, ])
 # }
 # 
-# ewe.m.array.stage.v2 <- ifelse(ewe.m.array <= 1, 1, 
-#                                floor(ewe.m.array)
-# )
+# #-- MODEL --#
 # 
-# ewe.m.array.stage.v2[is.na(ewe.m.array.stage.v2) == T] <- 19
-# for(i in 1:dim(ewe.m.array.stage.v2)[1]){
-#   for(j in 2:dim(ewe.m.array.stage.v2)[2]){
-#     ewe.m.array.stage.v2[i, j] <- ifelse(ewe.m.array.stage.v2[i, j - 1] >= 2 & ewe.m.array.stage.v2[i, j] == 1, 19, ewe.m.array.stage.v2[i, j])
-#   }
-# }
 # 
-# ewe.m.array.stage.v2[1:10, ]
-# table(ewe.m.array.stage.v2)
-# 
-# # f is a vector containing year of first capture for each sheep
-# get.first <- function(x){
-#   min(which(x >= 2))
-# }
-# f.v2 <- apply(ewe.m.array.stage.v2, 1, get.first)
-# 
-# # states are 1, 2, 3, 4, 5, 6 #
-# 
-# sink("sheep.agespecsurv.v2.bug")
+# sink("sheep.agespecrepro.binom.bug")
 # cat("
 #     model{
 #     
 #     #----------------#
 #     #-- Parameters --#
 #     #----------------#
-#     #-- alpha.<i> = aging (stage-transition)
-#     #-- s.<i> = survival (within stage; no transition)
+#     #-- wean.<i> = ewes in ith age class who weaned a lamb
 #     
 #     #----------------#
 #     #-- Priors ------#
-#     #----------------#
-#     for(t in 1:(n.years - 1)){
-#     s.2[t] <- mean.s2
-#     s.3[t] <- mean.s3
-#     s.4[t] <- mean.s4
-#     s.5[t] <- mean.s5
-#     collar.prop[t] <- mean.collar.prop
-#     }
-#     mean.s2 ~ dunif(0, 1)
-#     mean.s3 ~ dunif(0, 1)
-#     mean.s4 ~ dunif(0, 1)
-#     mean.s5 ~ dunif(0, 1)
-#     mean.collar.prop ~ dunif(0, 1)
+#     #----------------#    
 #     
-#     # Define state-transitions and observation matrices
-#     for(i in 1:nind){
-#     # State Process: Define probabilities of state S(t + 1) | S(t)
-#     for(t in f[i] :(n.years - 1)){
-#     # read matrix as (left-hand state number into right-hand state number)
-#     # Leslie matrix row 1 (uncollared)
-#     ps[1, i, t, 1] <- 1 - (collar.prop[t])
-#     ps[1, i, t, 2] <- collar.prop[t]
-#     ps[1, i, t, 3] <- collar.prop[t]
-#     ps[1, i, t, 4] <- collar.prop[t]
-#     ps[1, i, t, 5] <- collar.prop[t]
-#     ps[1, i, t, 6] <- collar.prop[t]
-#     ps[1, i, t, 7] <- collar.prop[t]
-#     ps[1, i, t, 8] <- collar.prop[t]
-#     ps[1, i, t, 9] <- collar.prop[t]
-#     ps[1, i, t, 10] <- collar.prop[t]
-#     ps[1, i, t, 11] <- collar.prop[t]
-#     ps[1, i, t, 12] <- collar.prop[t]
-#     ps[1, i, t, 13] <- collar.prop[t]
-#     ps[1, i, t, 14] <- collar.prop[t]
-#     ps[1, i, t, 15] <- collar.prop[t]
-#     ps[1, i, t, 16] <- collar.prop[t]
-#     ps[1, i, t, 17] <- collar.prop[t]
-#     ps[1, i, t, 18] <- collar.prop[t]
-#     ps[1, i, t, 19] <- 0
-#     # Leslie matrix row 2 (yearlings)
-#     ps[2, i, t, 1] <- 0
-#     ps[2, i, t, 2] <- 0
-#     ps[2, i, t, 3] <- s.2[t]
-#     ps[2, i, t, 4] <- 0
-#     ps[2, i, t, 5] <- 0
-#     ps[2, i, t, 6] <- 0
-#     ps[2, i, t, 7] <- 0
-#     ps[2, i, t, 8] <- 0
-#     ps[2, i, t, 9] <- 0
-#     ps[2, i, t, 10] <- 0
-#     ps[2, i, t, 11] <- 0
-#     ps[2, i, t, 12] <- 0
-#     ps[2, i, t, 13] <- 0
-#     ps[2, i, t, 14] <- 0
-#     ps[2, i, t, 15] <- 0
-#     ps[2, i, t, 16] <- 0
-#     ps[2, i, t, 17] <- 0
-#     ps[2, i, t, 18] <- 0
-#     ps[2, i, t, 19] <- (1 - s.2[t])
-#     # Leslie matrix row 3 (2-year-olds)
-#     ps[3, i, t, 1] <- 0
-#     ps[3, i, t, 2] <- 0
-#     ps[3, i, t, 3] <- 0
-#     ps[3, i, t, 4] <- s.3[t]
-#     ps[3, i, t, 5] <- 0
-#     ps[3, i, t, 6] <- 0
-#     ps[3, i, t, 7] <- 0
-#     ps[3, i, t, 8] <- 0
-#     ps[3, i, t, 9] <- 0
-#     ps[3, i, t, 10] <- 0
-#     ps[3, i, t, 11] <- 0
-#     ps[3, i, t, 12] <- 0
-#     ps[3, i, t, 13] <- 0
-#     ps[3, i, t, 14] <- 0
-#     ps[3, i, t, 15] <- 0
-#     ps[3, i, t, 16] <- 0
-#     ps[3, i, t, 17] <- 0
-#     ps[3, i, t, 18] <- 0
-#     ps[3, i, t, 19] <- (1 - s.3[t])
-#     # Leslie matrix row 4 (3-year-olds)
-#     ps[4, i, t, 1] <- 0
-#     ps[4, i, t, 2] <- 0
-#     ps[4, i, t, 3] <- 0
-#     ps[4, i, t, 4] <- 0
-#     ps[4, i, t, 5] <- s.3[t]
-#     ps[4, i, t, 6] <- 0
-#     ps[4, i, t, 7] <- 0
-#     ps[4, i, t, 8] <- 0
-#     ps[4, i, t, 9] <- 0
-#     ps[4, i, t, 10] <- 0
-#     ps[4, i, t, 11] <- 0
-#     ps[4, i, t, 12] <- 0
-#     ps[4, i, t, 13] <- 0
-#     ps[4, i, t, 14] <- 0
-#     ps[4, i, t, 15] <- 0
-#     ps[4, i, t, 16] <- 0
-#     ps[4, i, t, 17] <- 0
-#     ps[4, i, t, 18] <- 0
-#     ps[4, i, t, 19] <- (1 - s.3[t])
-#     # Leslie matrix row 5 (4-year-olds)
-#     ps[5, i, t, 1] <- 0
-#     ps[5, i, t, 2] <- 0
-#     ps[5, i, t, 3] <- 0
-#     ps[5, i, t, 4] <- 0
-#     ps[5, i, t, 5] <- 0
-#     ps[5, i, t, 6] <- s.3[t]
-#     ps[5, i, t, 7] <- 0
-#     ps[5, i, t, 8] <- 0
-#     ps[5, i, t, 9] <- 0
-#     ps[5, i, t, 10] <- 0
-#     ps[5, i, t, 11] <- 0
-#     ps[5, i, t, 12] <- 0
-#     ps[5, i, t, 13] <- 0
-#     ps[5, i, t, 14] <- 0
-#     ps[5, i, t, 15] <- 0
-#     ps[5, i, t, 16] <- 0
-#     ps[5, i, t, 17] <- 0
-#     ps[5, i, t, 18] <- 0
-#     ps[5, i, t, 19] <- (1 - s.3[t])
-#     # Leslie matrix row 6 (5-year-olds)
-#     ps[6, i, t, 1] <- 0
-#     ps[6, i, t, 2] <- 0
-#     ps[6, i, t, 3] <- 0
-#     ps[6, i, t, 4] <- 0
-#     ps[6, i, t, 5] <- 0
-#     ps[6, i, t, 6] <- 0
-#     ps[6, i, t, 7] <- s.3[t]
-#     ps[6, i, t, 8] <- 0
-#     ps[6, i, t, 9] <- 0
-#     ps[6, i, t, 10] <- 0
-#     ps[6, i, t, 11] <- 0
-#     ps[6, i, t, 12] <- 0
-#     ps[6, i, t, 13] <- 0
-#     ps[6, i, t, 14] <- 0
-#     ps[6, i, t, 15] <- 0
-#     ps[6, i, t, 16] <- 0
-#     ps[6, i, t, 17] <- 0
-#     ps[6, i, t, 18] <- 0
-#     ps[6, i, t, 19] <- (1 - s.3[t])
-#     # Leslie matrix row 7 (6-year-olds)
-#     ps[7, i, t, 1] <- 0
-#     ps[7, i, t, 2] <- 0
-#     ps[7, i, t, 3] <- 0
-#     ps[7, i, t, 4] <- 0
-#     ps[7, i, t, 5] <- 0
-#     ps[7, i, t, 6] <- 0
-#     ps[7, i, t, 7] <- 0
-#     ps[7, i, t, 8] <- s.3[t]
-#     ps[7, i, t, 9] <- 0
-#     ps[7, i, t, 10] <- 0
-#     ps[7, i, t, 11] <- 0
-#     ps[7, i, t, 12] <- 0
-#     ps[7, i, t, 13] <- 0
-#     ps[7, i, t, 14] <- 0
-#     ps[7, i, t, 15] <- 0
-#     ps[7, i, t, 16] <- 0
-#     ps[7, i, t, 17] <- 0
-#     ps[7, i, t, 18] <- 0
-#     ps[7, i, t, 19] <- (1 - s.3[t])
-#     # Leslie matrix row 8 (7-year-olds)
-#     ps[8, i, t, 1] <- 0
-#     ps[8, i, t, 2] <- 0
-#     ps[8, i, t, 3] <- 0
-#     ps[8, i, t, 4] <- 0
-#     ps[8, i, t, 5] <- 0
-#     ps[8, i, t, 6] <- 0
-#     ps[8, i, t, 7] <- 0
-#     ps[8, i, t, 8] <- 0
-#     ps[8, i, t, 9] <- s.3[t]
-#     ps[8, i, t, 10] <- 0
-#     ps[8, i, t, 11] <- 0
-#     ps[8, i, t, 12] <- 0
-#     ps[8, i, t, 13] <- 0
-#     ps[8, i, t, 14] <- 0
-#     ps[8, i, t, 15] <- 0
-#     ps[8, i, t, 16] <- 0
-#     ps[8, i, t, 17] <- 0
-#     ps[8, i, t, 18] <- 0
-#     ps[8, i, t, 19] <- (1 - s.3[t])
-#     # Leslie matrix row 9 (8-year-olds)
-#     ps[9, i, t, 1] <- 0
-#     ps[9, i, t, 2] <- 0
-#     ps[9, i, t, 3] <- 0
-#     ps[9, i, t, 4] <- 0
-#     ps[9, i, t, 5] <- 0
-#     ps[9, i, t, 6] <- 0
-#     ps[9, i, t, 7] <- 0
-#     ps[9, i, t, 8] <- 0
-#     ps[9, i, t, 9] <- 0
-#     ps[9, i, t, 10] <- s.4[t]
-#     ps[9, i, t, 11] <- 0
-#     ps[9, i, t, 12] <- 0
-#     ps[9, i, t, 13] <- 0
-#     ps[9, i, t, 14] <- 0
-#     ps[9, i, t, 15] <- 0
-#     ps[9, i, t, 16] <- 0
-#     ps[9, i, t, 17] <- 0
-#     ps[9, i, t, 18] <- 0
-#     ps[9, i, t, 19] <- (1 - s.4[t])
-#     # Leslie matrix row 10 (9-year-olds)
-#     ps[10, i, t, 1] <- 0
-#     ps[10, i, t, 2] <- 0
-#     ps[10, i, t, 3] <- 0
-#     ps[10, i, t, 4] <- 0
-#     ps[10, i, t, 5] <- 0
-#     ps[10, i, t, 6] <- 0
-#     ps[10, i, t, 7] <- 0
-#     ps[10, i, t, 8] <- 0
-#     ps[10, i, t, 9] <- 0
-#     ps[10, i, t, 10] <- 0
-#     ps[10, i, t, 11] <- s.4[t]
-#     ps[10, i, t, 12] <- 0
-#     ps[10, i, t, 13] <- 0
-#     ps[10, i, t, 14] <- 0
-#     ps[10, i, t, 15] <- 0
-#     ps[10, i, t, 16] <- 0
-#     ps[10, i, t, 17] <- 0
-#     ps[10, i, t, 18] <- 0
-#     ps[10, i, t, 19] <- (1 - s.4[t])
-#     # Leslie matrix row 11 (10-year-olds)
-#     ps[11, i, t, 1] <- 0
-#     ps[11, i, t, 2] <- 0
-#     ps[11, i, t, 3] <- 0
-#     ps[11, i, t, 4] <- 0
-#     ps[11, i, t, 5] <- 0
-#     ps[11, i, t, 6] <- 0
-#     ps[11, i, t, 7] <- 0
-#     ps[11, i, t, 8] <- 0
-#     ps[11, i, t, 9] <- 0
-#     ps[11, i, t, 10] <- 0
-#     ps[11, i, t, 11] <- 0
-#     ps[11, i, t, 12] <- s.4[t]
-#     ps[11, i, t, 13] <- 0
-#     ps[11, i, t, 14] <- 0
-#     ps[11, i, t, 15] <- 0
-#     ps[11, i, t, 16] <- 0
-#     ps[11, i, t, 17] <- 0
-#     ps[11, i, t, 18] <- 0
-#     ps[11, i, t, 19] <- (1 - s.4[t])
-#     # Leslie matrix row 12 (11-year-olds)
-#     ps[12, i, t, 1] <- 0
-#     ps[12, i, t, 2] <- 0
-#     ps[12, i, t, 3] <- 0
-#     ps[12, i, t, 4] <- 0
-#     ps[12, i, t, 5] <- 0
-#     ps[12, i, t, 6] <- 0
-#     ps[12, i, t, 7] <- 0
-#     ps[12, i, t, 8] <- 0
-#     ps[12, i, t, 9] <- 0
-#     ps[12, i, t, 10] <- 0
-#     ps[12, i, t, 11] <- 0
-#     ps[12, i, t, 12] <- 0
-#     ps[12, i, t, 13] <- s.4[t]
-#     ps[12, i, t, 14] <- 0
-#     ps[12, i, t, 15] <- 0
-#     ps[12, i, t, 16] <- 0
-#     ps[12, i, t, 17] <- 0
-#     ps[12, i, t, 18] <- 0
-#     ps[12, i, t, 19] <- (1 - s.4[t])
-#     # Leslie matrix row 13 (12-year-olds)
-#     ps[13, i, t, 1] <- 0
-#     ps[13, i, t, 2] <- 0
-#     ps[13, i, t, 3] <- 0
-#     ps[13, i, t, 4] <- 0
-#     ps[13, i, t, 5] <- 0
-#     ps[13, i, t, 6] <- 0
-#     ps[13, i, t, 7] <- 0
-#     ps[13, i, t, 8] <- 0
-#     ps[13, i, t, 9] <- 0
-#     ps[13, i, t, 10] <- 0
-#     ps[13, i, t, 11] <- 0
-#     ps[13, i, t, 12] <- 0
-#     ps[13, i, t, 13] <- 0
-#     ps[13, i, t, 14] <- s.4[t]
-#     ps[13, i, t, 15] <- 0
-#     ps[13, i, t, 16] <- 0
-#     ps[13, i, t, 17] <- 0
-#     ps[13, i, t, 18] <- 0
-#     ps[13, i, t, 19] <- (1 - s.4[t])
-#     # Leslie matrix row 14 (13-year-olds)
-#     ps[14, i, t, 1] <- 0
-#     ps[14, i, t, 2] <- 0
-#     ps[14, i, t, 3] <- 0
-#     ps[14, i, t, 4] <- 0
-#     ps[14, i, t, 5] <- 0
-#     ps[14, i, t, 6] <- 0
-#     ps[14, i, t, 7] <- 0
-#     ps[14, i, t, 8] <- 0
-#     ps[14, i, t, 9] <- 0
-#     ps[14, i, t, 10] <- 0
-#     ps[14, i, t, 11] <- 0
-#     ps[14, i, t, 12] <- 0
-#     ps[14, i, t, 13] <- 0
-#     ps[14, i, t, 14] <- 0
-#     ps[14, i, t, 15] <- s.4[t]
-#     ps[14, i, t, 16] <- 0
-#     ps[14, i, t, 17] <- 0
-#     ps[14, i, t, 18] <- 0 
-#     ps[14, i, t, 19] <- (1 - s.4[t])
-#     # Leslie matrix row 15 (14-year-olds)
-#     ps[15, i, t, 1] <- 0
-#     ps[15, i, t, 2] <- 0
-#     ps[15, i, t, 3] <- 0
-#     ps[15, i, t, 4] <- 0
-#     ps[15, i, t, 5] <- 0
-#     ps[15, i, t, 6] <- 0
-#     ps[15, i, t, 7] <- 0
-#     ps[15, i, t, 8] <- 0
-#     ps[15, i, t, 9] <- 0
-#     ps[15, i, t, 10] <- 0
-#     ps[15, i, t, 11] <- 0
-#     ps[15, i, t, 12] <- 0
-#     ps[15, i, t, 13] <- 0
-#     ps[15, i, t, 14] <- 0
-#     ps[15, i, t, 15] <- 0
-#     ps[15, i, t, 16] <- s.5[t]
-#     ps[15, i, t, 17] <- 0
-#     ps[15, i, t, 18] <- 0
-#     ps[15, i, t, 19] <- (1 - s.5[t])
-#     # Leslie matrix row 16 (15-year-olds)
-#     ps[16, i, t, 1] <- 0
-#     ps[16, i, t, 2] <- 0
-#     ps[16, i, t, 3] <- 0
-#     ps[16, i, t, 4] <- 0
-#     ps[16, i, t, 5] <- 0
-#     ps[16, i, t, 6] <- 0
-#     ps[16, i, t, 7] <- 0
-#     ps[16, i, t, 8] <- 0
-#     ps[16, i, t, 9] <- 0
-#     ps[16, i, t, 10] <- 0
-#     ps[16, i, t, 11] <- 0
-#     ps[16, i, t, 12] <- 0
-#     ps[16, i, t, 13] <- 0
-#     ps[16, i, t, 14] <- 0
-#     ps[16, i, t, 15] <- 0
-#     ps[16, i, t, 16] <- 0
-#     ps[16, i, t, 17] <- s.5[t]
-#     ps[16, i, t, 18] <- 0
-#     ps[16, i, t, 19] <- (1 - s.5[t])
-#     # Leslie matrix row 17 (16-year-olds)
-#     ps[17, i, t, 1] <- 0
-#     ps[17, i, t, 2] <- 0
-#     ps[17, i, t, 3] <- 0
-#     ps[17, i, t, 4] <- 0
-#     ps[17, i, t, 5] <- 0
-#     ps[17, i, t, 6] <- 0
-#     ps[17, i, t, 7] <- 0
-#     ps[17, i, t, 8] <- 0
-#     ps[17, i, t, 9] <- 0
-#     ps[17, i, t, 10] <- 0
-#     ps[17, i, t, 11] <- 0
-#     ps[17, i, t, 12] <- 0
-#     ps[17, i, t, 13] <- 0
-#     ps[17, i, t, 14] <- 0
-#     ps[17, i, t, 15] <- 0
-#     ps[17, i, t, 16] <- 0
-#     ps[17, i, t, 17] <- 0
-#     ps[17, i, t, 18] <- s.5[t]
-#     ps[17, i, t, 19] <- (1 - s.5[t])
-#     # Leslie matrix row 18 (dead)
-#     ps[18, i, t, 1] <- 0
-#     ps[18, i, t, 2] <- 0
-#     ps[18, i, t, 3] <- 0
-#     ps[18, i, t, 4] <- 0
-#     ps[18, i, t, 5] <- 0
-#     ps[18, i, t, 6] <- 0
-#     ps[18, i, t, 7] <- 0
-#     ps[18, i, t, 8] <- 0
-#     ps[18, i, t, 9] <- 0
-#     ps[18, i, t, 10] <- 0
-#     ps[18, i, t, 11] <- 0
-#     ps[18, i, t, 12] <- 0
-#     ps[18, i, t, 13] <- 0
-#     ps[18, i, t, 14] <- 0
-#     ps[18, i, t, 15] <- 0
-#     ps[18, i, t, 16] <- 0
-#     ps[18, i, t, 17] <- 0
-#     ps[18, i, t, 18] <- 0
-#     ps[18, i, t, 19] <- 1
-#     # Leslie matrix row 18 (dead)
-#     ps[19, i, t, 1] <- 0
-#     ps[19, i, t, 2] <- 0
-#     ps[19, i, t, 3] <- 0
-#     ps[19, i, t, 4] <- 0
-#     ps[19, i, t, 5] <- 0
-#     ps[19, i, t, 6] <- 0
-#     ps[19, i, t, 7] <- 0
-#     ps[19, i, t, 8] <- 0
-#     ps[19, i, t, 9] <- 0
-#     ps[19, i, t, 10] <- 0
-#     ps[19, i, t, 11] <- 0
-#     ps[19, i, t, 12] <- 0
-#     ps[19, i, t, 13] <- 0
-#     ps[19, i, t, 14] <- 0
-#     ps[19, i, t, 15] <- 0
-#     ps[19, i, t, 16] <- 0
-#     ps[19, i, t, 17] <- 0
-#     ps[19, i, t, 18] <- 0
-#     ps[19, i, t, 19] <- 1
-#     } #t
-#     } #i
+#     wean.1 ~ dunif(0, 1)
+#     wean.2 ~ dunif(0, 1)
+#     wean.3 ~ dunif(0, 1)
+#     wean.4 ~ dunif(0, 1)
+#     wean.5 ~ dunif(0, 1)
+#     
 #     #------------------#
-#     #-- Likelihood ----#
+#     #-- Likelihood ----#  
 #     #------------------#
-#       for(i in 1:nind){
-#        for(t in (f[i] + 1): n.years){
-#          z[i, t] ~ dcat(ps[z[i, t - 1], i, t - 1, ])
-#         } #t
-#       } #i
+#     for(a in 1:n.ages){
+#       repro.vec[a] ~ dbinom(lamb.pr[a], r[a])
+#     }
+#     
+#     #-- define cell probabilities --#
+#     # yearlings
+#     lamb.pr[1] <-  wean.1     # probability lamb is weaned
+#     # lamb.pr[1, 3] <-  nolamb.1   # probability no lamb is observed
+#     # 2-year-olds
+#     lamb.pr[2] <-  wean.2     # probability lamb is weaned
+#     # 3-7 year-olds
+#     for(a in 3:7){
+#       lamb.pr[a] <-  wean.3     # probability lamb is weaned
+#     } #a
+#     # 8 - 13 year-olds
+#     for(a in 8:13){
+#       lamb.pr[a] <-  wean.4     # probability lamb is weaned
+#     } #a  
+#     # > 13 year-olds
+#     for(a in 14:19){
+#       lamb.pr[a] <-  wean.5     # probability lamb is weaned
+#     } #a  
 #     }
 #     ", fill = T)
 # sink()
 # 
-# # bundle data
-# sheep.agespecsurv.data.v2 <- list(z = ewe.m.array.stage.v2,
-#                                   #                              y = ewe.m.array.stage,
-#                                   f = f.v2,
-#                                   n.years = dim(ewe.m.array.stage.v2)[2],
-#                                   nind = dim(ewe.m.array.stage.v2)[1]
+# #-- pneumonia-years only 
+# sheep.agespecrepro.data.pn <- list(n.ages = n.ages,
+#                                    r = r.pn, 
+#                                    repro.vec = repro.array.pn[ , 1]
 # )
-# # #-- pneumonia-years only 
-# # sheep.agespecrepro.data.pn <- list(n.ages = n.ages,
-# #                                    r = r.pn, 
-# #                                    repro.vec = repro.array.pn[ , 1]
-# # )
 # 
+# sheep.agespecrepro.data.he <- list(n.ages = n.ages,
+#                                    r = r.he, 
+#                                    repro.vec = repro.array.he[ , 1]
+# )
 # 
 # # initial values
-# sheep.agespecsurv.inits.v2 <- function(){
+# sheep.agespecrepro.inits <- function(){
 #   list(
-#     mean.s2 = runif(1, 0, 1),
-#     mean.s3 = runif(1, 0, 1),
-#     mean.s4 = runif(1, 0, 1),
-#     mean.s5 = runif(1, 0, 1),
-#     mean.collar.prop = runif(1, 0, 1)
+#     wean.1 = runif(0, 1),
+#     wean.2 = runif(0, 1),
+#     wean.3 = runif(0, 1),
+#     wean.4 = runif(0, 1),
+#     wean.5 = runif(0, 1)
 #   )
 # }
 # 
 # # parameters monitored
-# sheep.agespecsurv.parameters.v2 <- c(
-#   "mean.s2",
-#   "mean.s3",
-#   "mean.s4",
-#   "mean.s5",
-#   "mean.collar.prop")
-# 
-# # MCMC settings
-# ni <- 2000
-# nt <- 3
-# nb <- 1000
-# nc <- 3
-# 
-# # call JAGS from R
-# sheep.agespecsurv.v2 <- jags.model("sheep.agespecsurv.v2.bug",
-#                                    data = sheep.agespecsurv.data.v2,
-#                                    inits = sheep.agespecsurv.inits.v2,
-#                                    n.chains = nc,
-#                                    n.adapt = nb
+# sheep.agespecrepro.parameters <- c(
+#   "wean.1", "wean.2", "wean.3", "wean.4", "wean.5"
 # )
 # 
-# update(sheep.agespecsurv.v2, ni)
+# # MCMC settings
+# ni <- 20000
+# nt <- 3
+# nb <- 10000
+# nc <- 3
 # 
-# coda.samples.sheep.agespecsurv.v2 <- coda.samples(sheep.agespecsurv.v2,
-#                                                   sheep.agespecsurv.parameters.v2,
-#                                                   ni)
+# #-- Pneumonia-year model
+# # call JAGS from R
+# sheep.agespecrepro.pn <- jags.model("sheep.agespecrepro.binom.bug",
+#                                     data = sheep.agespecrepro.data.pn,
+#                                     inits = sheep.agespecrepro.inits,
+#                                     n.chains = nc,
+#                                     n.adapt = nb
+# )
 # 
-# summary(coda.samples.sheep.agespecsurv.v2)
-# gelman.diag(coda.samples.sheep.agespecsurv.v2)
+# update(sheep.agespecrepro.pn, ni)
 # 
-# he.surv.post <- rbind(coda.samples.sheep.agespecsurv.v2[[1]][1001:2000, ], coda.samples.sheep.agespecsurv.v2[[2]][1001:2000, ], coda.samples.sheep.agespecsurv.v2[[3]][1001:2000, ])
-  
-  
-#----------------------------------------------------#
-#-- Adult survival PN/Healthy Revised ---------------#
-#----------------------------------------------------#
-# data format: one row per ewe-year. 
-ewes.with.teeth <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
-ewe.years <- rep(NA, dim(ewes.with.teeth)[1])
-ewe.dat <- vector("list", dim(ewes.with.teeth)[1])
-for(i in 1:dim(ewes.with.teeth)[1]){
-  ewe.years[i] <- ewes.with.teeth$END_BIOYR[i] - ewes.with.teeth$ENTRY_BIOYR[i] + 1
-  ewe.dat[[i]] <- matrix(NA, nrow = ewe.years[i], ncol = 5)
-  loop.years <- ewe.years[i]
-  for(j in 1:loop.years){
-    year.status <- subset(compd.data, as.character(Pop) == as.character(ewes.with.teeth$Population)[i] & year == (ewes.with.teeth$ENTRY_BIOYR[i] + (j - 1)))
-    ewe.dat[[i]][j, 1] <- as.character(ewes.with.teeth$ID[i]) 
-    ewe.dat[[i]][j, 2] <- seq(ewes.with.teeth$ENTRY_BIOYR[i], ewes.with.teeth$END_BIOYR[i])[j]
-    ewe.dat[[i]][j, 3] <- ewes.with.teeth$AENTRY[i] + (j - 1)
-    ewe.dat[[i]][j, 4] <- as.character(year.status$CLASS)[1]
-    ewe.dat[[i]][j, 5] <- ifelse(j != loop.years, 0, ifelse(ewes.with.teeth$DEAD == 1, 1, NA))
-  }
-}  
-
-ewe.rowperyear.dat <- as.data.frame(do.call("rbind", ewe.dat))
-names(ewe.rowperyear.dat) <- c("ID", "Year", "EstAge", "PNClass", "Dead")
-ewe.rowperyear.dat$EstAge <- as.numeric(as.character(ewe.rowperyear.dat$EstAge))
-ewe.rowperyear.dat$AgeClass <- ifelse(ewe.rowperyear.dat$EstAge <= 2, 2,  ifelse(ewe.rowperyear.dat$EstAge > 2 & ewe.rowperyear.dat$EstAge <= 7, 3, ifelse(ewe.rowperyear.dat$EstAge > 7 & ewe.rowperyear.dat$EstAge <= 13, 4, 5)))
-
-#-- calculate number of ewe-years survived (in aggregate) by each age class in each disease state --#
-pn.eweyrs <- subset(ewe.rowperyear.dat, PNClass %in% c("ADULTS", "ALL_AGE", "LAMBS"))
-he.eweyrs <- subset(ewe.rowperyear.dat, !(PNClass %in% c("ADULTS", "ALL_AGE", "LAMBS")))
-
-surv.array <- table(round(ewe.rowperyear.dat$EstAge), ewe.rowperyear.dat$Dead)
-pn.surv.array <- rbind(c(0, 0), c(0, 0), table(round(pn.eweyrs$EstAge), pn.eweyrs$Dead), c(0, 0))
-he.surv.array <- table(round(he.eweyrs$EstAge), he.eweyrs$Dead)
-
-n.eweages <- 19
-s <- s.pn <- s.he <- s.premovi <- rep(NA, n.eweages)
-for(a in 1:n.eweages){
-  s[a] <- sum(surv.array[a, ])
-  s.pn[a] <- sum(pn.surv.array[a, ])
-  s.he[a] <- sum(he.surv.array[a, ])
-#  r.premovi[a] <- sum(repro.array.premovi[a, ])
-}
-
-#-- MODEL --#
-sink("agespecsurv.binom.bug")
-cat("
-    model{
-    
-    #----------------#
-    #-- Parameters --#
-    #----------------#
-    #-- wean.<i> = ewes in ith age class who weaned a lamb
-    
-    #----------------#
-    #-- Priors ------#
-    #----------------#    
-    
-    surv.1 ~ dunif(0, 1)
-    surv.2 ~ dunif(0, 1)
-    surv.3 ~ dunif(0, 1)
-    surv.4 ~ dunif(0, 1)
-#    wean.5 ~ dunif(0, 1)
-    surv.5 ~ dunif(0, 1)
-    
-    #------------------#
-    #-- Likelihood ----#  
-    #------------------#
-    for(a in 1:n.eweages){
-#    repro.vec[a] ~ dbinom(lamb.pr[a], r[a])
-      surv.vec[a] ~ dbinom(ewe.pr[a], s[a])
-    }
-    
-    #-- define cell probabilities --#
-    # yearlings
-#    lamb.pr[1] <-  wean.1     # probability lamb is weaned
-    ewe.pr[1] <-  surv.1   # probability no lamb is observed
-    # 2-year-olds
-#    lamb.pr[2] <-  wean.2     # probability lamb is weaned
-    ewe.pr[2] <-  surv.2     # probability lamb is weaned
-    # 3-7 year-olds
-    for(a in 3:7){
-#    lamb.pr[a] <-  wean.3     # probability lamb is weaned
-    ewe.pr[a] <-  surv.3     # probability lamb is weaned
-    } #a
-    # 8 - 13 year-olds
-    for(a in 8:13){
-#    lamb.pr[a] <-  wean.4     # probability lamb is weaned
-    ewe.pr[a] <-  surv.4     # probability lamb is weaned
-    } #a  
-    # > 13 year-olds
-    for(a in 14:19){
-#    lamb.pr[a] <-  wean.5     # probability lamb is weaned
-    ewe.pr[a] <-  surv.5     # probability lamb is weaned
-    } #a  
-    }
-    ", fill = T)
-sink()
-
-#-- pneumonia-years only 
-agespecsurv.data.pn <- list(n.eweages = n.eweages,
-                                   s = s.pn, 
-                                   surv.vec = pn.surv.array[ , 1]
-)
-
-agespecsurv.data.he <- list(n.eweages = n.eweages,
-                                   s = s.he, 
-                                   surv.vec = he.surv.array[ , 1]
-)
-
-# initial values
-agespecsurv.inits <- function(){
-  list(
-    surv.1 = runif(0, 1),
-    surv.2 = runif(0, 1),
-    surv.3 = runif(0, 1),
-    surv.4 = runif(0, 1),
-    surv.5 = runif(0, 1)
-  )
-}
-
-# parameters monitored
-agespecsurv.parameters <- c(
-  "surv.1", "surv.2", "surv.3", "surv.4", "surv.5"
-)
-
-# MCMC settings
-ni <- 20000
-nt <- 3
-nb <- 10000
-nc <- 3
-
-#-- Pneumonia-year model
-# call JAGS from R
-agespecsurv.pn <- jags.model("agespecsurv.binom.bug",
-                                    data = agespecsurv.data.pn,
-                                    inits = agespecsurv.inits,
-                                    n.chains = nc,
-                                    n.adapt = nb
-)
-
-update(agespecsurv.pn, ni)
-
-coda.samples.agespecsurv.pn <- coda.samples(agespecsurv.pn,
-                                                   agespecsurv.parameters,
-                                                   ni)
-
-#-- Healthy-year model
-# call JAGS from R
-agespecsurv.he <- jags.model("agespecsurv.binom.bug",
-                                    data = agespecsurv.data.he,
-                                    inits = agespecsurv.inits,
-                                    n.chains = nc,
-                                    n.adapt = nb
-)
-
-update(agespecsurv.he, ni)
-
-coda.samples.agespecsurv.he <- coda.samples(agespecsurv.he,
-                                                   agespecsurv.parameters,
-                                                   ni)
-
-#coda.samples.agespecsurv.he <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/HealthyReproPost_30Sept2014.csv")
-#coda.samples.agespecsurv.pn <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/PNReproPost_30Sept2014.csv")
-
-#-- plot intervals over time --#
-par(cex.main = .8, mfrow = c(1, 1))
-plot(xlim = c(1.5, 5.5), xaxt = "n", ylim = c(0, 1), x = -1, y = 1, main = "95% credible intervals for age-specific survival", xlab = "age class", ylab = "P(survives)")
-for(i in 2:5){ 
-  segments(x0 = i, x1 = i, y0 = summary(coda.samples.agespecsurv.pn)[[2]][i, 1], y1 = summary(coda.samples.agespecsurv.pn)[[2]][i, 5], col = "red", lwd = 2)
-  segments(x0 = i + 0.25, x1 = i + 0.25, y0 = summary(coda.samples.agespecsurv.he)[[2]][i, 1], y1 = summary(coda.samples.agespecsurv.he)[[2]][i, 5], col = "grey30", lwd = 2, lty = 2)
-#  segments(x0 = i + 0.15, x1 = i + 0.15, y0 = summary(coda.samples.sheep.agespecrepro.premovi)[[2]][i, 1], y1 = summary(coda.samples.agespecsurv.premovi)[[2]][i, 5], col = "grey60", lwd = 2, lty = 3)
-}
-axis(side = 1, at = 2:5, labels = c("<2.5", "2.5-7", "8-13", ">13"))
-legend("topright", c("disease years", "healthy years"), lty = c(1, 2), col = c("red", "grey30"), lwd = c(2, 2), bty = "n")
-
-#premovi.surv <- rbind(coda.samples.sheep.agespecrepro.premovi[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[3]][1001:2000, ])
-he.surv <- rbind(coda.samples.agespecsurv.he[[1]][1:10000, ], coda.samples.agespecsurv.he[[2]][1:10000, ], coda.samples.agespecsurv.he[[3]][1:10000, ])
-pn.surv <- rbind(coda.samples.agespecsurv.pn[[1]][1:10000, ], coda.samples.agespecsurv.pn[[2]][1:10000, ], coda.samples.agespecsurv.pn[[3]][1:10000, ])
-#write.csv(he.surv, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/HealthyReproPost_30Sept2014.csv")
-#write.csv(pn.surv, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/PNReproPost_30Sept2014.csv")
-
-#-------------------------------------------------------------#
-#-- Recruitment in pneumonia and healthy years ---------------#
-#-------------------------------------------------------------#
-compd.data.recr <- subset(compd.data, select = c("RadEwes", "RadEwesWLambs", "SumLambSurv", "Recr"), year >= 1995)
-pn.yrs <- subset(compd.data, !(CLASS %in% c("HEALTHY")) & year >= 1995)
-# SumLambSurv references survival only for those ewes observed at least once with a lamb
-# 1) calculate radiocollared ewes who reproduced.
-pnyear.prop.repro <- pn.yrs$RadEwesWLambs / pn.yrs$RadEwes
-# 2) multiply the proportion who reproduced by SLS to get estimated end-of-summer ewe:lamb ratio
-pnyear.endofsummer.ewelambrat <- pn.yrs$SumLambSurv * pnyear.prop.repro
-# 3) calculate multiplicative change between end of summer ewe-lamb ratio and recr
-pnyear.sls.recr.ratio <- 1 - (pn.yrs$SumLambSurv - pn.yrs$Recr)
-
-he.yrs <- subset(compd.data, CLASS %in% c("HEALTHY") & year >= 1995)
-# 1) calculate radiocollared ewes who reproduced.
-heyear.prop.repro <- he.yrs$RadEwesWLambs / he.yrs$RadEwes
-# 2) multiply the proportion who reproduced by SLS to get estimated end-of-summer ewe:lamb ratio
-heyear.endofsummer.ewelambrat <- he.yrs$SumLambSurv * heyear.prop.repro
-# 3) calculate multiplicative change between end of summer ewe-lamb ratio and recr
-heyear.sls.recr.ratio <- 1 - (he.yrs$SumLambSurv - he.yrs$Recr)
-  
-par(mfrow = c(2, 1))
-hist(pnyear.sls.recr.ratio, col = "grey80", xlim = c(0, 4), main = "Pneumonia years for lambs", xlab = "Estimate of total overwinter lamb mortality")
-hist(heyear.sls.recr.ratio, col = "grey80", xlim = c(0, 4), main = "Healthy years (healthy + adult-only)", xlab = "Estimate of total overwinter lamb mortality")
-
-
-
+# coda.samples.sheep.agespecrepro.pn <- coda.samples(sheep.agespecrepro.pn,
+#                                                    sheep.agespecrepro.parameters,
+#                                                    ni)
+# 
+# #-- Healthy-year model
+# # call JAGS from R
+# sheep.agespecrepro.he <- jags.model("sheep.agespecrepro.binom.bug",
+#                                     data = sheep.agespecrepro.data.he,
+#                                     inits = sheep.agespecrepro.inits,
+#                                     n.chains = nc,
+#                                     n.adapt = nb
+# )
+# 
+# update(sheep.agespecrepro.he, ni)
+# 
+# coda.samples.sheep.agespecrepro.he <- coda.samples(sheep.agespecrepro.he,
+#                                                    sheep.agespecrepro.parameters,
+#                                                    ni)
+# 
+# #-- Pre-Movi-year model
+# # call JAGS from R
+# sheep.agespecrepro.data.premovi <- list(n.ages = n.ages,
+#                                         r = r.premovi, 
+#                                         repro.vec = repro.array.premovi[ , 1]
+# )
+# 
+# sheep.agespecrepro.premovi <- jags.model("sheep.agespecrepro.binom.bug",
+#                                          data = sheep.agespecrepro.data.premovi,
+#                                          inits = sheep.agespecrepro.inits,
+#                                          n.chains = nc,
+#                                          n.adapt = nb
+# )
+# 
+# update(sheep.agespecrepro.premovi, ni)
+# 
+# coda.samples.sheep.agespecrepro.premovi <- coda.samples(sheep.agespecrepro.premovi,
+#                                                         sheep.agespecrepro.parameters,
+#                                                         ni)
+# 
+# premovi.repro <- rbind(coda.samples.sheep.agespecrepro.premovi[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[3]][1001:2000, ])
+# he.repro <- rbind(coda.samples.sheep.agespecrepro.he[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.he[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.he[[3]][1001:2000, ])
+# pn.repro <- rbind(coda.samples.sheep.agespecrepro.pn[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.pn[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.pn[[3]][1001:2000, ])
+# 
+# #write.csv(he.repro, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/HealthyReproPost_30Sept2014.csv")
+# #write.csv(pn.repro, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/PNReproPost_30Sept2014.csv")
+# 
+# #-- summaries of MCMC outputs --#
+# 
+# summary(coda.samples.sheep.agespecrepro.pn)[[2]]
+# summary(coda.samples.sheep.agespecrepro.he)[[2]]
+# summary(coda.samples.sheep.agespecrepro.premovi)[[2]]
+# 
+# gelman.diag(coda.samples.sheep.agespecrepro.pn)
+# gelman.diag(coda.samples.sheep.agespecrepro.he)
+# gelman.diag(coda.samples.sheep.agespecrepro.premovi)
+# 
+# #-- plot intervals over time --#
+# par(cex.main = .8, mfrow = c(1, 1))
+# plot(xlim = c(1.5, 5.5), xaxt = "n", ylim = c(0, 1), x = -1, y = 1, main = "95% credible intervals for age-specific reproduction", xlab = "age class", ylab = "P(weans a lamb)")
+# for(i in 2:5){ 
+#   segments(x0 = i, x1 = i, y0 = summary(coda.samples.sheep.agespecrepro.pn)[[2]][i, 1], y1 = summary(coda.samples.sheep.agespecrepro.pn)[[2]][i, 5], col = "red", lwd = 2)
+#   segments(x0 = i + 0.25, x1 = i + 0.25, y0 = summary(coda.samples.sheep.agespecrepro.he)[[2]][i, 1], y1 = summary(coda.samples.sheep.agespecrepro.he)[[2]][i, 5], col = "grey30", lwd = 2, lty = 2)
+#   segments(x0 = i + 0.15, x1 = i + 0.15, y0 = summary(coda.samples.sheep.agespecrepro.premovi)[[2]][i, 1], y1 = summary(coda.samples.sheep.agespecrepro.premovi)[[2]][i, 5], col = "grey60", lwd = 2, lty = 3)
+# }
+# axis(side = 1, at = 2:5, labels = c("<2.5", "2.5-7", "8-13", ">13"))
+# legend("topright", c("lamb disease years", "lamb healthy years", "pre-Movi years"), lty = c(1, 2, 3), col = c("red", "grey30", "grey60"), lwd = c(2, 2, 2), bty = "n")
+# 
+# 
+# 
+# # #-----------------------------------------------#
+# # #-- 2) Age-specific survival PN vs. Healthy ----#
+# # #-----------------------------------------------#
+# # #-- 1) build data. Use Festa-Bianchet 2006 stages: lamb, yearling, 2-7, 8-13, >13 --#
+# # #-- keep each year cohort distinct from the others --#
+# # #----- m-array runs from 1995 - 2010 --#
+# # ewes <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
+# # ewe.m.array <- matrix(NA, nrow = length(levels(factor(ewes$ID))), ncol = 2011 - 1995)
+# # stage.entry <- rep(NA, length(levels(factor(ewes$ID))))
+# # for(i in 1:dim(ewe.m.array)[1]){
+# #   k <- subset(ewes, ID == levels(factor(ewes$ID))[i])
+# #   ewe.m.array[i, 1 : (k$ENTRY_BIOYR - 1994)] <- 0
+# #   ewe.m.array[i, (k$ENTRY_BIOYR - 1994)] <- k$AENTRY
+# #   ewe.m.array[i, (min(k$ENTRY_BIOYR - 1994 + 1, dim(ewe.m.array)[2]) : min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]))] <- k$AENTRY + (1 : length((min(k$ENTRY_BIOYR - 1994 + 1, dim(ewe.m.array)[2]) : min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]))))
+# #   ewe.m.array[i, (min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]) : min(k$END_BIOYR - 1994 + 1, dim(ewe.m.array)[2]))] <- 0
+# # }
+# # 
+# # ewe.m.array.stage.v2 <- ifelse(ewe.m.array <= 1, 1, 
+# #                                floor(ewe.m.array)
+# # )
+# # 
+# # ewe.m.array.stage.v2[is.na(ewe.m.array.stage.v2) == T] <- 19
+# # for(i in 1:dim(ewe.m.array.stage.v2)[1]){
+# #   for(j in 2:dim(ewe.m.array.stage.v2)[2]){
+# #     ewe.m.array.stage.v2[i, j] <- ifelse(ewe.m.array.stage.v2[i, j - 1] >= 2 & ewe.m.array.stage.v2[i, j] == 1, 19, ewe.m.array.stage.v2[i, j])
+# #   }
+# # }
+# # 
+# # ewe.m.array.stage.v2[1:10, ]
+# # table(ewe.m.array.stage.v2)
+# # 
+# # # f is a vector containing year of first capture for each sheep
+# # get.first <- function(x){
+# #   min(which(x >= 2))
+# # }
+# # f.v2 <- apply(ewe.m.array.stage.v2, 1, get.first)
+# # 
+# # # states are 1, 2, 3, 4, 5, 6 #
+# # 
+# # sink("sheep.agespecsurv.v2.bug")
+# # cat("
+# #     model{
+# #     
+# #     #----------------#
+# #     #-- Parameters --#
+# #     #----------------#
+# #     #-- alpha.<i> = aging (stage-transition)
+# #     #-- s.<i> = survival (within stage; no transition)
+# #     
+# #     #----------------#
+# #     #-- Priors ------#
+# #     #----------------#
+# #     for(t in 1:(n.years - 1)){
+# #     s.2[t] <- mean.s2
+# #     s.3[t] <- mean.s3
+# #     s.4[t] <- mean.s4
+# #     s.5[t] <- mean.s5
+# #     collar.prop[t] <- mean.collar.prop
+# #     }
+# #     mean.s2 ~ dunif(0, 1)
+# #     mean.s3 ~ dunif(0, 1)
+# #     mean.s4 ~ dunif(0, 1)
+# #     mean.s5 ~ dunif(0, 1)
+# #     mean.collar.prop ~ dunif(0, 1)
+# #     
+# #     # Define state-transitions and observation matrices
+# #     for(i in 1:nind){
+# #     # State Process: Define probabilities of state S(t + 1) | S(t)
+# #     for(t in f[i] :(n.years - 1)){
+# #     # read matrix as (left-hand state number into right-hand state number)
+# #     # Leslie matrix row 1 (uncollared)
+# #     ps[1, i, t, 1] <- 1 - (collar.prop[t])
+# #     ps[1, i, t, 2] <- collar.prop[t]
+# #     ps[1, i, t, 3] <- collar.prop[t]
+# #     ps[1, i, t, 4] <- collar.prop[t]
+# #     ps[1, i, t, 5] <- collar.prop[t]
+# #     ps[1, i, t, 6] <- collar.prop[t]
+# #     ps[1, i, t, 7] <- collar.prop[t]
+# #     ps[1, i, t, 8] <- collar.prop[t]
+# #     ps[1, i, t, 9] <- collar.prop[t]
+# #     ps[1, i, t, 10] <- collar.prop[t]
+# #     ps[1, i, t, 11] <- collar.prop[t]
+# #     ps[1, i, t, 12] <- collar.prop[t]
+# #     ps[1, i, t, 13] <- collar.prop[t]
+# #     ps[1, i, t, 14] <- collar.prop[t]
+# #     ps[1, i, t, 15] <- collar.prop[t]
+# #     ps[1, i, t, 16] <- collar.prop[t]
+# #     ps[1, i, t, 17] <- collar.prop[t]
+# #     ps[1, i, t, 18] <- collar.prop[t]
+# #     ps[1, i, t, 19] <- 0
+# #     # Leslie matrix row 2 (yearlings)
+# #     ps[2, i, t, 1] <- 0
+# #     ps[2, i, t, 2] <- 0
+# #     ps[2, i, t, 3] <- s.2[t]
+# #     ps[2, i, t, 4] <- 0
+# #     ps[2, i, t, 5] <- 0
+# #     ps[2, i, t, 6] <- 0
+# #     ps[2, i, t, 7] <- 0
+# #     ps[2, i, t, 8] <- 0
+# #     ps[2, i, t, 9] <- 0
+# #     ps[2, i, t, 10] <- 0
+# #     ps[2, i, t, 11] <- 0
+# #     ps[2, i, t, 12] <- 0
+# #     ps[2, i, t, 13] <- 0
+# #     ps[2, i, t, 14] <- 0
+# #     ps[2, i, t, 15] <- 0
+# #     ps[2, i, t, 16] <- 0
+# #     ps[2, i, t, 17] <- 0
+# #     ps[2, i, t, 18] <- 0
+# #     ps[2, i, t, 19] <- (1 - s.2[t])
+# #     # Leslie matrix row 3 (2-year-olds)
+# #     ps[3, i, t, 1] <- 0
+# #     ps[3, i, t, 2] <- 0
+# #     ps[3, i, t, 3] <- 0
+# #     ps[3, i, t, 4] <- s.3[t]
+# #     ps[3, i, t, 5] <- 0
+# #     ps[3, i, t, 6] <- 0
+# #     ps[3, i, t, 7] <- 0
+# #     ps[3, i, t, 8] <- 0
+# #     ps[3, i, t, 9] <- 0
+# #     ps[3, i, t, 10] <- 0
+# #     ps[3, i, t, 11] <- 0
+# #     ps[3, i, t, 12] <- 0
+# #     ps[3, i, t, 13] <- 0
+# #     ps[3, i, t, 14] <- 0
+# #     ps[3, i, t, 15] <- 0
+# #     ps[3, i, t, 16] <- 0
+# #     ps[3, i, t, 17] <- 0
+# #     ps[3, i, t, 18] <- 0
+# #     ps[3, i, t, 19] <- (1 - s.3[t])
+# #     # Leslie matrix row 4 (3-year-olds)
+# #     ps[4, i, t, 1] <- 0
+# #     ps[4, i, t, 2] <- 0
+# #     ps[4, i, t, 3] <- 0
+# #     ps[4, i, t, 4] <- 0
+# #     ps[4, i, t, 5] <- s.3[t]
+# #     ps[4, i, t, 6] <- 0
+# #     ps[4, i, t, 7] <- 0
+# #     ps[4, i, t, 8] <- 0
+# #     ps[4, i, t, 9] <- 0
+# #     ps[4, i, t, 10] <- 0
+# #     ps[4, i, t, 11] <- 0
+# #     ps[4, i, t, 12] <- 0
+# #     ps[4, i, t, 13] <- 0
+# #     ps[4, i, t, 14] <- 0
+# #     ps[4, i, t, 15] <- 0
+# #     ps[4, i, t, 16] <- 0
+# #     ps[4, i, t, 17] <- 0
+# #     ps[4, i, t, 18] <- 0
+# #     ps[4, i, t, 19] <- (1 - s.3[t])
+# #     # Leslie matrix row 5 (4-year-olds)
+# #     ps[5, i, t, 1] <- 0
+# #     ps[5, i, t, 2] <- 0
+# #     ps[5, i, t, 3] <- 0
+# #     ps[5, i, t, 4] <- 0
+# #     ps[5, i, t, 5] <- 0
+# #     ps[5, i, t, 6] <- s.3[t]
+# #     ps[5, i, t, 7] <- 0
+# #     ps[5, i, t, 8] <- 0
+# #     ps[5, i, t, 9] <- 0
+# #     ps[5, i, t, 10] <- 0
+# #     ps[5, i, t, 11] <- 0
+# #     ps[5, i, t, 12] <- 0
+# #     ps[5, i, t, 13] <- 0
+# #     ps[5, i, t, 14] <- 0
+# #     ps[5, i, t, 15] <- 0
+# #     ps[5, i, t, 16] <- 0
+# #     ps[5, i, t, 17] <- 0
+# #     ps[5, i, t, 18] <- 0
+# #     ps[5, i, t, 19] <- (1 - s.3[t])
+# #     # Leslie matrix row 6 (5-year-olds)
+# #     ps[6, i, t, 1] <- 0
+# #     ps[6, i, t, 2] <- 0
+# #     ps[6, i, t, 3] <- 0
+# #     ps[6, i, t, 4] <- 0
+# #     ps[6, i, t, 5] <- 0
+# #     ps[6, i, t, 6] <- 0
+# #     ps[6, i, t, 7] <- s.3[t]
+# #     ps[6, i, t, 8] <- 0
+# #     ps[6, i, t, 9] <- 0
+# #     ps[6, i, t, 10] <- 0
+# #     ps[6, i, t, 11] <- 0
+# #     ps[6, i, t, 12] <- 0
+# #     ps[6, i, t, 13] <- 0
+# #     ps[6, i, t, 14] <- 0
+# #     ps[6, i, t, 15] <- 0
+# #     ps[6, i, t, 16] <- 0
+# #     ps[6, i, t, 17] <- 0
+# #     ps[6, i, t, 18] <- 0
+# #     ps[6, i, t, 19] <- (1 - s.3[t])
+# #     # Leslie matrix row 7 (6-year-olds)
+# #     ps[7, i, t, 1] <- 0
+# #     ps[7, i, t, 2] <- 0
+# #     ps[7, i, t, 3] <- 0
+# #     ps[7, i, t, 4] <- 0
+# #     ps[7, i, t, 5] <- 0
+# #     ps[7, i, t, 6] <- 0
+# #     ps[7, i, t, 7] <- 0
+# #     ps[7, i, t, 8] <- s.3[t]
+# #     ps[7, i, t, 9] <- 0
+# #     ps[7, i, t, 10] <- 0
+# #     ps[7, i, t, 11] <- 0
+# #     ps[7, i, t, 12] <- 0
+# #     ps[7, i, t, 13] <- 0
+# #     ps[7, i, t, 14] <- 0
+# #     ps[7, i, t, 15] <- 0
+# #     ps[7, i, t, 16] <- 0
+# #     ps[7, i, t, 17] <- 0
+# #     ps[7, i, t, 18] <- 0
+# #     ps[7, i, t, 19] <- (1 - s.3[t])
+# #     # Leslie matrix row 8 (7-year-olds)
+# #     ps[8, i, t, 1] <- 0
+# #     ps[8, i, t, 2] <- 0
+# #     ps[8, i, t, 3] <- 0
+# #     ps[8, i, t, 4] <- 0
+# #     ps[8, i, t, 5] <- 0
+# #     ps[8, i, t, 6] <- 0
+# #     ps[8, i, t, 7] <- 0
+# #     ps[8, i, t, 8] <- 0
+# #     ps[8, i, t, 9] <- s.3[t]
+# #     ps[8, i, t, 10] <- 0
+# #     ps[8, i, t, 11] <- 0
+# #     ps[8, i, t, 12] <- 0
+# #     ps[8, i, t, 13] <- 0
+# #     ps[8, i, t, 14] <- 0
+# #     ps[8, i, t, 15] <- 0
+# #     ps[8, i, t, 16] <- 0
+# #     ps[8, i, t, 17] <- 0
+# #     ps[8, i, t, 18] <- 0
+# #     ps[8, i, t, 19] <- (1 - s.3[t])
+# #     # Leslie matrix row 9 (8-year-olds)
+# #     ps[9, i, t, 1] <- 0
+# #     ps[9, i, t, 2] <- 0
+# #     ps[9, i, t, 3] <- 0
+# #     ps[9, i, t, 4] <- 0
+# #     ps[9, i, t, 5] <- 0
+# #     ps[9, i, t, 6] <- 0
+# #     ps[9, i, t, 7] <- 0
+# #     ps[9, i, t, 8] <- 0
+# #     ps[9, i, t, 9] <- 0
+# #     ps[9, i, t, 10] <- s.4[t]
+# #     ps[9, i, t, 11] <- 0
+# #     ps[9, i, t, 12] <- 0
+# #     ps[9, i, t, 13] <- 0
+# #     ps[9, i, t, 14] <- 0
+# #     ps[9, i, t, 15] <- 0
+# #     ps[9, i, t, 16] <- 0
+# #     ps[9, i, t, 17] <- 0
+# #     ps[9, i, t, 18] <- 0
+# #     ps[9, i, t, 19] <- (1 - s.4[t])
+# #     # Leslie matrix row 10 (9-year-olds)
+# #     ps[10, i, t, 1] <- 0
+# #     ps[10, i, t, 2] <- 0
+# #     ps[10, i, t, 3] <- 0
+# #     ps[10, i, t, 4] <- 0
+# #     ps[10, i, t, 5] <- 0
+# #     ps[10, i, t, 6] <- 0
+# #     ps[10, i, t, 7] <- 0
+# #     ps[10, i, t, 8] <- 0
+# #     ps[10, i, t, 9] <- 0
+# #     ps[10, i, t, 10] <- 0
+# #     ps[10, i, t, 11] <- s.4[t]
+# #     ps[10, i, t, 12] <- 0
+# #     ps[10, i, t, 13] <- 0
+# #     ps[10, i, t, 14] <- 0
+# #     ps[10, i, t, 15] <- 0
+# #     ps[10, i, t, 16] <- 0
+# #     ps[10, i, t, 17] <- 0
+# #     ps[10, i, t, 18] <- 0
+# #     ps[10, i, t, 19] <- (1 - s.4[t])
+# #     # Leslie matrix row 11 (10-year-olds)
+# #     ps[11, i, t, 1] <- 0
+# #     ps[11, i, t, 2] <- 0
+# #     ps[11, i, t, 3] <- 0
+# #     ps[11, i, t, 4] <- 0
+# #     ps[11, i, t, 5] <- 0
+# #     ps[11, i, t, 6] <- 0
+# #     ps[11, i, t, 7] <- 0
+# #     ps[11, i, t, 8] <- 0
+# #     ps[11, i, t, 9] <- 0
+# #     ps[11, i, t, 10] <- 0
+# #     ps[11, i, t, 11] <- 0
+# #     ps[11, i, t, 12] <- s.4[t]
+# #     ps[11, i, t, 13] <- 0
+# #     ps[11, i, t, 14] <- 0
+# #     ps[11, i, t, 15] <- 0
+# #     ps[11, i, t, 16] <- 0
+# #     ps[11, i, t, 17] <- 0
+# #     ps[11, i, t, 18] <- 0
+# #     ps[11, i, t, 19] <- (1 - s.4[t])
+# #     # Leslie matrix row 12 (11-year-olds)
+# #     ps[12, i, t, 1] <- 0
+# #     ps[12, i, t, 2] <- 0
+# #     ps[12, i, t, 3] <- 0
+# #     ps[12, i, t, 4] <- 0
+# #     ps[12, i, t, 5] <- 0
+# #     ps[12, i, t, 6] <- 0
+# #     ps[12, i, t, 7] <- 0
+# #     ps[12, i, t, 8] <- 0
+# #     ps[12, i, t, 9] <- 0
+# #     ps[12, i, t, 10] <- 0
+# #     ps[12, i, t, 11] <- 0
+# #     ps[12, i, t, 12] <- 0
+# #     ps[12, i, t, 13] <- s.4[t]
+# #     ps[12, i, t, 14] <- 0
+# #     ps[12, i, t, 15] <- 0
+# #     ps[12, i, t, 16] <- 0
+# #     ps[12, i, t, 17] <- 0
+# #     ps[12, i, t, 18] <- 0
+# #     ps[12, i, t, 19] <- (1 - s.4[t])
+# #     # Leslie matrix row 13 (12-year-olds)
+# #     ps[13, i, t, 1] <- 0
+# #     ps[13, i, t, 2] <- 0
+# #     ps[13, i, t, 3] <- 0
+# #     ps[13, i, t, 4] <- 0
+# #     ps[13, i, t, 5] <- 0
+# #     ps[13, i, t, 6] <- 0
+# #     ps[13, i, t, 7] <- 0
+# #     ps[13, i, t, 8] <- 0
+# #     ps[13, i, t, 9] <- 0
+# #     ps[13, i, t, 10] <- 0
+# #     ps[13, i, t, 11] <- 0
+# #     ps[13, i, t, 12] <- 0
+# #     ps[13, i, t, 13] <- 0
+# #     ps[13, i, t, 14] <- s.4[t]
+# #     ps[13, i, t, 15] <- 0
+# #     ps[13, i, t, 16] <- 0
+# #     ps[13, i, t, 17] <- 0
+# #     ps[13, i, t, 18] <- 0
+# #     ps[13, i, t, 19] <- (1 - s.4[t])
+# #     # Leslie matrix row 14 (13-year-olds)
+# #     ps[14, i, t, 1] <- 0
+# #     ps[14, i, t, 2] <- 0
+# #     ps[14, i, t, 3] <- 0
+# #     ps[14, i, t, 4] <- 0
+# #     ps[14, i, t, 5] <- 0
+# #     ps[14, i, t, 6] <- 0
+# #     ps[14, i, t, 7] <- 0
+# #     ps[14, i, t, 8] <- 0
+# #     ps[14, i, t, 9] <- 0
+# #     ps[14, i, t, 10] <- 0
+# #     ps[14, i, t, 11] <- 0
+# #     ps[14, i, t, 12] <- 0
+# #     ps[14, i, t, 13] <- 0
+# #     ps[14, i, t, 14] <- 0
+# #     ps[14, i, t, 15] <- s.4[t]
+# #     ps[14, i, t, 16] <- 0
+# #     ps[14, i, t, 17] <- 0
+# #     ps[14, i, t, 18] <- 0 
+# #     ps[14, i, t, 19] <- (1 - s.4[t])
+# #     # Leslie matrix row 15 (14-year-olds)
+# #     ps[15, i, t, 1] <- 0
+# #     ps[15, i, t, 2] <- 0
+# #     ps[15, i, t, 3] <- 0
+# #     ps[15, i, t, 4] <- 0
+# #     ps[15, i, t, 5] <- 0
+# #     ps[15, i, t, 6] <- 0
+# #     ps[15, i, t, 7] <- 0
+# #     ps[15, i, t, 8] <- 0
+# #     ps[15, i, t, 9] <- 0
+# #     ps[15, i, t, 10] <- 0
+# #     ps[15, i, t, 11] <- 0
+# #     ps[15, i, t, 12] <- 0
+# #     ps[15, i, t, 13] <- 0
+# #     ps[15, i, t, 14] <- 0
+# #     ps[15, i, t, 15] <- 0
+# #     ps[15, i, t, 16] <- s.5[t]
+# #     ps[15, i, t, 17] <- 0
+# #     ps[15, i, t, 18] <- 0
+# #     ps[15, i, t, 19] <- (1 - s.5[t])
+# #     # Leslie matrix row 16 (15-year-olds)
+# #     ps[16, i, t, 1] <- 0
+# #     ps[16, i, t, 2] <- 0
+# #     ps[16, i, t, 3] <- 0
+# #     ps[16, i, t, 4] <- 0
+# #     ps[16, i, t, 5] <- 0
+# #     ps[16, i, t, 6] <- 0
+# #     ps[16, i, t, 7] <- 0
+# #     ps[16, i, t, 8] <- 0
+# #     ps[16, i, t, 9] <- 0
+# #     ps[16, i, t, 10] <- 0
+# #     ps[16, i, t, 11] <- 0
+# #     ps[16, i, t, 12] <- 0
+# #     ps[16, i, t, 13] <- 0
+# #     ps[16, i, t, 14] <- 0
+# #     ps[16, i, t, 15] <- 0
+# #     ps[16, i, t, 16] <- 0
+# #     ps[16, i, t, 17] <- s.5[t]
+# #     ps[16, i, t, 18] <- 0
+# #     ps[16, i, t, 19] <- (1 - s.5[t])
+# #     # Leslie matrix row 17 (16-year-olds)
+# #     ps[17, i, t, 1] <- 0
+# #     ps[17, i, t, 2] <- 0
+# #     ps[17, i, t, 3] <- 0
+# #     ps[17, i, t, 4] <- 0
+# #     ps[17, i, t, 5] <- 0
+# #     ps[17, i, t, 6] <- 0
+# #     ps[17, i, t, 7] <- 0
+# #     ps[17, i, t, 8] <- 0
+# #     ps[17, i, t, 9] <- 0
+# #     ps[17, i, t, 10] <- 0
+# #     ps[17, i, t, 11] <- 0
+# #     ps[17, i, t, 12] <- 0
+# #     ps[17, i, t, 13] <- 0
+# #     ps[17, i, t, 14] <- 0
+# #     ps[17, i, t, 15] <- 0
+# #     ps[17, i, t, 16] <- 0
+# #     ps[17, i, t, 17] <- 0
+# #     ps[17, i, t, 18] <- s.5[t]
+# #     ps[17, i, t, 19] <- (1 - s.5[t])
+# #     # Leslie matrix row 18 (dead)
+# #     ps[18, i, t, 1] <- 0
+# #     ps[18, i, t, 2] <- 0
+# #     ps[18, i, t, 3] <- 0
+# #     ps[18, i, t, 4] <- 0
+# #     ps[18, i, t, 5] <- 0
+# #     ps[18, i, t, 6] <- 0
+# #     ps[18, i, t, 7] <- 0
+# #     ps[18, i, t, 8] <- 0
+# #     ps[18, i, t, 9] <- 0
+# #     ps[18, i, t, 10] <- 0
+# #     ps[18, i, t, 11] <- 0
+# #     ps[18, i, t, 12] <- 0
+# #     ps[18, i, t, 13] <- 0
+# #     ps[18, i, t, 14] <- 0
+# #     ps[18, i, t, 15] <- 0
+# #     ps[18, i, t, 16] <- 0
+# #     ps[18, i, t, 17] <- 0
+# #     ps[18, i, t, 18] <- 0
+# #     ps[18, i, t, 19] <- 1
+# #     # Leslie matrix row 18 (dead)
+# #     ps[19, i, t, 1] <- 0
+# #     ps[19, i, t, 2] <- 0
+# #     ps[19, i, t, 3] <- 0
+# #     ps[19, i, t, 4] <- 0
+# #     ps[19, i, t, 5] <- 0
+# #     ps[19, i, t, 6] <- 0
+# #     ps[19, i, t, 7] <- 0
+# #     ps[19, i, t, 8] <- 0
+# #     ps[19, i, t, 9] <- 0
+# #     ps[19, i, t, 10] <- 0
+# #     ps[19, i, t, 11] <- 0
+# #     ps[19, i, t, 12] <- 0
+# #     ps[19, i, t, 13] <- 0
+# #     ps[19, i, t, 14] <- 0
+# #     ps[19, i, t, 15] <- 0
+# #     ps[19, i, t, 16] <- 0
+# #     ps[19, i, t, 17] <- 0
+# #     ps[19, i, t, 18] <- 0
+# #     ps[19, i, t, 19] <- 1
+# #     } #t
+# #     } #i
+# #     #------------------#
+# #     #-- Likelihood ----#
+# #     #------------------#
+# #       for(i in 1:nind){
+# #        for(t in (f[i] + 1): n.years){
+# #          z[i, t] ~ dcat(ps[z[i, t - 1], i, t - 1, ])
+# #         } #t
+# #       } #i
+# #     }
+# #     ", fill = T)
+# # sink()
+# # 
+# # # bundle data
+# # sheep.agespecsurv.data.v2 <- list(z = ewe.m.array.stage.v2,
+# #                                   #                              y = ewe.m.array.stage,
+# #                                   f = f.v2,
+# #                                   n.years = dim(ewe.m.array.stage.v2)[2],
+# #                                   nind = dim(ewe.m.array.stage.v2)[1]
+# # )
+# # # #-- pneumonia-years only 
+# # # sheep.agespecrepro.data.pn <- list(n.ages = n.ages,
+# # #                                    r = r.pn, 
+# # #                                    repro.vec = repro.array.pn[ , 1]
+# # # )
+# # 
+# # 
+# # # initial values
+# # sheep.agespecsurv.inits.v2 <- function(){
+# #   list(
+# #     mean.s2 = runif(1, 0, 1),
+# #     mean.s3 = runif(1, 0, 1),
+# #     mean.s4 = runif(1, 0, 1),
+# #     mean.s5 = runif(1, 0, 1),
+# #     mean.collar.prop = runif(1, 0, 1)
+# #   )
+# # }
+# # 
+# # # parameters monitored
+# # sheep.agespecsurv.parameters.v2 <- c(
+# #   "mean.s2",
+# #   "mean.s3",
+# #   "mean.s4",
+# #   "mean.s5",
+# #   "mean.collar.prop")
+# # 
+# # # MCMC settings
+# # ni <- 2000
+# # nt <- 3
+# # nb <- 1000
+# # nc <- 3
+# # 
+# # # call JAGS from R
+# # sheep.agespecsurv.v2 <- jags.model("sheep.agespecsurv.v2.bug",
+# #                                    data = sheep.agespecsurv.data.v2,
+# #                                    inits = sheep.agespecsurv.inits.v2,
+# #                                    n.chains = nc,
+# #                                    n.adapt = nb
+# # )
+# # 
+# # update(sheep.agespecsurv.v2, ni)
+# # 
+# # coda.samples.sheep.agespecsurv.v2 <- coda.samples(sheep.agespecsurv.v2,
+# #                                                   sheep.agespecsurv.parameters.v2,
+# #                                                   ni)
+# # 
+# # summary(coda.samples.sheep.agespecsurv.v2)
+# # gelman.diag(coda.samples.sheep.agespecsurv.v2)
+# # 
+# # he.surv.post <- rbind(coda.samples.sheep.agespecsurv.v2[[1]][1001:2000, ], coda.samples.sheep.agespecsurv.v2[[2]][1001:2000, ], coda.samples.sheep.agespecsurv.v2[[3]][1001:2000, ])
+#   
+#   
+# #----------------------------------------------------#
+# #-- Adult survival PN/Healthy Revised ---------------#
+# #----------------------------------------------------#
+# # data format: one row per ewe-year. 
+# ewes.with.teeth <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
+# ewe.years <- rep(NA, dim(ewes.with.teeth)[1])
+# ewe.dat <- vector("list", dim(ewes.with.teeth)[1])
+# for(i in 1:dim(ewes.with.teeth)[1]){
+#   ewe.years[i] <- ewes.with.teeth$END_BIOYR[i] - ewes.with.teeth$ENTRY_BIOYR[i] + 1
+#   ewe.dat[[i]] <- matrix(NA, nrow = ewe.years[i], ncol = 5)
+#   loop.years <- ewe.years[i]
+#   for(j in 1:loop.years){
+#     year.status <- subset(compd.data, as.character(Pop) == as.character(ewes.with.teeth$Population)[i] & year == (ewes.with.teeth$ENTRY_BIOYR[i] + (j - 1)))
+#     ewe.dat[[i]][j, 1] <- as.character(ewes.with.teeth$ID[i]) 
+#     ewe.dat[[i]][j, 2] <- seq(ewes.with.teeth$ENTRY_BIOYR[i], ewes.with.teeth$END_BIOYR[i])[j]
+#     ewe.dat[[i]][j, 3] <- ewes.with.teeth$AENTRY[i] + (j - 1)
+#     ewe.dat[[i]][j, 4] <- as.character(year.status$CLASS)[1]
+#     ewe.dat[[i]][j, 5] <- ifelse(j != loop.years, 0, ifelse(ewes.with.teeth$DEAD == 1, 1, NA))
+#   }
+# }  
+# 
+# ewe.rowperyear.dat <- as.data.frame(do.call("rbind", ewe.dat))
+# names(ewe.rowperyear.dat) <- c("ID", "Year", "EstAge", "PNClass", "Dead")
+# ewe.rowperyear.dat$EstAge <- as.numeric(as.character(ewe.rowperyear.dat$EstAge))
+# ewe.rowperyear.dat$AgeClass <- ifelse(ewe.rowperyear.dat$EstAge <= 2, 2,  ifelse(ewe.rowperyear.dat$EstAge > 2 & ewe.rowperyear.dat$EstAge <= 7, 3, ifelse(ewe.rowperyear.dat$EstAge > 7 & ewe.rowperyear.dat$EstAge <= 13, 4, 5)))
+# 
+# #-- calculate number of ewe-years survived (in aggregate) by each age class in each disease state --#
+# pn.eweyrs <- subset(ewe.rowperyear.dat, PNClass %in% c("ADULTS", "ALL_AGE", "LAMBS"))
+# he.eweyrs <- subset(ewe.rowperyear.dat, !(PNClass %in% c("ADULTS", "ALL_AGE", "LAMBS")))
+# 
+# surv.array <- table(round(ewe.rowperyear.dat$EstAge), ewe.rowperyear.dat$Dead)
+# pn.surv.array <- rbind(c(0, 0), c(0, 0), table(round(pn.eweyrs$EstAge), pn.eweyrs$Dead), c(0, 0))
+# he.surv.array <- table(round(he.eweyrs$EstAge), he.eweyrs$Dead)
+# 
+# n.eweages <- 19
+# s <- s.pn <- s.he <- s.premovi <- rep(NA, n.eweages)
+# for(a in 1:n.eweages){
+#   s[a] <- sum(surv.array[a, ])
+#   s.pn[a] <- sum(pn.surv.array[a, ])
+#   s.he[a] <- sum(he.surv.array[a, ])
+# #  r.premovi[a] <- sum(repro.array.premovi[a, ])
+# }
+# 
+# #-- MODEL --#
+# sink("agespecsurv.binom.bug")
+# cat("
+#     model{
+#     
+#     #----------------#
+#     #-- Parameters --#
+#     #----------------#
+#     #-- wean.<i> = ewes in ith age class who weaned a lamb
+#     
+#     #----------------#
+#     #-- Priors ------#
+#     #----------------#    
+#     
+#     surv.1 ~ dunif(0, 1)
+#     surv.2 ~ dunif(0, 1)
+#     surv.3 ~ dunif(0, 1)
+#     surv.4 ~ dunif(0, 1)
+# #    wean.5 ~ dunif(0, 1)
+#     surv.5 ~ dunif(0, 1)
+#     
+#     #------------------#
+#     #-- Likelihood ----#  
+#     #------------------#
+#     for(a in 1:n.eweages){
+# #    repro.vec[a] ~ dbinom(lamb.pr[a], r[a])
+#       surv.vec[a] ~ dbinom(ewe.pr[a], s[a])
+#     }
+#     
+#     #-- define cell probabilities --#
+#     # yearlings
+# #    lamb.pr[1] <-  wean.1     # probability lamb is weaned
+#     ewe.pr[1] <-  surv.1   # probability no lamb is observed
+#     # 2-year-olds
+# #    lamb.pr[2] <-  wean.2     # probability lamb is weaned
+#     ewe.pr[2] <-  surv.2     # probability lamb is weaned
+#     # 3-7 year-olds
+#     for(a in 3:7){
+# #    lamb.pr[a] <-  wean.3     # probability lamb is weaned
+#     ewe.pr[a] <-  surv.3     # probability lamb is weaned
+#     } #a
+#     # 8 - 13 year-olds
+#     for(a in 8:13){
+# #    lamb.pr[a] <-  wean.4     # probability lamb is weaned
+#     ewe.pr[a] <-  surv.4     # probability lamb is weaned
+#     } #a  
+#     # > 13 year-olds
+#     for(a in 14:19){
+# #    lamb.pr[a] <-  wean.5     # probability lamb is weaned
+#     ewe.pr[a] <-  surv.5     # probability lamb is weaned
+#     } #a  
+#     }
+#     ", fill = T)
+# sink()
+# 
+# #-- pneumonia-years only 
+# agespecsurv.data.pn <- list(n.eweages = n.eweages,
+#                                    s = s.pn, 
+#                                    surv.vec = pn.surv.array[ , 1]
+# )
+# 
+# agespecsurv.data.he <- list(n.eweages = n.eweages,
+#                                    s = s.he, 
+#                                    surv.vec = he.surv.array[ , 1]
+# )
+# 
+# # initial values
+# agespecsurv.inits <- function(){
+#   list(
+#     surv.1 = runif(0, 1),
+#     surv.2 = runif(0, 1),
+#     surv.3 = runif(0, 1),
+#     surv.4 = runif(0, 1),
+#     surv.5 = runif(0, 1)
+#   )
+# }
+# 
+# # parameters monitored
+# agespecsurv.parameters <- c(
+#   "surv.1", "surv.2", "surv.3", "surv.4", "surv.5"
+# )
+# 
+# # MCMC settings
+# ni <- 20000
+# nt <- 3
+# nb <- 10000
+# nc <- 3
+# 
+# #-- Pneumonia-year model
+# # call JAGS from R
+# agespecsurv.pn <- jags.model("agespecsurv.binom.bug",
+#                                     data = agespecsurv.data.pn,
+#                                     inits = agespecsurv.inits,
+#                                     n.chains = nc,
+#                                     n.adapt = nb
+# )
+# 
+# update(agespecsurv.pn, ni)
+# 
+# coda.samples.agespecsurv.pn <- coda.samples(agespecsurv.pn,
+#                                                    agespecsurv.parameters,
+#                                                    ni)
+# 
+# #-- Healthy-year model
+# # call JAGS from R
+# agespecsurv.he <- jags.model("agespecsurv.binom.bug",
+#                                     data = agespecsurv.data.he,
+#                                     inits = agespecsurv.inits,
+#                                     n.chains = nc,
+#                                     n.adapt = nb
+# )
+# 
+# update(agespecsurv.he, ni)
+# 
+# coda.samples.agespecsurv.he <- coda.samples(agespecsurv.he,
+#                                                    agespecsurv.parameters,
+#                                                    ni)
+# 
+# #coda.samples.agespecsurv.he <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/HealthyReproPost_30Sept2014.csv")
+# #coda.samples.agespecsurv.pn <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/PNReproPost_30Sept2014.csv")
+# 
+# #-- plot intervals over time --#
+# par(cex.main = .8, mfrow = c(1, 1))
+# plot(xlim = c(1.5, 5.5), xaxt = "n", ylim = c(0, 1), x = -1, y = 1, main = "95% credible intervals for age-specific survival", xlab = "age class", ylab = "P(survives)")
+# for(i in 2:5){ 
+#   segments(x0 = i, x1 = i, y0 = summary(coda.samples.agespecsurv.pn)[[2]][i, 1], y1 = summary(coda.samples.agespecsurv.pn)[[2]][i, 5], col = "red", lwd = 2)
+#   segments(x0 = i + 0.25, x1 = i + 0.25, y0 = summary(coda.samples.agespecsurv.he)[[2]][i, 1], y1 = summary(coda.samples.agespecsurv.he)[[2]][i, 5], col = "grey30", lwd = 2, lty = 2)
+# #  segments(x0 = i + 0.15, x1 = i + 0.15, y0 = summary(coda.samples.sheep.agespecrepro.premovi)[[2]][i, 1], y1 = summary(coda.samples.agespecsurv.premovi)[[2]][i, 5], col = "grey60", lwd = 2, lty = 3)
+# }
+# axis(side = 1, at = 2:5, labels = c("<2.5", "2.5-7", "8-13", ">13"))
+# legend("topright", c("disease years", "healthy years"), lty = c(1, 2), col = c("red", "grey30"), lwd = c(2, 2), bty = "n")
+# 
+# #premovi.surv <- rbind(coda.samples.sheep.agespecrepro.premovi[[1]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[2]][1001:2000, ], coda.samples.sheep.agespecrepro.premovi[[3]][1001:2000, ])
+# he.surv <- rbind(coda.samples.agespecsurv.he[[1]][1:10000, ], coda.samples.agespecsurv.he[[2]][1:10000, ], coda.samples.agespecsurv.he[[3]][1:10000, ])
+# pn.surv <- rbind(coda.samples.agespecsurv.pn[[1]][1:10000, ], coda.samples.agespecsurv.pn[[2]][1:10000, ], coda.samples.agespecsurv.pn[[3]][1:10000, ])
+# #write.csv(he.surv, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/HealthyReproPost_30Sept2014.csv")
+# #write.csv(pn.surv, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/PNReproPost_30Sept2014.csv")
+# 
+# #-------------------------------------------------------------#
+# #-- Recruitment in pneumonia and healthy years ---------------#
+# #-------------------------------------------------------------#
+# compd.data.recr <- subset(compd.data, select = c("RadEwes", "RadEwesWLambs", "SumLambSurv", "Recr"), year >= 1995)
+# pn.yrs <- subset(compd.data, !(CLASS %in% c("HEALTHY")) & year >= 1995)
+# # SumLambSurv references survival only for those ewes observed at least once with a lamb
+# # 1) calculate radiocollared ewes who reproduced.
+# pnyear.prop.repro <- pn.yrs$RadEwesWLambs / pn.yrs$RadEwes
+# # 2) multiply the proportion who reproduced by SLS to get estimated end-of-summer ewe:lamb ratio
+# pnyear.endofsummer.ewelambrat <- pn.yrs$SumLambSurv * pnyear.prop.repro
+# # 3) calculate multiplicative change between end of summer ewe-lamb ratio and recr
+# pnyear.sls.recr.ratio <- 1 - (pn.yrs$SumLambSurv - pn.yrs$Recr)
+# 
+# he.yrs <- subset(compd.data, CLASS %in% c("HEALTHY") & year >= 1995)
+# # 1) calculate radiocollared ewes who reproduced.
+# heyear.prop.repro <- he.yrs$RadEwesWLambs / he.yrs$RadEwes
+# # 2) multiply the proportion who reproduced by SLS to get estimated end-of-summer ewe:lamb ratio
+# heyear.endofsummer.ewelambrat <- he.yrs$SumLambSurv * heyear.prop.repro
+# # 3) calculate multiplicative change between end of summer ewe-lamb ratio and recr
+# heyear.sls.recr.ratio <- 1 - (he.yrs$SumLambSurv - he.yrs$Recr)
+#   
+# par(mfrow = c(2, 1))
+# hist(pnyear.sls.recr.ratio, col = "grey80", xlim = c(0, 4), main = "Pneumonia years for lambs", xlab = "Estimate of total overwinter lamb mortality")
+# hist(heyear.sls.recr.ratio, col = "grey80", xlim = c(0, 4), main = "Healthy years (healthy + adult-only)", xlab = "Estimate of total overwinter lamb mortality")
+# 
+# 
+# 
 
 #-------------------------------------------------------------------------#
 #-- 3) Population trajectory simulations for diseased and healthy years --#
@@ -1035,139 +1035,161 @@ hist(heyear.sls.recr.ratio, col = "grey80", xlim = c(0, 4), main = "Healthy year
 #-- generate inital age-structure based on limiting distribution for healthy-year states
 #-- (for now, make it up and bias it low) --#
 # projection function
+# 
+# he.surv <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/HealthyReproPost_30Sept2014.csv")
+# pn.surv <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/PNReproPost_30Sept2014.csv")
+# he.repro <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/HealthyReproPost_30Sept2014.csv")
+# pn.repro <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/PNReproPost_30Sept2014.csv")
 
-he.surv <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/HealthyReproPost_30Sept2014.csv")
-pn.surv <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Survival/PNReproPost_30Sept2014.csv")
-he.repro <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/HealthyReproPost_30Sept2014.csv")
-pn.repro <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/PNReproPost_30Sept2014.csv")
+source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
+timesteps <- 60
+reps <- 100
+ages.init <- rep(10, 19)
+alpha <- .1
+gamma <- 1
+samples.to.draw <- seq(1000:2000)
+tot.chains <- 3
+joint.posterior.coda <- ipm11.coda
+posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
+"beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
+"beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
+"beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6", "beta.overwinter.1",
+"beta.overwinter.2", "beta.overwinter.3", "beta.repro.1.1", "beta.repro.2.1",
+"beta.repro.3.1]", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
+"beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
+"beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
+"beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
+"beta.repro.3.6", "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+"beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
+"beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
+"beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
 
-sp.repro.post <- pn.repro
-sp.surv.post <- he.surv * runif(1, .85, 1)
-inf.surv.post <- pn.surv
-he.surv.post <- he.surv
-he.repro.post <- he.repro
-pn.repro.post <- pn.repro
+healthy.test <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  
+reps <- 100
+popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
 
-pn.recr <- na.omit(pnyear.sls.recr.ratio) * .5
-he.recr <- na.omit(pnyear.sls.recr.ratio) * .5 # multiply by .5 to eliminate ram-lambs at recruitment.
+for(i in 1:reps){
+  he.project <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  popsize.he[i, ] <- he.project$tot.pop.size 
+  log.lambda.s.he[i, ] <- he.project$log.lambda.s
+}  
 
-repros.med <- c(0, rep(median(he.repro.post[1:3000, 2]), 2), rep(median(he.repro.post[1:3000, 3]), 4), rep(median(he.repro.post[1:3000, 4]), 6), rep(median(he.repro.post[1:3000, 5]), 5))    
-#    survs <- c(he.repro.post[sample(1:3000, 1), 1], rep(he.surv.post[sample(1:3000, 1), 2], 2), rep(he.surv.post[sample(1:3000, 1), 3], 4), rep(he.surv.post[sample(1:3000, 1), 4], 6), rep(he.surv.post[sample(1:3000, 1), 5], 4))
-survs.med <- c(median(he.recr[(1:length(he.recr))]), rep(median(he.surv.post[1:3000, 2]), 2), rep(median(he.surv.post[1:3000, 3]), 4), rep(median(he.surv.post[1:3000, 4]), 6), rep(median(he.surv.post[1:3000, 5]), 4))
-leslie.init <- rbind(repros.med, cbind(diag(c(survs.med)), rep(0, length(survs.med))))
-eigen(leslie.init)$vectors[, 1]
+#write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
+#popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
 
-stable.age.structure <- abs(eigen(leslie.init)$vectors[, 1]) / sum(abs(eigen(leslie.init)$vectors[, 1]))
+he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
+he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
 
-N.init <- 100
-ages.init <- floor(N.init * stable.age.structure)
-#ages.init.orig <- c(100, 50, 40, 40, 40, 30, 30, 30, 30, 30, 30, 20, 20, 20, 20, 10, 10, 10)  
-#ages.init <- round(c(sum(ages.init.orig[2:18]) / 4 * .4, ages.init.orig[2:18] / 4) )
-# build vector to keep track of states
-current.state <- rep(NA, 30)
-current.state[1] <- "healthy"
-
-# function to update environmental state
-update.status.fun <- function(alpha, gamma, current.state){
-  current.state.new <- rep(NA, 1)
-  if(current.state == "healthy"){
-    gets.infected <- rbinom(1, 1, alpha)
-    current.state.new[1] <- ifelse(gets.infected == 0, "healthy", "spillover")
-  }
-  else if(current.state == "spillover"){
-    current.state.new[1] <- "infected"
-    } else if(current.state == "infected"){
-      fade.out <- rbinom(1, 1, gamma)
-      current.state.new[1] <- ifelse(fade.out == 1, "healthy", "infected")
-    }
-  return(list(current.state.new = current.state.new))
+#par(mfrow = c(2, 1))
+layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
+plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
+for(i in 2:reps){
+  lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
-
-# function to update Leslie matrix parameters
-  #  need to expand Leslie to be 18x18... also, need individuals to age....
-update.leslie.fun <- function(current.state, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
-  leslie.out <- rep(NA, 6, 6)
-  if(current.state == "healthy"){
-    repros <- c(0, rep(he.repro.post[sample(1:3000, 1), 2], 2), rep(he.repro.post[sample(1:3000, 1), 3], 4), rep(he.repro.post[sample(1:3000, 1), 4], 6), rep(he.repro.post[sample(1:3000, 1), 5], 5))    
-#    survs <- c(he.repro.post[sample(1:3000, 1), 1], rep(he.surv.post[sample(1:3000, 1), 2], 2), rep(he.surv.post[sample(1:3000, 1), 3], 4), rep(he.surv.post[sample(1:3000, 1), 4], 6), rep(he.surv.post[sample(1:3000, 1), 5], 4))
-    survs <- c(he.recr[sample(1:length(he.recr), 1)], rep(he.surv.post[sample(1:3000, 1), 2], 2), rep(he.surv.post[sample(1:3000, 1), 3], 4), rep(he.surv.post[sample(1:3000, 1), 4], 6), rep(he.surv.post[sample(1:3000, 1), 5], 4))
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-  }
-  else {
-    repros <- c(0, rep(inf.repro.post[sample(1:3000, 1), 2], 2), rep(inf.repro.post[sample(1:3000, 1), 3], 4), rep(inf.repro.post[sample(1:3000, 1), 4], 6), rep(inf.repro.post[sample(1:3000, 1), 5], 5))    
-#    survs <- c(inf.repro.post[sample(1:3000, 1), 1], rep(inf.surv.post[sample(1:3000, 1), 2], 2), rep(inf.surv.post[sample(1:3000, 1), 3], 4), rep(inf.surv.post[sample(1:3000, 1), 4], 6), rep(inf.surv.post[sample(1:3000, 1), 5], 4))
-    survs <- c(pn.recr[sample(1:length(pn.recr), 1)], rep(inf.surv.post[sample(1:3000, 1), 2], 2), rep(inf.surv.post[sample(1:3000, 1), 3], 4), rep(inf.surv.post[sample(1:3000, 1), 4], 6), rep(inf.surv.post[sample(1:3000, 1), 5], 4))
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-  }
-  return(leslie)
+for(j in 1:3){
+  lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
 }
+lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
 
-
-project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
-  N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
-  N[, 1] <- ages.init
-  tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
-  disease.status <- rep(NA, timesteps)
-#  disease.status[1] <- "healthy"
-  disease.status[1:11] <- c(rep("healthy", 10), "spillover")
-  for(i in 1:10){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-    N[, i + 1] <- round(t(N[ , i]) %*% new.leslie) 
-    tot.pop.size[i] <- sum(N[ , i])
-    if(i == 1){
-      log.lambda.s[i] <- NA
-    } else {
-      log.lambda.s[i] <- ifelse(tot.pop.size[i] == 0, NA, log(tot.pop.size[i] / tot.pop.size[i - 1]))
-    }
-  }
-  for(i in 11:(timesteps - 1)){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-    N[, i + 1] <- round(t(N[ , i]) %*% new.leslie)
-    disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
-    tot.pop.size[i] <- sum(N[ , i])
-    if(i == 1){
-      log.lambda.s[i] <- NA
-    } else {
-      log.lambda.s[i] <- ifelse(tot.pop.size[i] == 0, NA, log(tot.pop.size[i] / tot.pop.size[i - 1]))
-    }
-  }
-#  tot.pop.size <- apply(N, 2, sum)
-#  out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size)
-  out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size, log.lambda.s = log.lambda.s)
-  return(out.list)
+plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
+for(i in 2:reps){
+  lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
+abline( h = 0, lty = 2, col = "red", lwd = 2)
+boxplot(as.vector(log.lambda.s.he[, -c(1, 2)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
+abline(h = 0, lty = 2, col = "red", lwd = 2)
 
-project.fun.out <- project.fun(timesteps = 20, ages.init = ages.init, alpha = .01, gamma = 1, he.repro = he.repro.post, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
 
-#--------------------------------------------------------#
-#-- Model check: population trajectory with no disease --#
-#--------------------------------------------------------#
-he.project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
-  N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
-  N[, 1] <- ages.init
-  tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
-  disease.status <- rep("healthy", timesteps)
-  #  disease.status[1] <- "healthy"
-#  disease.status[1:11] <- c(rep("healthy", 10), "spillover")
-  for(i in 1:(timesteps - 1)){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-    N[, i + 1] <- t(N[ , i]) %*% new.leslie  
-    tot.pop.size[i] <- sum(N[ , i])
-    if(i == 1){
-      log.lambda.s[i] <- NA
-    } else {
-      log.lambda.s[i] <- log(tot.pop.size[i] / tot.pop.size[i - 1])
-    }
-  }
+#     }
+#   return(list(current.state.new = current.state.new))
+# }
+# 
+# # function to update Leslie matrix parameters
+#   #  need to expand Leslie to be 18x18... also, need individuals to age....
+# update.leslie.fun <- function(current.state, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
+#   leslie.out <- rep(NA, 6, 6)
+#   if(current.state == "healthy"){
+#     repros <- c(0, rep(he.repro.post[sample(1:3000, 1), 2], 2), rep(he.repro.post[sample(1:3000, 1), 3], 4), rep(he.repro.post[sample(1:3000, 1), 4], 6), rep(he.repro.post[sample(1:3000, 1), 5], 5))    
+# #    survs <- c(he.repro.post[sample(1:3000, 1), 1], rep(he.surv.post[sample(1:3000, 1), 2], 2), rep(he.surv.post[sample(1:3000, 1), 3], 4), rep(he.surv.post[sample(1:3000, 1), 4], 6), rep(he.surv.post[sample(1:3000, 1), 5], 4))
+#     survs <- c(he.recr[sample(1:length(he.recr), 1)], rep(he.surv.post[sample(1:3000, 1), 2], 2), rep(he.surv.post[sample(1:3000, 1), 3], 4), rep(he.surv.post[sample(1:3000, 1), 4], 6), rep(he.surv.post[sample(1:3000, 1), 5], 4))
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
+#   }
+#   else {
+#     repros <- c(0, rep(inf.repro.post[sample(1:3000, 1), 2], 2), rep(inf.repro.post[sample(1:3000, 1), 3], 4), rep(inf.repro.post[sample(1:3000, 1), 4], 6), rep(inf.repro.post[sample(1:3000, 1), 5], 5))    
+# #    survs <- c(inf.repro.post[sample(1:3000, 1), 1], rep(inf.surv.post[sample(1:3000, 1), 2], 2), rep(inf.surv.post[sample(1:3000, 1), 3], 4), rep(inf.surv.post[sample(1:3000, 1), 4], 6), rep(inf.surv.post[sample(1:3000, 1), 5], 4))
+#     survs <- c(pn.recr[sample(1:length(pn.recr), 1)], rep(inf.surv.post[sample(1:3000, 1), 2], 2), rep(inf.surv.post[sample(1:3000, 1), 3], 4), rep(inf.surv.post[sample(1:3000, 1), 4], 6), rep(inf.surv.post[sample(1:3000, 1), 5], 4))
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
+#   }
+#   return(leslie)
+# }
+# 
+# 
+# project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
+#   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
+#   N[, 1] <- ages.init
+#   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
+#   disease.status <- rep(NA, timesteps)
+# #  disease.status[1] <- "healthy"
+#   disease.status[1:11] <- c(rep("healthy", 10), "spillover")
+#   for(i in 1:10){
+#     new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#     N[, i + 1] <- round(t(N[ , i]) %*% new.leslie) 
+#     tot.pop.size[i] <- sum(N[ , i])
+#     if(i == 1){
+#       log.lambda.s[i] <- NA
+#     } else {
+#       log.lambda.s[i] <- ifelse(tot.pop.size[i] == 0, NA, log(tot.pop.size[i] / tot.pop.size[i - 1]))
+#     }
+#   }
 #   for(i in 11:(timesteps - 1)){
 #     new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-#     N[, i + 1] <- t(N[ , i]) %*% new.leslie
+#     N[, i + 1] <- round(t(N[ , i]) %*% new.leslie)
 #     disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
+#     tot.pop.size[i] <- sum(N[ , i])
+#     if(i == 1){
+#       log.lambda.s[i] <- NA
+#     } else {
+#       log.lambda.s[i] <- ifelse(tot.pop.size[i] == 0, NA, log(tot.pop.size[i] / tot.pop.size[i - 1]))
+#     }
 #   }
-#  tot.pop.size <- apply(N, 2, sum)
-  out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size, log.lambda.s = log.lambda.s)
-  return(out.list)
-}
+# #  tot.pop.size <- apply(N, 2, sum)
+# #  out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size)
+#   out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size, log.lambda.s = log.lambda.s)
+#   return(out.list)
+# }
+# 
+# project.fun.out <- project.fun(timesteps = 20, ages.init = ages.init, alpha = .01, gamma = 1, he.repro = he.repro.post, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+# 
+# #--------------------------------------------------------#
+# #-- Model check: population trajectory with no disease --#
+# #--------------------------------------------------------#
+# he.project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
+#   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
+#   N[, 1] <- ages.init
+#   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
+#   disease.status <- rep("healthy", timesteps)
+#   #  disease.status[1] <- "healthy"
+# #  disease.status[1:11] <- c(rep("healthy", 10), "spillover")
+#   for(i in 1:(timesteps - 1)){
+#     new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
+#     tot.pop.size[i] <- sum(N[ , i])
+#     if(i == 1){
+#       log.lambda.s[i] <- NA
+#     } else {
+#       log.lambda.s[i] <- log(tot.pop.size[i] / tot.pop.size[i - 1])
+#     }
+#   }
+# #   for(i in 11:(timesteps - 1)){
+# #     new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+# #     N[, i + 1] <- t(N[ , i]) %*% new.leslie
+# #     disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
+# #   }
+# #  tot.pop.size <- apply(N, 2, sum)
+#   out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size, log.lambda.s = log.lambda.s)
+#   return(out.list)
+# }
 
 sp.repro.post <- pn.repro
 sp.surv.post <- he.surv * runif(1, .3, 1)
@@ -1811,7 +1833,4 @@ for(i in 1:length(yearstoreintro)){
 }
 leg.text2 <- c("Expect 3 years to fade-out", "Expect 10 years to fade-out")
 legend("topleft", bty = "n", leg.text2, lty = c(1, 1), col = c("black", "red"), cex = .6)
-
-#---------------------------------------------
-#-- Figure5: alpha, gamma, 30 ye pop si
 

@@ -1,6 +1,8 @@
 # BHS IPM Round 11 -- no marrays; ewe-age- and disease-status-specific reproduction; ewe-age- and disease-status-specific sls
 # November 11, 2014
 
+# test branch. 
+
 # 0. Load required packages
 require(rjags)
 require(runjags)
@@ -106,7 +108,8 @@ for(i in 1:dim(ch.full)[1]){
   } else ewe.age[i, ] <- rep(0, dim(ch.full)[2])
 }
 
-ewe.age <- ewe.age + 1
+# ewe.age <- ewe.age + 1
+ewe.age <- ifelse(ewe.age == 0, 20, ewe.age)
 ewe.pop.ind.num <- as.numeric(as.factor(ewe.pop.ind))
 
 # create vector with occasion of marking:
@@ -119,7 +122,9 @@ f <- apply(ch, 1, get.first)
 
 # build a x 1 vector of age-class specifications (maps 1:18 age in years to 1:5 age in age-class)
 #age.class.ind <- c(1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6)
-age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5)
+#age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5)
+#age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6)
+age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6)
 
 
 
@@ -168,6 +173,7 @@ for(i in 1:length(ewe.wean.list)){
     wean.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
     #    wean.given.lambed.status[j] <- ifelse(dim(wean.given.lambed.year)[1] == 0, NA, ifelse(wean.given.lambed.year$CENSOR2 == 0, 1, 0))
     wean.status[j] <- ifelse(dim(wean.year)[1] == 0, NA, ifelse(wean.year$CENSOR2 == 0, 1, 0))
+#    wean.status[j] <- ifelse(dim(wean.year)[1] == 0, 0, ifelse(wean.year$CENSOR2 == 0, 1, 0))
   }
   ewe.wean.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.wean, wean.status))
 }
@@ -229,7 +235,6 @@ cat("
     
     for(w in 1:n.weans){
     logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
-    # reproduction needs to be in its own loop, over number of weans (not number of ewes)
     } #w
     
     # get phi estimates for each popyr (j) 
@@ -297,6 +302,7 @@ cat("
     for(a in 2:18){
     Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
     Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
+#    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t - 1, a - 1]) 
     # Note: Weaning updates are from last year in this version of the model
     }
     N[j, t, 1] <- sum(Nwean[j, t, 2:18])
@@ -420,6 +426,7 @@ ipm11.inits <- function(){
 
 # parameters to monitor
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
+ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
 ni <- 2000
@@ -454,15 +461,15 @@ row.names(coda.summary.obj.11[[2]])
 # beta.posts.repro <- coda.summary.obj.11[[2]][25:45, ]
 # beta.posts.wean <- coda.summary.obj.11[[2]][46:66, ]
 # 
-# beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
-# beta.posts.overwinter <- coda.summary.obj.11[[2]][19:21, ]
-# beta.posts.repro <- coda.summary.obj.11[[2]][22:39, ]
-# beta.posts.wean <- coda.summary.obj.11[[2]][40:57, ]
+beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
+beta.posts.overwinter <- coda.summary.obj.11[[2]][19:21, ]
+beta.posts.repro <- coda.summary.obj.11[[2]][22:39, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][40:57, ]
 
-beta.posts.adsurv <- coda.summary.obj.11[[2]][1:15, ]
-beta.posts.overwinter <- coda.summary.obj.11[[2]][16:18, ]
-beta.posts.repro <- coda.summary.obj.11[[2]][19:33, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][34:48, ]
+# beta.posts.adsurv <- coda.summary.obj.11[[2]][1:15, ]
+# beta.posts.overwinter <- coda.summary.obj.11[[2]][16:18, ]
+# beta.posts.repro <- coda.summary.obj.11[[2]][19:33, ]
+# beta.posts.wean <- coda.summary.obj.11[[2]][34:48, ]
 
 # plot betas out
 plot.cols <- c("white", "black", "red")
@@ -470,20 +477,24 @@ par(mfrow = c(2, 2))
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "Class")
 for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.adsurv[i, 3])) / (1 + exp(beta.posts.adsurv[i, 3])), y1 = exp(beta.posts.adsurv[i, 3]) / (1 + exp(beta.posts.adsurv[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of reproducing", xlab = "Class")
 for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.repro[i, 1])) / (1 + exp(beta.posts.repro[i, 1])), y1 = (exp(beta.posts.repro[i, 5])) / (1 + exp(beta.posts.repro[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.repro[i, 3])) / (1 + exp(beta.posts.repro[i, 3])), y1 = exp(beta.posts.repro[i, 3]) / (1 + exp(beta.posts.repro[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of weaning", xlab = "Class")
 for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.wean[i, 1])) / (1 + exp(beta.posts.wean[i, 1])), y1 = (exp(beta.posts.wean[i, 5])) / (1 + exp(beta.posts.wean[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean[i, 3])) / (1 + exp(beta.posts.wean[i, 3])), y1 = exp(beta.posts.wean[i, 3]) / (1 + exp(beta.posts.wean[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
 plot(-1, -1, ylim = c(0, 1), xlim = c(0.5, 3.5), ylab = "Probability of surviving overwinter", xlab = "Class")
 for(i in 1:3){
-  segments(x0 = i, x1 = i, y0 = ((exp(beta.posts.overwinter[i, 1])) / (1 + exp(beta.posts.overwinter[i, 1]))), y1 = (exp(beta.posts.overwinter[i, 5])) / (1 + exp(beta.posts.overwinter[i, 5])), lwd = 2)
+  segments(x0 = i, x1 = i, y0 = ((exp(beta.posts.overwinter[i, 1])) / (1 + exp(beta.posts.overwinter[i, 1]))), y1 = (exp(beta.posts.overwinter[i, 5])) / (1 + exp(beta.posts.overwinter[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.overwinter[i, 3])) / (1 + exp(beta.posts.overwinter[i, 3])), y1 = exp(beta.posts.overwinter[i, 3]) / (1 + exp(beta.posts.overwinter[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
