@@ -243,8 +243,8 @@ cat("
     # get phi estimates for each popyr (j) 
     for(t in 1:n.years){
     for(j in 1:n.pops){
-    #    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
-    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] 
+    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
+#    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] 
     for(a in 1:n.ages){
     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]]
     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] 
@@ -258,12 +258,12 @@ cat("
     } #t
     
 #     # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
-#     for(t in 1:(n.years)){
+     for(t in 1:(n.years)){
 #     time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
 #     time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
 #     time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
-#     time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
-#     }
+     time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
+     }
     
     for(d in 1:n.dis.states){
     beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
@@ -289,9 +289,9 @@ cat("
 #     tau.time.wean <- pow(sigma.time.wean, -2)
 #     sigma.time2.wean <- pow(sigma.time.wean, 2)   
 #     
-#     sigma.time.overwinter ~ dunif(0, 10)
-#     tau.time.overwinter <- pow(sigma.time.overwinter, -2)
-#     sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
+    sigma.time.overwinter ~ dunif(0, 10)
+    tau.time.overwinter <- pow(sigma.time.overwinter, -2)
+    sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
     
     #----------------------------------------#
     #-- Likelihoods of the single datasets --#
@@ -424,7 +424,7 @@ ipm11.inits <- function(){
 #     sigma.time.adsurv = runif(1, 0, 10),
 #        sigma.time.repro = runif(1, 0, 10),
 #        sigma.time.wean = runif(1, 0, 10), 
-#        sigma.time.overwinter = runif(1, 0, 10),
+        sigma.time.overwinter = runif(1, 0, 10),
        #       mean.p.repro = runif(1, 0, 1),
        sigma.y = runif(1, 0, 10)
   )
@@ -433,6 +433,7 @@ ipm11.inits <- function(){
 
 # parameters to monitor
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter")
+ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.overwinter")
 #ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
