@@ -17,22 +17,54 @@ update.status.fun <- function(alpha, gamma, current.state){
 }
 
 # function to update Leslie matrix parameters
-# need to expand Leslie to be 18x18... also, need individuals to age....
-update.leslie.fun <- function(current.state, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
+update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
+  chain <- ceiling(runif(1, 0, tot.chains))
+  post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
+  names(post.draw) <- posterior.names
+  
+  post.draw$beta.repro.1.2 <- exp(post.draw$beta.repro.1.2) / (1 + exp(post.draw$beta.repro.1.2))
+  post.draw$beta.repro.1.3 <- exp(post.draw$beta.repro.1.3) / (1 + exp(post.draw$beta.repro.1.3))
+  post.draw$beta.repro.1.4 <- exp(post.draw$beta.repro.1.4) / (1 + exp(post.draw$beta.repro.1.4))
+  post.draw$beta.repro.1.5 <- exp(post.draw$beta.repro.1.5) / (1 + exp(post.draw$beta.repro.1.5))
+  post.draw$beta.wean.1.2 <- exp(post.draw$beta.wean.1.2) / (1 + exp(post.draw$beta.wean.1.2))
+  post.draw$beta.wean.1.3 <- exp(post.draw$beta.wean.1.3) / (1 + exp(post.draw$beta.wean.1.3))
+  post.draw$beta.wean.1.4 <- exp(post.draw$beta.wean.1.4) / (1 + exp(post.draw$beta.wean.1.4))
+  post.draw$beta.wean.1.5 <- exp(post.draw$beta.wean.1.5) / (1 + exp(post.draw$beta.wean.1.5))
+  post.draw$beta.overwinter.1 <- exp(post.draw$beta.overwinter.1) / (1 + exp(post.draw$beta.overwinter.1))
+  post.draw$beta.adsurv.1.1 <- exp(post.draw$beta.adsurv.1.1) / (1 + exp(post.draw$beta.adsurv.1.1))
+  post.draw$beta.adsurv.1.2 <- exp(post.draw$beta.adsurv.1.2) / (1 + exp(post.draw$beta.adsurv.1.2))
+  post.draw$beta.adsurv.1.3 <- exp(post.draw$beta.adsurv.1.3) / (1 + exp(post.draw$beta.adsurv.1.3))
+  post.draw$beta.adsurv.1.4 <- exp(post.draw$beta.adsurv.1.4) / (1 + exp(post.draw$beta.adsurv.1.4))
+  post.draw$beta.adsurv.1.5 <- exp(post.draw$beta.adsurv.1.5) / (1 + exp(post.draw$beta.adsurv.1.5))
+  
+  post.draw$beta.repro.2.2 <- exp(post.draw$beta.repro.2.2) / (1 + exp(post.draw$beta.repro.2.2))
+  post.draw$beta.repro.2.3 <- exp(post.draw$beta.repro.2.3) / (1 + exp(post.draw$beta.repro.2.3))
+  post.draw$beta.repro.2.4 <- exp(post.draw$beta.repro.2.4) / (1 + exp(post.draw$beta.repro.2.4))
+  post.draw$beta.repro.2.5 <- exp(post.draw$beta.repro.2.5) / (1 + exp(post.draw$beta.repro.2.5))
+  post.draw$beta.wean.2.2 <- exp(post.draw$beta.wean.2.2) / (1 + exp(post.draw$beta.wean.2.2))
+  post.draw$beta.wean.2.3 <- exp(post.draw$beta.wean.2.3) / (1 + exp(post.draw$beta.wean.2.3))
+  post.draw$beta.wean.2.4 <- exp(post.draw$beta.wean.2.4) / (1 + exp(post.draw$beta.wean.2.4))
+  post.draw$beta.wean.2.5 <- exp(post.draw$beta.wean.2.5) / (1 + exp(post.draw$beta.wean.2.5))
+  post.draw$beta.overwinter.2 <- exp(post.draw$beta.overwinter.2) / (1 + exp(post.draw$beta.overwinter.2))
+  post.draw$beta.adsurv.2.1 <- exp(post.draw$beta.adsurv.2.1) / (1 + exp(post.draw$beta.adsurv.2.1))
+  post.draw$beta.adsurv.2.2 <- exp(post.draw$beta.adsurv.2.2) / (1 + exp(post.draw$beta.adsurv.2.2))
+  post.draw$beta.adsurv.2.3 <- exp(post.draw$beta.adsurv.2.3) / (1 + exp(post.draw$beta.adsurv.2.3))
+  post.draw$beta.adsurv.2.4 <- exp(post.draw$beta.adsurv.2.4) / (1 + exp(post.draw$beta.adsurv.2.4))
+  post.draw$beta.adsurv.2.5 <- exp(post.draw$beta.adsurv.2.5) / (1 + exp(post.draw$beta.adsurv.2.5))
+  
   leslie.out <- rep(NA, 6, 6)
   if(current.state == "healthy"){
-    repros <- c(0, rep(he.repro.post[sample(1:3000, 1), 2], 2), rep(he.repro.post[sample(1:3000, 1), 3], 4), rep(he.repro.post[sample(1:3000, 1), 4], 6), rep(he.repro.post[sample(1:3000, 1), 5], 5))    
-    survs <- c(he.recr[sample(1:length(he.recr), 1)], rep(he.surv.post[sample(1:3000, 1), 2], 2), rep(he.surv.post[sample(1:3000, 1), 3], 4), rep(he.surv.post[sample(1:3000, 1), 4], 6), rep(he.surv.post[sample(1:3000, 1), 5], 4))
+    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * post.draw$beta.overwinter.1), 1), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * post.draw$beta.overwinter.1), 4))    
+    survs <- c(post.draw$beta.adsurv.1.1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 3), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   else {
-    repros <- c(0, rep(inf.repro.post[sample(1:3000, 1), 2], 2), rep(inf.repro.post[sample(1:3000, 1), 3], 4), rep(inf.repro.post[sample(1:3000, 1), 4], 6), rep(inf.repro.post[sample(1:3000, 1), 5], 5))    
-    survs <- c(pn.recr[sample(1:length(pn.recr), 1)], rep(inf.surv.post[sample(1:3000, 1), 2], 2), rep(inf.surv.post[sample(1:3000, 1), 3], 4), rep(inf.surv.post[sample(1:3000, 1), 4], 6), rep(inf.surv.post[sample(1:3000, 1), 5], 4))
+    repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 * post.draw$beta.overwinter.2), 1), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 * post.draw$beta.overwinter.2), 4))    
+    survs <- c(post.draw$beta.adsurv.2.1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 3), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   return(leslie)
 }
-
 
 project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
@@ -66,13 +98,14 @@ project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.r
 }
 
 # projection function in absence of disease
-healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
+# healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
+healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
   N[, 1] <- ages.init
   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
   disease.status <- rep("healthy", timesteps)
   for(i in 1:(timesteps - 1)){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+    new.leslie <- update.leslie.fun(current.state = disease.status[i], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
     tot.pop.size[i] <- sum(N[ , i])
     if(i == 1){
