@@ -223,18 +223,21 @@ cat("
     # get phi estimates for each individual (i) 
     for(i in 1:nind){
     for(t in f[i] : (n.years)){
-    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]] + time.re.adsurv[t]
+#    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]] + time.re.adsurv[t]
+    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]]
     #-- this logit pulls out the effect for ewe i's survival prob given her age class and her pop's current disease status
     } #t
     } #i
     
     for(r in 1:n.repros){
-    logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
+#    logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
+    logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] 
     # reproduction needs to be in its own loop, over number of repros (not number of ewes)
     } #r
     
     for(w in 1:n.weans){
-    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+#    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]]
     } #w
     
     # get phi estimates for each popyr (j) 
@@ -243,21 +246,24 @@ cat("
     #    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
     logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] 
     for(a in 1:n.ages){
-    logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
-    logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
-    logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
-    #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
+    logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]]
+    logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] 
+    logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] 
+#     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
+#     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
+#     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
+#     #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
     } #a
     } #j
     } #t
     
-    # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
-    for(t in 1:(n.years)){
-    time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
-    time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
-    time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
-    time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
-    }
+#     # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
+#     for(t in 1:(n.years)){
+#     time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
+#     time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
+#     time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
+#     time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
+#     }
     
     for(d in 1:n.dis.states){
     beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
@@ -270,22 +276,22 @@ cat("
     }
     }
     
-    # hyperpriors for time.re's
-    sigma.time.adsurv ~ dunif(0, 10)
-    tau.time.adsurv <- pow(sigma.time.adsurv, -2)
-    sigma.time2.adsurv <- pow(sigma.time.adsurv, 2)
-    
-    sigma.time.repro ~ dunif(0, 10)
-    tau.time.repro <- pow(sigma.time.repro, -2)
-    sigma.time2.repro <- pow(sigma.time.repro, 2)   
-    
-    sigma.time.wean ~ dunif(0, 10)
-    tau.time.wean <- pow(sigma.time.wean, -2)
-    sigma.time2.wean <- pow(sigma.time.wean, 2)   
-    
-    sigma.time.overwinter ~ dunif(0, 10)
-    tau.time.overwinter <- pow(sigma.time.overwinter, -2)
-    sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
+#     # hyperpriors for time.re's
+#     sigma.time.adsurv ~ dunif(0, 10)
+#     tau.time.adsurv <- pow(sigma.time.adsurv, -2)
+#     sigma.time2.adsurv <- pow(sigma.time.adsurv, 2)
+#     
+#     sigma.time.repro ~ dunif(0, 10)
+#     tau.time.repro <- pow(sigma.time.repro, -2)
+#     sigma.time2.repro <- pow(sigma.time.repro, 2)   
+#     
+#     sigma.time.wean ~ dunif(0, 10)
+#     tau.time.wean <- pow(sigma.time.wean, -2)
+#     sigma.time2.wean <- pow(sigma.time.wean, 2)   
+#     
+#     sigma.time.overwinter ~ dunif(0, 10)
+#     tau.time.overwinter <- pow(sigma.time.overwinter, -2)
+#     sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
     
     #----------------------------------------#
     #-- Likelihoods of the single datasets --#
@@ -414,10 +420,11 @@ ch.init <- function(ch, f){
 }
 
 ipm11.inits <- function(){
-  list(sigma.time.adsurv = runif(1, 0, 10),
-       sigma.time.repro = runif(1, 0, 10),
-       sigma.time.wean = runif(1, 0, 10), 
-       sigma.time.overwinter = runif(1, 0, 10),
+  list(
+#     sigma.time.adsurv = runif(1, 0, 10),
+#        sigma.time.repro = runif(1, 0, 10),
+#        sigma.time.wean = runif(1, 0, 10), 
+#        sigma.time.overwinter = runif(1, 0, 10),
        #       mean.p.repro = runif(1, 0, 1),
        sigma.y = runif(1, 0, 10)
   )
@@ -425,8 +432,8 @@ ipm11.inits <- function(){
 
 
 # parameters to monitor
-ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
-ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
+ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter")
+#ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
 ni <- 1000
