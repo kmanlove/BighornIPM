@@ -11,6 +11,7 @@ studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_
 lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
+#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
@@ -117,7 +118,8 @@ ch <- ch.full[-which(f.init == "Inf"), ]
 f <- apply(ch, 1, get.first)
 
 # build a x 1 vector of age-class specifications (maps 1:18 age in years to 1:5 age in age-class)
-age.class.ind <- c(1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6)
+#age.class.ind <- c(1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6)
+age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5)
 
 
 
@@ -233,7 +235,8 @@ cat("
     # get phi estimates for each popyr (j) 
     for(t in 1:n.years){
     for(j in 1:n.pops){
-    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
+#    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
+    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] 
     for(a in 1:n.ages){
     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
@@ -255,6 +258,8 @@ cat("
     beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
     for(a in 1:n.age.classes){
     beta.adsurv[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+#}
+#    for(a in 2:n.age.classes){
     beta.repro[d , a] ~ dnorm(0, 0.01)T(-10, 10)
     beta.wean[d , a] ~ dnorm(0, 0.01)T(-10, 10)
     }
@@ -364,7 +369,8 @@ ipm11.data <- list(z = ch,
                    nind = dim(ch)[1], 
                    n.years = n.years,
                    n.pops = dim(popyr.dis.status)[1],
-                   n.age.classes = (length(levels(factor(age.class.ind))) + 1),
+#                   n.age.classes = (length(levels(factor(age.class.ind))) + 1),
+                   n.age.classes = (length(levels(factor(age.class.ind)))),
                    n.ages = 18,
                    n.dis.states = length(levels(factor(popyr.dis.status))),
                    ewe.age = ewe.age,
@@ -416,9 +422,9 @@ ipm11.inits <- function(){
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
-ni <- 2000
+ni <- 50000
 nt <- 3
-nb <- 1000
+nb <- 25000
 nc <- 3
 
 # MAY NEED TO REINITIALIZE A NUMBER OF TIMES TO GET APPROPRIATE INITIAL VALUES. 
@@ -443,26 +449,36 @@ gelman.diag(ipm11.coda)
 
 coda.summary.obj.11 <- summary(ipm11.coda)
 row.names(coda.summary.obj.11[[2]])
-beta.posts.adsurv <- coda.summary.obj.11[[2]][1:21, ]
-beta.posts.overwinter <- coda.summary.obj.11[[2]][22:24, ]
-beta.posts.repro <- coda.summary.obj.11[[2]][25:45, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][46:66, ]
+# beta.posts.adsurv <- coda.summary.obj.11[[2]][1:21, ]
+# beta.posts.overwinter <- coda.summary.obj.11[[2]][22:24, ]
+# beta.posts.repro <- coda.summary.obj.11[[2]][25:45, ]
+# beta.posts.wean <- coda.summary.obj.11[[2]][46:66, ]
+# 
+# beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
+# beta.posts.overwinter <- coda.summary.obj.11[[2]][19:21, ]
+# beta.posts.repro <- coda.summary.obj.11[[2]][22:39, ]
+# beta.posts.wean <- coda.summary.obj.11[[2]][40:57, ]
+
+beta.posts.adsurv <- coda.summary.obj.11[[2]][1:15, ]
+beta.posts.overwinter <- coda.summary.obj.11[[2]][16:18, ]
+beta.posts.repro <- coda.summary.obj.11[[2]][19:33, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][34:48, ]
 
 # plot betas out
 plot.cols <- c("white", "black", "red")
 par(mfrow = c(2, 2))
-plot(-1, -1, ylim = c(0, 1), xlim = c(6, 22), ylab = "Probability of survival", xlab = "Class")
-for(i in 7:21){
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "Class")
+for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(6, 22), ylab = "Probability of reproducing", xlab = "Class")
-for(i in 7:21){
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of reproducing", xlab = "Class")
+for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.repro[i, 1])) / (1 + exp(beta.posts.repro[i, 1])), y1 = (exp(beta.posts.repro[i, 5])) / (1 + exp(beta.posts.repro[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(6, 22), ylab = "Probability of weaning", xlab = "Class")
-for(i in 7:21){
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of weaning", xlab = "Class")
+for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.wean[i, 1])) / (1 + exp(beta.posts.wean[i, 1])), y1 = (exp(beta.posts.wean[i, 5])) / (1 + exp(beta.posts.wean[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
