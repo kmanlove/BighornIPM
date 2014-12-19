@@ -31,7 +31,7 @@ update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.
   post.draw$beta.wean.1.4 <- exp(post.draw$beta.wean.1.4) / (1 + exp(post.draw$beta.wean.1.4))
   post.draw$beta.wean.1.5 <- exp(post.draw$beta.wean.1.5) / (1 + exp(post.draw$beta.wean.1.5))
   post.draw$beta.overwinter.1 <- exp(post.draw$beta.overwinter.1) / (1 + exp(post.draw$beta.overwinter.1))
-  post.draw$beta.adsurv.1.1 <- exp(post.draw$beta.adsurv.1.1) / (1 + exp(post.draw$beta.adsurv.1.1))
+#  post.draw$beta.adsurv.1.1 <- exp(post.draw$beta.adsurv.1.1) / (1 + exp(post.draw$beta.adsurv.1.1))
   post.draw$beta.adsurv.1.2 <- exp(post.draw$beta.adsurv.1.2) / (1 + exp(post.draw$beta.adsurv.1.2))
   post.draw$beta.adsurv.1.3 <- exp(post.draw$beta.adsurv.1.3) / (1 + exp(post.draw$beta.adsurv.1.3))
   post.draw$beta.adsurv.1.4 <- exp(post.draw$beta.adsurv.1.4) / (1 + exp(post.draw$beta.adsurv.1.4))
@@ -46,21 +46,21 @@ update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.
   post.draw$beta.wean.2.4 <- exp(post.draw$beta.wean.2.4) / (1 + exp(post.draw$beta.wean.2.4))
   post.draw$beta.wean.2.5 <- exp(post.draw$beta.wean.2.5) / (1 + exp(post.draw$beta.wean.2.5))
   post.draw$beta.overwinter.2 <- exp(post.draw$beta.overwinter.2) / (1 + exp(post.draw$beta.overwinter.2))
-  post.draw$beta.adsurv.2.1 <- exp(post.draw$beta.adsurv.2.1) / (1 + exp(post.draw$beta.adsurv.2.1))
+#  post.draw$beta.adsurv.2.1 <- exp(post.draw$beta.adsurv.2.1) / (1 + exp(post.draw$beta.adsurv.2.1))
   post.draw$beta.adsurv.2.2 <- exp(post.draw$beta.adsurv.2.2) / (1 + exp(post.draw$beta.adsurv.2.2))
   post.draw$beta.adsurv.2.3 <- exp(post.draw$beta.adsurv.2.3) / (1 + exp(post.draw$beta.adsurv.2.3))
   post.draw$beta.adsurv.2.4 <- exp(post.draw$beta.adsurv.2.4) / (1 + exp(post.draw$beta.adsurv.2.4))
   post.draw$beta.adsurv.2.5 <- exp(post.draw$beta.adsurv.2.5) / (1 + exp(post.draw$beta.adsurv.2.5))
   
-  leslie.out <- rep(NA, 6, 6)
+#  leslie.out <- rep(NA, 6, 6)
   if(current.state == "healthy"){
-    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * post.draw$beta.overwinter.1), 1), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * post.draw$beta.overwinter.1), 4))    
-    survs <- c(post.draw$beta.adsurv.1.1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 3), 0)    
+    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * post.draw$beta.overwinter.1), 1), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * post.draw$beta.overwinter.1), 5))    
+    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 4), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   else {
     repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 * post.draw$beta.overwinter.2), 1), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 * post.draw$beta.overwinter.2), 4))    
-    survs <- c(post.draw$beta.adsurv.2.1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 3), 0)    
+    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 3), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   return(leslie)
