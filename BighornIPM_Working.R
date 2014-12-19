@@ -124,7 +124,7 @@ f <- apply(ch, 1, get.first)
 #age.class.ind <- c(1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6)
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5)
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6)
-age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6)
+age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 6)
 
 
 
@@ -432,7 +432,7 @@ ipm11.inits <- function(){
 
 
 # parameters to monitor
-ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter")
+#ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter")
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.overwinter")
 #ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
