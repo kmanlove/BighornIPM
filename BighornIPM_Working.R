@@ -170,6 +170,7 @@ for(i in 1:length(ewe.wean.list)){
     wean.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
     #    wean.given.lambed.status[j] <- ifelse(dim(wean.given.lambed.year)[1] == 0, NA, ifelse(wean.given.lambed.year$CENSOR2 == 0, 1, 0))
     wean.status[j] <- ifelse(dim(wean.year)[1] == 0, NA, ifelse(wean.year$CENSOR2 == 0, 1, 0))
+#    wean.status[j] <- ifelse(dim(wean.year)[1] == 0, 0, ifelse(wean.year$CENSOR2 == 0, 1, 0))
   }
   ewe.wean.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.wean, wean.status))
 }
@@ -231,7 +232,6 @@ cat("
     
     for(w in 1:n.weans){
     logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
-    # reproduction needs to be in its own loop, over number of weans (not number of ewes)
     } #w
     
     # get phi estimates for each popyr (j) 
@@ -299,6 +299,7 @@ cat("
     for(a in 2:18){
     Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
     Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
+#    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t - 1, a - 1]) 
     # Note: Weaning updates are from last year in this version of the model
     }
     N[j, t, 1] <- sum(Nwean[j, t, 2:18])
@@ -421,6 +422,7 @@ ipm11.inits <- function(){
 
 
 # parameters to monitor
+ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
