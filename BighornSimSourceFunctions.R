@@ -54,8 +54,8 @@ update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.
   
 #  leslie.out <- rep(NA, 6, 6)
   if(current.state == "healthy"){
-    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * post.draw$beta.overwinter.1), 2), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 * post.draw$beta.overwinter.1), 5), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * post.draw$beta.overwinter.1), 5))    
-    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 4), 0)    
+    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * post.draw$beta.overwinter.1), 3), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 * post.draw$beta.overwinter.1), 5), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * post.draw$beta.overwinter.1), 4))    
+    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 5), rep(post.draw$beta.adsurv.1.5, 3), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   else {

@@ -1044,10 +1044,10 @@ require(Matrix)
 source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
 timesteps <- 60
 reps <- 100
-ages.init <- rep(10, 19)
+ages.init <- c(100, 20, rep(10, 8), rep(5, 5), rep(3, 4))
 alpha <- .1
 gamma <- 1
-samples.to.draw <- seq(1000:2000)
+samples.to.draw <- seq(500:1000)
 tot.chains <- 3
 joint.posterior.coda <- ipm11.coda
 posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 

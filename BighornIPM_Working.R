@@ -13,7 +13,7 @@ studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_
 lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
+#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
@@ -124,7 +124,7 @@ f <- apply(ch, 1, get.first)
 #age.class.ind <- c(1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6)
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5)
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6)
-age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 6)
+age.class.ind <- c(1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6)
 
 
 
@@ -307,14 +307,16 @@ cat("
     # loop to get number of offspring produced by each age-class last year
     for(a in 2:18){
     Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
+#    Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t, a - 1], N[j, t - 1, a - 1])
     Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
 #    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t - 1, a - 1]) 
     # Note: Weaning updates are from last year in this version of the model
     }
     N[j, t, 1] <- sum(Nwean[j, t, 2:18])
     for(a in 2:18){
-    N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t - 1, a - 1], N[j, t - 1, a - 1])
-    } #a
+#    N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t - 1, a - 1], N[j, t - 1, a - 1])
+    N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t, a - 1], N[j, t - 1, a - 1])
+     } #a
     Nad[j, t] <- max(sum(N[j, t, 2:18]) - RemovedEwes[j, t], 1) 
     # subtract (known number of) removed ewes from pop count before doing observation (Oad)
     #    Nad[j, t] <- sum(N[j, t, 2:18])
@@ -401,8 +403,8 @@ ipm11.data <- list(z = ch,
                    n.weans = dim(age.spec.ewe.wean)[1],
                    Ojuv = Ojuv,
                    Oad = Oad,
-                   Osls = Osls,
-                   RadEwes = RadEwes,
+#                   Osls = Osls,
+#                   RadEwes = RadEwes,
                    RemovedEwes = RemovedEwes
 )
 
