@@ -5,11 +5,87 @@
 # require(runjags)
 require(popbio)
 require(Matrix)
-
 source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
-
 ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
 
+
+#---------------------------------------------#
+#-- Plot IPM posterior estimates -------------#
+#---------------------------------------------#
+coda.summary.obj.11 <- summary(ipm11.coda)
+row.names(coda.summary.obj.11[[2]])
+
+beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
+beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][37:54, ]
+
+# reminder of age-structure for IPM:
+age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6) 
+
+# restructure posteriors so that age-classes are represented as many times as they contain years
+he.adsurv <- beta.posts.adsurv[c(1, 4, 7, 10, 13, 16), ]
+inf.adsurv <- beta.posts.adsurv[c(1, 4, 7, 10, 13, 16) + 1, ]
+he.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16), ]
+inf.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16) + 1, ]
+he.wean <- beta.posts.wean[c(1, 4, 7, 10, 13, 16), ]
+inf.wean <- beta.posts.wean[c(1, 4, 7, 10, 13, 16) + 1, ]
+he.adsurv.2 <- he.adsurv[age.class.ind, ]
+inf.adsurv.2 <- inf.adsurv[age.class.ind, ]
+he.repro.2 <- he.repro[age.class.ind, ]
+inf.repro.2 <- inf.repro[age.class.ind, ]
+he.wean.2 <- he.wean[age.class.ind, ]
+inf.wean.2 <- inf.wean[age.class.ind, ]
+
+# plot betas out
+plot.cols <- c("white", "black", "red")
+par(mfrow = c(1, 3))
+plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of survival", xlab = "Age (years)")
+for(i in 2:19){
+  segments(x0 = i, x1 = i, y0 = (exp(he.adsurv.2[i, 1])) / (1 + exp(he.adsurv.2[i, 1])), y1 = exp(he.adsurv.2[i, 5]) / (1 + exp(he.adsurv.2[i, 5])), col = "black", lty = 2, lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.adsurv.2[i, 3])) / (1 + exp(he.adsurv.2[i, 3])), y1 = exp(he.adsurv.2[i, 3]) / (1 + exp(he.adsurv.2[i, 3])), col = "black", lty = 2, lwd = 2)
+  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.adsurv.2[i, 1])) / (1 + exp(inf.adsurv.2[i, 1])), y1 = exp(inf.adsurv.2[i, 5]) / (1 + exp(inf.adsurv.2[i, 5])), col = "red", lty = 1, lwd = 2)
+  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.adsurv.2[i, 3])) / (1 + exp(inf.adsurv.2[i, 3])), y1 = exp(inf.adsurv.2[i, 3]) / (1 + exp(inf.adsurv.2[i, 3])), col = "red", lty = 1, lwd = 2)
+}
+
+plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of reproducing", xlab = "Age (years)")
+for(i in 2:19){
+  segments(x0 = i, x1 = i, y0 = (exp(he.repro.2[i, 1])) / (1 + exp(he.repro.2[i, 1])), y1 = exp(he.repro.2[i, 5]) / (1 + exp(he.repro.2[i, 5])), col = "black", lty = 2, lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.repro.2[i, 3])) / (1 + exp(he.repro.2[i, 3])), y1 = exp(he.repro.2[i, 3]) / (1 + exp(he.repro.2[i, 3])), col = "black", lty = 2, lwd = 2)
+  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.repro.2[i, 1])) / (1 + exp(inf.repro.2[i, 1])), y1 = exp(inf.repro.2[i, 5]) / (1 + exp(inf.repro.2[i, 5])), col = "red", lty = 1, lwd = 2)
+  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.repro.2[i, 3])) / (1 + exp(inf.repro.2[i, 3])), y1 = exp(inf.repro.2[i, 3]) / (1 + exp(inf.repro.2[i, 3])), col = "red", lty = 1, lwd = 2)
+}
+
+plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of weaning", xlab = "Age (years)")
+for(i in 2:19){
+  segments(x0 = i, x1 = i, y0 = (exp(he.wean.2[i, 1])) / (1 + exp(he.wean.2[i, 1])), y1 = exp(he.wean.2[i, 5]) / (1 + exp(he.wean.2[i, 5])), col = "black", lty = 2, lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.wean.2[i, 3])) / (1 + exp(he.wean.2[i, 3])), y1 = exp(he.wean.2[i, 3]) / (1 + exp(he.wean.2[i, 3])), col = "black", lty = 2, lwd = 2)
+  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.wean.2[i, 1])) / (1 + exp(inf.wean.2[i, 1])), y1 = exp(inf.wean.2[i, 5]) / (1 + exp(inf.wean.2[i, 5])), col = "red", lty = 1, lwd = 2)
+  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.wean.2[i, 3])) / (1 + exp(inf.wean.2[i, 3])), y1 = exp(inf.wean.2[i, 3]) / (1 + exp(inf.wean.2[i, 3])), col = "red", lty = 1, lwd = 2)
+}
+
+par(mfrow = c(2, 2))
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "Class")
+for(i in 3:15){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.adsurv[i, 3])) / (1 + exp(beta.posts.adsurv[i, 3])), y1 = exp(beta.posts.adsurv[i, 3]) / (1 + exp(beta.posts.adsurv[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+}
+
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of reproducing", xlab = "Class")
+for(i in 3:15){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.repro[i, 1])) / (1 + exp(beta.posts.repro[i, 1])), y1 = (exp(beta.posts.repro[i, 5])) / (1 + exp(beta.posts.repro[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.repro[i, 3])) / (1 + exp(beta.posts.repro[i, 3])), y1 = exp(beta.posts.repro[i, 3]) / (1 + exp(beta.posts.repro[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+}
+
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of weaning", xlab = "Class")
+for(i in 3:15){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.wean[i, 1])) / (1 + exp(beta.posts.wean[i, 1])), y1 = (exp(beta.posts.wean[i, 5])) / (1 + exp(beta.posts.wean[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean[i, 3])) / (1 + exp(beta.posts.wean[i, 3])), y1 = exp(beta.posts.wean[i, 3]) / (1 + exp(beta.posts.wean[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+}
+
+
+#---------------------------------------------#
+#-- build population projection structures ---#
+#---------------------------------------------#
 timesteps <- 60
 reps <- 100
 ages.init <- c(100, 20, rep(10, 8), rep(5, 5), rep(3, 4))
