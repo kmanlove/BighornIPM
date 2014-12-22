@@ -1111,9 +1111,126 @@ for(i in 2:reps){
   lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
 abline( h = 0, lty = 2, col = "red", lwd = 2)
-boxplot(as.vector(log.lambda.s.he[, -c(1, 2)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
+boxplot(as.vector(log.lambda.s.he[, -c(1:10)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
 abline(h = 0, lty = 2, col = "red", lwd = 2)
 
+#--------------------------------------------------------------------------#
+#-- Exploration of lambda and age structure in each environmental state ---#
+#--------------------------------------------------------------------------#
+
+healthy.leslie.list <- infected.leslie.list <- vector("list", length = 1000)
+healthy.eigenval1 <- infected.eigenval1 <- rep(NA, 1000)
+juvsurv.elast.he <- juvsurv.elast.inf <- adsurv.elast.he <- adsurv.elast.inf <- fecund.elast.he <- fecund.elast.inf <- rep(NA, 1000)
+age.struct.he <- age.struct.inf <- matrix(NA, nrow = 19, ncol = 1000)
+
+for(i in 1:1000){
+    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 1, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
+    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 1, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
+#     healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#     spillover.leslie.list[[i]] <- update.leslie.fun(current.state = "spillover", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#     infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+    healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
+#    spillover.eigenval1[i] <- Re(eigen(spillover.leslie.list[[i]])$values[1])
+    infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
+    he.eigen.rescale <- sum(Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]))
+    inf.eigen.rescale <- sum(Re(eigen(infected.leslie.list[[i]])$vectors[, 1]))
+    age.struct.he[, i] <- Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]) / he.eigen.rescale
+    age.struct.inf[, i] <- Re(eigen(infected.leslie.list[[i]])$vectors[, 1]) / inf.eigen.rescale
+    
+    he.sens <- sensitivity(healthy.leslie.list[[i]])
+    he.elast <- (1 / Re(eigen(healthy.leslie.list[[i]])$values[1])) * he.sens * healthy.leslie.list[[i]]
+    #  round(he.sens, 2)
+    #  round(he.elast, 2)
+    fecund.elast.he[i] <- sum(he.elast[1, ])
+    juvsurv.elast.he[i] <- sum(he.elast[2, 1], he.elast[3, 2])
+    adsurv.elast.he[i] <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+    
+    inf.sens <- sensitivity(infected.leslie.list[[i]])
+    inf.elast <- (1 / Re(eigen(infected.leslie.list[[i]])$values[1])) * inf.sens * infected.leslie.list[[i]]
+    #  round(inf.sens, 2)
+    #  round(inf.elast, 2)
+    fecund.elast.inf[i] <- sum(inf.elast[1, ])
+    juvsurv.elast.inf[i] <- sum(inf.elast[2, 1], inf.elast[3, 2])
+    #sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
+    adsurv.elast.inf[i] <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+  }
+  
+  # 95% intervals on lambda 
+  healthy.cred<- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
+  spillover.cred<- quantile(spillover.eigenval1, c(0.25, 0.5, 0.75))
+  infected.cred<- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
+  
+  # 95% intervals for fecundity, juvenile survival, and adult survival in each environment (healthy and infected)
+  fecund.he <- quantile(fecund.elast.he, c(0.25, 0.5, 0.75))
+  fecund.inf <- quantile(fecund.elast.inf, c(.25, 0.5, 0.75))
+  juvsurv.he <- quantile(juvsurv.elast.he, c(0.25, 0.5, 0.75))
+  juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.25, 0.5, 0.75))
+  adsurv.he <- quantile(adsurv.elast.he, c(0.25, 0.5, 0.75))
+  adsurv.inf <- quantile(adsurv.elast.inf, c(0.25, 0.5, 0.75))
+  
+  par(mfrow = c(1, 1), mar = c(4, 8, 2, 2), las = 1, cex.lab = 1.0)
+  plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
+  lines(c(2, 2) ~ c(fecund.inf[1], fecund.inf[3]), lty = 2, col = "red", lwd = 2)
+  lines(c(3, 3) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
+  lines(c(4, 4) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 2, col = "red", lwd = 2)
+  lines(c(5, 5) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
+  lines(c(6, 6) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 2, col = "red", lwd = 2)
+  lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
+  lines(c(1.75, 2.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 2, col = "red", lwd = 2)
+  lines(c(2.75, 3.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
+  lines(c(3.75, 4.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 2, col = "red", lwd = 2)
+  lines(c(4.75, 5.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
+  lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "red", lwd = 2)
+  axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile survival (he)", "Juvenile surv (pers)", "Adult survival (he)", "Adult survival (pers)"))
+  
+  par(mfrow = c(1, 3), cex.axis = 1.2, cex.lab = 1.5)
+  hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, xlab = expression(lambda), main = "Healthy", col = "grey80")
+  abline(v = 1, col = "red", lwd = 3)
+  hist(spillover.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Introduction", col = "grey80")
+  abline(v = 1, col = "red", lwd = 3)
+  hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
+  abline(v = 1, col = "red", lwd = 3)
+  
+  # environ-state-specific elasticities
+  he.sens <- sensitivity(healthy.leslie.list[[1]])
+  he.elast <- (1 / Re(eigen(healthy.leslie.list[[1]])$values[1])) * he.sens * healthy.leslie.list[[1]]
+  round(he.sens, 2)
+  round(he.elast, 2)
+  fecund.elast.he <- sum(he.elast[1, ])
+  juvsurv.elast.he <- sum(he.elast[2, 1], he.elast[3, 2])
+  adsurv.elast.he <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+  
+  inf.sens <- sensitivity(infected.leslie.list[[1]])
+  inf.elast <- (1 / Re(eigen(infected.leslie.list[[1]])$values[1])) * inf.sens * infected.leslie.list[[1]]
+  round(inf.sens, 2)
+  round(inf.elast, 2)
+  fecund.elast.inf <- sum(inf.elast[1, ])
+  juvsurv.elast.inf <- sum(inf.elast[2, 1], inf.elast[3, 2])
+  #sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
+  adsurv.elast.inf <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+  
+  # intervals on age-structure in healthy and infected environments 
+  age.bounds.he <- age.bounds.inf <- matrix(NA, nrow = 18, ncol = 3)
+  for(i in 1:18){
+    age.bounds.he[i, ] <- quantile(abs(age.struct.he[i, ]), c(0.025, 0.5, 0.975))
+    age.bounds.inf[i, ] <- quantile(abs(age.struct.inf[i, ]), c(0.025, 0.5, 0.975))
+  }
+  
+  par(mfrow = c(1, 1))
+  plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), type = "l", xlim = c(0.5, 18.5), ylim = c(0, .5), lwd = 2, xlab = "age (years)", ylab = "Expected proportion of pop")
+  segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], y1 = age.bounds.inf[1, 2], lwd = 2, col = "red")
+  for(i in 2: dim(age.bounds.he)[1]){
+    segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2)
+    segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "red")
+  }
+  leg.text <- c("healthy", "persistently infected")
+  legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
+  
+
+
+#-----------------------------------------------#
+#-- OLD ----------------------------------------#
+#-----------------------------------------------#
 
 #     }
 #   return(list(current.state.new = current.state.new))
@@ -1203,49 +1320,49 @@ abline(h = 0, lty = 2, col = "red", lwd = 2)
 # #  tot.pop.size <- apply(N, 2, sum)
 #   out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size, log.lambda.s = log.lambda.s)
 #   return(out.list)
+# # }
+# 
+# sp.repro.post <- pn.repro
+# sp.surv.post <- he.surv * runif(1, .3, 1)
+# inf.surv.post <- pn.surv
+# he.surv.post <- he.surv
+# 
+# he.project.fun.out <- he.project.fun(timesteps = 20, ages.init = ages.init, alpha = .01, gamma = 1, he.repro = he.repro.post, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+# 
+# timesteps <- 60
+# reps <- 100
+# popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
+# 
+# for(i in 1:reps){
+#   he.project <- he.project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .01, gamma = .1, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#   popsize.he[i, ] <- he.project$tot.pop.size 
+#   log.lambda.s.he[i, ] <- he.project$log.lambda.s
+# }  
+# 
+# #write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
+# #popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
+# 
+# he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
+# he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
+# 
+# #par(mfrow = c(2, 1))
+# layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
+# plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
+# for(i in 2:reps){
+#   lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 # }
-
-sp.repro.post <- pn.repro
-sp.surv.post <- he.surv * runif(1, .3, 1)
-inf.surv.post <- pn.surv
-he.surv.post <- he.surv
-
-he.project.fun.out <- he.project.fun(timesteps = 20, ages.init = ages.init, alpha = .01, gamma = 1, he.repro = he.repro.post, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-
-timesteps <- 60
-reps <- 100
-popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
-
-for(i in 1:reps){
-  he.project <- he.project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .01, gamma = .1, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  popsize.he[i, ] <- he.project$tot.pop.size 
-  log.lambda.s.he[i, ] <- he.project$log.lambda.s
-}  
-
-#write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
-#popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
-
-he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
-he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
-
-#par(mfrow = c(2, 1))
-layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
-plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
-for(i in 2:reps){
-  lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-}
-for(j in 1:3){
-  lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
-}
-lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
-
-plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
-for(i in 2:reps){
-  lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-}
-abline( h = 0, lty = 2, col = "red", lwd = 2)
-boxplot(as.vector(log.lambda.s.he[, -c(1, 2)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
-abline(h = 0, lty = 2, col = "red", lwd = 2)
+# for(j in 1:3){
+#   lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
+# }
+# lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
+# 
+# plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
+# for(i in 2:reps){
+#   lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline( h = 0, lty = 2, col = "red", lwd = 2)
+# boxplot(as.vector(log.lambda.s.he[, -c(1, 2)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
+# abline(h = 0, lty = 2, col = "red", lwd = 2)
 
 #-----------------------------------------------------#
 #-- Environmental model 1: Movi presence definition --#
@@ -1254,24 +1371,24 @@ abline(h = 0, lty = 2, col = "red", lwd = 2)
 #------------------------------------------------------------------#
 #-- project population sizes in loop over gammas of .1, .5, .9 ----#
 #------------------------------------------------------------------#
-popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.steps, gamma.steps){
-  alphas <- 1 / seq(min(alpha.range), max(alpha.range), length.out = alpha.steps)  
-  gammas <- 1 / seq(min(gamma.range), max(gamma.range), length.out = gamma.steps)
-  alpha.gamma.frame <- expand.grid(alphas, gammas)
-  popsize.ij <- loglambda.ij <- vector("list", dim(alpha.gamma.frame)[1])
-  mean.lnlambda <- rep(NA, dim(alpha.gamma.frame)[1])
-  for(i in 1:length(popsize.ij)){
-    popsize.ij[[i]] <- loglambda.ij[[i]] <- matrix(NA, nrow = timesteps, ncol = reps)
-    for(j in 1:reps){
-      popgrowthsim.ij <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.gamma.frame[i, 1], gamma = alpha.gamma.frame[i, 2], he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-      popsize.ij[[i]][, j] <- popgrowthsim.ij$tot.pop.size
-      loglambda.ij[[i]][, j] <- popgrowthsim.ij$log.lambda.s
-    }
-    mean.lnlambda[i] <- mean(na.omit(unlist(as.vector(loglambda.ij[[i]][-c(11, 12), ]))))
-  }
-  outlist <- list(alpha.gamma.frame = alpha.gamma.frame, popsize.ij = popsize.ij, loglambda.ij = loglambda.ij, mean.lnlambda = mean.lnlambda)
-  return(outlist)
-}
+# popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.steps, gamma.steps){
+#   alphas <- 1 / seq(min(alpha.range), max(alpha.range), length.out = alpha.steps)  
+#   gammas <- 1 / seq(min(gamma.range), max(gamma.range), length.out = gamma.steps)
+#   alpha.gamma.frame <- expand.grid(alphas, gammas)
+#   popsize.ij <- loglambda.ij <- vector("list", dim(alpha.gamma.frame)[1])
+#   mean.lnlambda <- rep(NA, dim(alpha.gamma.frame)[1])
+#   for(i in 1:length(popsize.ij)){
+#     popsize.ij[[i]] <- loglambda.ij[[i]] <- matrix(NA, nrow = timesteps, ncol = reps)
+#     for(j in 1:reps){
+#       popgrowthsim.ij <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.gamma.frame[i, 1], gamma = alpha.gamma.frame[i, 2], he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#       popsize.ij[[i]][, j] <- popgrowthsim.ij$tot.pop.size
+#       loglambda.ij[[i]][, j] <- popgrowthsim.ij$log.lambda.s
+#     }
+#     mean.lnlambda[i] <- mean(na.omit(unlist(as.vector(loglambda.ij[[i]][-c(11, 12), ]))))
+#   }
+#   outlist <- list(alpha.gamma.frame = alpha.gamma.frame, popsize.ij = popsize.ij, loglambda.ij = loglambda.ij, mean.lnlambda = mean.lnlambda)
+#   return(outlist)
+# }
 
 timesteps <- 30
 reps <- 100
@@ -1557,115 +1674,117 @@ for(i in 1:length(yearstoreintro)){
   segments(x0 = yearstoreintro[i] + .1, x1 = yearstoreintro[i] + .3, y0 = popsize.alpha.gamma.1.30.quants[i, 3], y1 = popsize.alpha.gamma.1.30.quants[i, 3], col = "red")
 }
 
-#--------------------------------------------------------------------------#
-#-- Exploration of lambda and age structure in each environmental state ---#
-#--------------------------------------------------------------------------#
-healthy.leslie.list <- spillover.leslie.list <- infected.leslie.list <- vector("list", length = 1000)
-healthy.eigenval1 <- spillover.eigenval1 <- infected.eigenval1 <- rep(NA, 1000)
-juvsurv.elast.he <- juvsurv.elast.inf <- adsurv.elast.he <- adsurv.elast.inf <- fecund.elast.he <- fecund.elast.inf <- rep(NA, 1000)
-age.struct.he <- age.struct.inf <- matrix(NA, nrow = 18, ncol = 1000)
-
-for(i in 1:1000){
-  healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  spillover.leslie.list[[i]] <- update.leslie.fun(current.state = "spillover", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
-  spillover.eigenval1[i] <- Re(eigen(spillover.leslie.list[[i]])$values[1])
-  infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
-  he.eigen.rescale <- sum(Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]))
-  inf.eigen.rescale <- sum(Re(eigen(infected.leslie.list[[i]])$vectors[, 1]))
-  age.struct.he[, i] <- Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]) / he.eigen.rescale
-  age.struct.inf[, i] <- Re(eigen(infected.leslie.list[[i]])$vectors[, 1]) / inf.eigen.rescale
-  
-  he.sens <- sensitivity(healthy.leslie.list[[i]])
-  he.elast <- (1 / Re(eigen(healthy.leslie.list[[i]])$values[1])) * he.sens * healthy.leslie.list[[i]]
-#  round(he.sens, 2)
-#  round(he.elast, 2)
-  fecund.elast.he[i] <- sum(he.elast[1, ])
-  juvsurv.elast.he[i] <- sum(he.elast[2, 1], he.elast[3, 2])
-  adsurv.elast.he[i] <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
-  
-  inf.sens <- sensitivity(infected.leslie.list[[i]])
-  inf.elast <- (1 / Re(eigen(infected.leslie.list[[i]])$values[1])) * inf.sens * infected.leslie.list[[i]]
-#  round(inf.sens, 2)
-#  round(inf.elast, 2)
-  fecund.elast.inf[i] <- sum(inf.elast[1, ])
-  juvsurv.elast.inf[i] <- sum(inf.elast[2, 1], inf.elast[3, 2])
-  #sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
-  adsurv.elast.inf[i] <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
-}
-
-# 95% intervals on lambda 
-healthy.cred<- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
-spillover.cred<- quantile(spillover.eigenval1, c(0.25, 0.5, 0.75))
-infected.cred<- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
-
-# 95% intervals for fecundity, juvenile survival, and adult survival in each environment (healthy and infected)
-fecund.he <- quantile(fecund.elast.he, c(0.25, 0.5, 0.75))
-fecund.inf <- quantile(fecund.elast.inf, c(.25, 0.5, 0.75))
-juvsurv.he <- quantile(juvsurv.elast.he, c(0.25, 0.5, 0.75))
-juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.25, 0.5, 0.75))
-adsurv.he <- quantile(adsurv.elast.he, c(0.25, 0.5, 0.75))
-adsurv.inf <- quantile(adsurv.elast.inf, c(0.25, 0.5, 0.75))
-
-par(mfrow = c(1, 1), mar = c(4, 8, 2, 2), las = 1, cex.lab = 1.0)
-plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
-lines(c(2, 2) ~ c(fecund.inf[1], fecund.inf[3]), lty = 2, col = "red", lwd = 2)
-lines(c(3, 3) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
-lines(c(4, 4) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 2, col = "red", lwd = 2)
-lines(c(5, 5) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
-lines(c(6, 6) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 2, col = "red", lwd = 2)
-lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
-lines(c(1.75, 2.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 2, col = "red", lwd = 2)
-lines(c(2.75, 3.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
-lines(c(3.75, 4.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 2, col = "red", lwd = 2)
-lines(c(4.75, 5.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
-lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "red", lwd = 2)
-axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile survival (he)", "Juvenile surv (pers)", "Adult survival (he)", "Adult survival (pers)"))
-
-par(mfrow = c(1, 3), cex.axis = 1.2, cex.lab = 1.5)
-hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, xlab = expression(lambda), main = "Healthy", col = "grey80")
-abline(v = 1, col = "red", lwd = 3)
-hist(spillover.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Introduction", col = "grey80")
-abline(v = 1, col = "red", lwd = 3)
-hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
-abline(v = 1, col = "red", lwd = 3)
-
-# environ-state-specific elasticities
-he.sens <- sensitivity(healthy.leslie.list[[1]])
-he.elast <- (1 / Re(eigen(healthy.leslie.list[[1]])$values[1])) * he.sens * healthy.leslie.list[[1]]
-round(he.sens, 2)
-round(he.elast, 2)
-fecund.elast.he <- sum(he.elast[1, ])
-juvsurv.elast.he <- sum(he.elast[2, 1], he.elast[3, 2])
-adsurv.elast.he <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
-
-inf.sens <- sensitivity(infected.leslie.list[[1]])
-inf.elast <- (1 / Re(eigen(infected.leslie.list[[1]])$values[1])) * inf.sens * infected.leslie.list[[1]]
-round(inf.sens, 2)
-round(inf.elast, 2)
-fecund.elast.inf <- sum(inf.elast[1, ])
-juvsurv.elast.inf <- sum(inf.elast[2, 1], inf.elast[3, 2])
-#sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
-adsurv.elast.inf <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
-
-# intervals on age-structure in healthy and infected environments 
-age.bounds.he <- age.bounds.inf <- matrix(NA, nrow = 18, ncol = 3)
-for(i in 1:18){
-  age.bounds.he[i, ] <- quantile(abs(age.struct.he[i, ]), c(0.025, 0.5, 0.975))
-  age.bounds.inf[i, ] <- quantile(abs(age.struct.inf[i, ]), c(0.025, 0.5, 0.975))
-}
-
-par(mfrow = c(1, 1))
-plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), type = "l", xlim = c(0.5, 18.5), ylim = c(0, .5), lwd = 2, xlab = "age (years)", ylab = "Expected proportion of pop")
-segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], y1 = age.bounds.inf[1, 2], lwd = 2, col = "red")
-for(i in 2: dim(age.bounds.he)[1]){
-  segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2)
-  segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "red")
-}
-leg.text <- c("healthy", "persistently infected")
-legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
-
+# #--------------------------------------------------------------------------#
+# #-- Exploration of lambda and age structure in each environmental state ---#
+# #--------------------------------------------------------------------------#
+# healthy.leslie.list <- spillover.leslie.list <- infected.leslie.list <- vector("list", length = 1000)
+# healthy.eigenval1 <- spillover.eigenval1 <- infected.eigenval1 <- rep(NA, 1000)
+# juvsurv.elast.he <- juvsurv.elast.inf <- adsurv.elast.he <- adsurv.elast.inf <- fecund.elast.he <- fecund.elast.inf <- rep(NA, 1000)
+# age.struct.he <- age.struct.inf <- matrix(NA, nrow = 18, ncol = 1000)
+# 
+# for(i in 1:1000){
+#   function(current.state, samples.to.draw = 1, tot.chains = 3, joint.posterior.coda = ipmcoda.11, posterior.names = posterior.names){
+#     
+#   healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#   spillover.leslie.list[[i]] <- update.leslie.fun(current.state = "spillover", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#   infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+#   healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
+#   spillover.eigenval1[i] <- Re(eigen(spillover.leslie.list[[i]])$values[1])
+#   infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
+#   he.eigen.rescale <- sum(Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]))
+#   inf.eigen.rescale <- sum(Re(eigen(infected.leslie.list[[i]])$vectors[, 1]))
+#   age.struct.he[, i] <- Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]) / he.eigen.rescale
+#   age.struct.inf[, i] <- Re(eigen(infected.leslie.list[[i]])$vectors[, 1]) / inf.eigen.rescale
+#   
+#   he.sens <- sensitivity(healthy.leslie.list[[i]])
+#   he.elast <- (1 / Re(eigen(healthy.leslie.list[[i]])$values[1])) * he.sens * healthy.leslie.list[[i]]
+# #  round(he.sens, 2)
+# #  round(he.elast, 2)
+#   fecund.elast.he[i] <- sum(he.elast[1, ])
+#   juvsurv.elast.he[i] <- sum(he.elast[2, 1], he.elast[3, 2])
+#   adsurv.elast.he[i] <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+#   
+#   inf.sens <- sensitivity(infected.leslie.list[[i]])
+#   inf.elast <- (1 / Re(eigen(infected.leslie.list[[i]])$values[1])) * inf.sens * infected.leslie.list[[i]]
+# #  round(inf.sens, 2)
+# #  round(inf.elast, 2)
+#   fecund.elast.inf[i] <- sum(inf.elast[1, ])
+#   juvsurv.elast.inf[i] <- sum(inf.elast[2, 1], inf.elast[3, 2])
+#   #sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
+#   adsurv.elast.inf[i] <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+# }
+# 
+# # 95% intervals on lambda 
+# healthy.cred<- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
+# spillover.cred<- quantile(spillover.eigenval1, c(0.25, 0.5, 0.75))
+# infected.cred<- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
+# 
+# # 95% intervals for fecundity, juvenile survival, and adult survival in each environment (healthy and infected)
+# fecund.he <- quantile(fecund.elast.he, c(0.25, 0.5, 0.75))
+# fecund.inf <- quantile(fecund.elast.inf, c(.25, 0.5, 0.75))
+# juvsurv.he <- quantile(juvsurv.elast.he, c(0.25, 0.5, 0.75))
+# juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.25, 0.5, 0.75))
+# adsurv.he <- quantile(adsurv.elast.he, c(0.25, 0.5, 0.75))
+# adsurv.inf <- quantile(adsurv.elast.inf, c(0.25, 0.5, 0.75))
+# 
+# par(mfrow = c(1, 1), mar = c(4, 8, 2, 2), las = 1, cex.lab = 1.0)
+# plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
+# lines(c(2, 2) ~ c(fecund.inf[1], fecund.inf[3]), lty = 2, col = "red", lwd = 2)
+# lines(c(3, 3) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
+# lines(c(4, 4) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 2, col = "red", lwd = 2)
+# lines(c(5, 5) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
+# lines(c(6, 6) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 2, col = "red", lwd = 2)
+# lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
+# lines(c(1.75, 2.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 2, col = "red", lwd = 2)
+# lines(c(2.75, 3.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
+# lines(c(3.75, 4.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 2, col = "red", lwd = 2)
+# lines(c(4.75, 5.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
+# lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "red", lwd = 2)
+# axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile survival (he)", "Juvenile surv (pers)", "Adult survival (he)", "Adult survival (pers)"))
+# 
+# par(mfrow = c(1, 3), cex.axis = 1.2, cex.lab = 1.5)
+# hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, xlab = expression(lambda), main = "Healthy", col = "grey80")
+# abline(v = 1, col = "red", lwd = 3)
+# hist(spillover.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Introduction", col = "grey80")
+# abline(v = 1, col = "red", lwd = 3)
+# hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
+# abline(v = 1, col = "red", lwd = 3)
+# 
+# # environ-state-specific elasticities
+# he.sens <- sensitivity(healthy.leslie.list[[1]])
+# he.elast <- (1 / Re(eigen(healthy.leslie.list[[1]])$values[1])) * he.sens * healthy.leslie.list[[1]]
+# round(he.sens, 2)
+# round(he.elast, 2)
+# fecund.elast.he <- sum(he.elast[1, ])
+# juvsurv.elast.he <- sum(he.elast[2, 1], he.elast[3, 2])
+# adsurv.elast.he <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+# 
+# inf.sens <- sensitivity(infected.leslie.list[[1]])
+# inf.elast <- (1 / Re(eigen(infected.leslie.list[[1]])$values[1])) * inf.sens * infected.leslie.list[[1]]
+# round(inf.sens, 2)
+# round(inf.elast, 2)
+# fecund.elast.inf <- sum(inf.elast[1, ])
+# juvsurv.elast.inf <- sum(inf.elast[2, 1], inf.elast[3, 2])
+# #sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
+# adsurv.elast.inf <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+# 
+# # intervals on age-structure in healthy and infected environments 
+# age.bounds.he <- age.bounds.inf <- matrix(NA, nrow = 18, ncol = 3)
+# for(i in 1:18){
+#   age.bounds.he[i, ] <- quantile(abs(age.struct.he[i, ]), c(0.025, 0.5, 0.975))
+#   age.bounds.inf[i, ] <- quantile(abs(age.struct.inf[i, ]), c(0.025, 0.5, 0.975))
+# }
+# 
+# par(mfrow = c(1, 1))
+# plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), type = "l", xlim = c(0.5, 18.5), ylim = c(0, .5), lwd = 2, xlab = "age (years)", ylab = "Expected proportion of pop")
+# segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], y1 = age.bounds.inf[1, 2], lwd = 2, col = "red")
+# for(i in 2: dim(age.bounds.he)[1]){
+#   segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2)
+#   segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "red")
+# }
+# leg.text <- c("healthy", "persistently infected")
+# legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
+# 
 #--------------------------------------------------------#
 #-- Sensitivies and Elasticities using Vec-permutation --#
 #--------------------------------------------------------#

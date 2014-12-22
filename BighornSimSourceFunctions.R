@@ -62,8 +62,11 @@ update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   else {
-    repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 * post.draw$beta.overwinter.2), 1), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 * post.draw$beta.overwinter.2), 4))    
-    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 3), 0)    
+#    repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 * post.draw$beta.overwinter.2), 1), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 * post.draw$beta.overwinter.2), 4))    
+#    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 3), 0)    
+#    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
+    repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 ), 3), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 ), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 ), 5), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 ), 4))    
+    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 2), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 5), rep(post.draw$beta.adsurv.2.5, 3), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   return(leslie)
@@ -119,4 +122,23 @@ healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.d
   }
   out.list <- list(N = N, disease.status = disease.status, tot.pop.size = tot.pop.size, log.lambda.s = log.lambda.s)
   return(out.list)
+}
+
+popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.steps, gamma.steps){
+  alphas <- 1 / seq(min(alpha.range), max(alpha.range), length.out = alpha.steps)  
+  gammas <- 1 / seq(min(gamma.range), max(gamma.range), length.out = gamma.steps)
+  alpha.gamma.frame <- expand.grid(alphas, gammas)
+  popsize.ij <- loglambda.ij <- vector("list", dim(alpha.gamma.frame)[1])
+  mean.lnlambda <- rep(NA, dim(alpha.gamma.frame)[1])
+  for(i in 1:length(popsize.ij)){
+    popsize.ij[[i]] <- loglambda.ij[[i]] <- matrix(NA, nrow = timesteps, ncol = reps)
+    for(j in 1:reps){
+      popgrowthsim.ij <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.gamma.frame[i, 1], gamma = alpha.gamma.frame[i, 2], he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+      popsize.ij[[i]][, j] <- popgrowthsim.ij$tot.pop.size
+      loglambda.ij[[i]][, j] <- popgrowthsim.ij$log.lambda.s
+    }
+    mean.lnlambda[i] <- mean(na.omit(unlist(as.vector(loglambda.ij[[i]][-c(11, 12), ]))))
+  }
+  outlist <- list(alpha.gamma.frame = alpha.gamma.frame, popsize.ij = popsize.ij, loglambda.ij = loglambda.ij, mean.lnlambda = mean.lnlambda)
+  return(outlist)
 }
