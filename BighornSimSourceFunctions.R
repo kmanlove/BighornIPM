@@ -180,7 +180,7 @@ vec.permut.fun <- function(reps, alpha, gamma){
   # 19 age classes; 2 environmental states. 
   fade.out.elast <- intro.elast <- rep(NA, reps)
   for(i in 1:reps){
-    # P is the vec-permutation matrix (sensu Hunter and Caswell 2005 Ecology)
+    # P is the vec-permutation matrix (sensu Hunter and Caswell 2005 Ecological Modelling)
   P <- matrix(NA, nrow = 19 * 2, ncol = 19 * 2)
   e.full <- array(NA, dim = c(38, 38, 38))
   for(k in 1:2){
@@ -191,14 +191,14 @@ vec.permut.fun <- function(reps, alpha, gamma){
     }}
   P <- apply(e.full, c(1, 2), sum)
     
-    # B is block diagonal, with 3 19x19 blocks for the 3 environmental states.
+    # B is block diagonal, with 2 19x19 blocks for the 2 environmental states.
     healthy.leslie <- update.leslie.fun(current.state = "healthy", samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     endemic.leslie <-  update.leslie.fun(current.state = "infected", samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     leslie.list <- list(healthy.leslie, endemic.leslie)
   B <- bdiag(leslie.list)
     
-    # M is block diagonal with 20 2x2 blocks for the 20 demographic states
-    small.M <- rbind(c(1 - alpha, alpha), c(gamma, 1 - gamma))
+    # M is block diagonal with 19 2x2 blocks for the 19 demographic states
+    small.M <- cbind(c(1 - alpha, alpha), c(gamma, 1 - gamma)) # set up to be columns into rows, so that columns of M sum to 1. 
     M <- bdiag(list(small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M))
     
     # A is population projection matrix with environmental stochasticity
@@ -214,10 +214,12 @@ vec.permut.fun <- function(reps, alpha, gamma){
 #    E_m <- (1 / .92) * M * S_m # regular * because it's a Hadamard production
     round(E_m, 2)[1:10, 1:10]
     # compare elasticities of fade-out to elasticity of reintroduction
-    fade.indices <- seq(1:19) * 2
-    fade.out.elast[i] <- sum(E_m[fade.indices, fade.indices])
-    intro.indices <- seq(1:19) * 2 - 1
-    intro.elast[i] <- sum(E_m[intro.indices, intro.indices])
+    even.indices <- seq(1:19) * 2
+    odd.indices <- seq(1:19) * 2 - 1
+    # elasticites are sum (off-diagonal elasts in 2x2 blocks) - sum(main-diag elasts)
+    fade.out.elast[i] <- sum(E_m[odd.indices, even.indices]) - sum(E_m[even.indices, even.indices])
+#    intro.indices <- seq(1:19) * 2 - 1
+    intro.elast[i] <- sum(E_m[even.indices, odd.indices]) - sum(E_m[odd.indices, odd.indices])
   }
   return(list(fade.out.elast = fade.out.elast, intro.elast = intro.elast))
 }
