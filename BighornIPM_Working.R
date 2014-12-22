@@ -124,7 +124,7 @@ f <- apply(ch, 1, get.first)
 #age.class.ind <- c(1, 2, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6)
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5)
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6)
-age.class.ind <- c(1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6)
+age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6)
 
 
 
@@ -316,12 +316,14 @@ cat("
     for(a in 2:18){
 #    N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t - 1, a - 1], N[j, t - 1, a - 1])
     N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t, a - 1], N[j, t - 1, a - 1])
-     } #a
+    Njuv.agespec[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], N[j, t, a])
+} #a
     Nad[j, t] <- max(sum(N[j, t, 2:18]) - RemovedEwes[j, t], 1) 
     # subtract (known number of) removed ewes from pop count before doing observation (Oad)
     #    Nad[j, t] <- sum(N[j, t, 2:18])
     Nfall[j, t] <- sum(Nwean[j, t, 2:18])
-    Njuv[j, t] ~ dbin(phi.popyr.overwinter[j, t], Nfall[j, t])
+#    Njuv[j, t] ~ dbin(phi.popyr.overwinter[j, t], Nfall[j, t])
+    Njuv[j, t] <- sum(Njuv.agespec[j, t, 2:18])
     Ntot[j, t] <- Nad[j, t] + Njuv[j, t]
     } #t
     
