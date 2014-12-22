@@ -1042,6 +1042,9 @@ require(Matrix)
 # pn.repro <- read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/Reproduction/PNReproPost_30Sept2014.csv")
 
 source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
+
+ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
+
 timesteps <- 60
 reps <- 100
 ages.init <- c(100, 20, rep(10, 8), rep(5, 5), rep(3, 4))
@@ -1124,8 +1127,8 @@ juvsurv.elast.he <- juvsurv.elast.inf <- adsurv.elast.he <- adsurv.elast.inf <- 
 age.struct.he <- age.struct.inf <- matrix(NA, nrow = 19, ncol = 1000)
 
 for(i in 1:1000){
-    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 1, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
-    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 1, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
+    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 500:1000, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
+    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 500:1000, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
 #     healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
 #     spillover.leslie.list[[i]] <- update.leslie.fun(current.state = "spillover", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
 #     infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
@@ -1153,7 +1156,7 @@ for(i in 1:1000){
     juvsurv.elast.inf[i] <- sum(inf.elast[2, 1], inf.elast[3, 2])
     #sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
     adsurv.elast.inf[i] <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
-  }
+}
   
   # 95% intervals on lambda 
   healthy.cred<- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
@@ -1161,12 +1164,12 @@ for(i in 1:1000){
   infected.cred<- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
   
   # 95% intervals for fecundity, juvenile survival, and adult survival in each environment (healthy and infected)
-  fecund.he <- quantile(fecund.elast.he, c(0.25, 0.5, 0.75))
-  fecund.inf <- quantile(fecund.elast.inf, c(.25, 0.5, 0.75))
-  juvsurv.he <- quantile(juvsurv.elast.he, c(0.25, 0.5, 0.75))
-  juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.25, 0.5, 0.75))
-  adsurv.he <- quantile(adsurv.elast.he, c(0.25, 0.5, 0.75))
-  adsurv.inf <- quantile(adsurv.elast.inf, c(0.25, 0.5, 0.75))
+  fecund.he <- quantile(fecund.elast.he, c(0.05, 0.5, 0.975))
+  fecund.inf <- quantile(fecund.elast.inf, c(.05, 0.5, 0.975))
+  juvsurv.he <- quantile(juvsurv.elast.he, c(0.05, 0.5, 0.975))
+  juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.05, 0.5, 0.975))
+  adsurv.he <- quantile(adsurv.elast.he, c(0.05, 0.5, 0.975))
+  adsurv.inf <- quantile(adsurv.elast.inf, c(0.05, 0.5, 0.975))
   
   par(mfrow = c(1, 1), mar = c(4, 8, 2, 2), las = 1, cex.lab = 1.0)
   plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
@@ -1183,12 +1186,12 @@ for(i in 1:1000){
   lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "red", lwd = 2)
   axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile survival (he)", "Juvenile surv (pers)", "Adult survival (he)", "Adult survival (pers)"))
   
-  par(mfrow = c(1, 3), cex.axis = 1.2, cex.lab = 1.5)
-  hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, xlab = expression(lambda), main = "Healthy", col = "grey80")
+k <- hist(c(healthy.eigenval1, infected.eigenval1), breaks = 15)
+  par(mfrow = c(1, 2), cex.axis = 1.2, cex.lab = 1.5)
+  hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(infected.eigenval1))), breaks = k$breaks, xlab = expression(lambda), main = "Healthy", col = "grey80")
   abline(v = 1, col = "red", lwd = 3)
-  hist(spillover.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Introduction", col = "grey80")
   abline(v = 1, col = "red", lwd = 3)
-  hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(spillover.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(spillover.eigenval1), max(infected.eigenval1))), breaks = 15, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
+  hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(infected.eigenval1))), breaks = k$breaks, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
   abline(v = 1, col = "red", lwd = 3)
   
   # environ-state-specific elasticities
@@ -1217,7 +1220,7 @@ for(i in 1:1000){
   }
   
   par(mfrow = c(1, 1))
-  plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), type = "l", xlim = c(0.5, 18.5), ylim = c(0, .5), lwd = 2, xlab = "age (years)", ylab = "Expected proportion of pop")
+  plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), type = "l", xlim = c(0.5, 18.5), ylim = c(0, .2), lwd = 2, xlab = "age (years)", ylab = "Expected proportion of pop")
   segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], y1 = age.bounds.inf[1, 2], lwd = 2, col = "red")
   for(i in 2: dim(age.bounds.he)[1]){
     segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2)
@@ -1226,6 +1229,300 @@ for(i in 1:1000){
   leg.text <- c("healthy", "persistently infected")
   legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
   
+
+#--------------------------------------------------------#
+#-- Sensitivies and Elasticities using Vec-permutation --#
+#--------------------------------------------------------#
+
+vec.permut.test0 <- vec.permut.fun(reps = 100, alpha = 0.9, gamma = 0.1)
+vec.permut.test1 <- vec.permut.fun(reps = 100, alpha = 0.2, gamma = 0.1)
+vec.permut.test2 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.1)
+vec.permut.test3 <- vec.permut.fun(reps = 100, alpha = 0.05, gamma = 0.1)
+
+vec.permut.fixedalpha.test0 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.9)
+vec.permut.fixedalpha.test1 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.2)
+vec.permut.fixedalpha.test2 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.1)
+vec.permut.fixedalpha.test3 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.05)
+
+fade.out.elasts <- quantile(vec.permut.test$fade.out.elast, c(0.025, 0.975))
+intro.elasts <- quantile(vec.permut.test$intro.elast, c(0.025, 0.975))
+
+par(mfrow = c(4, 4), cex.lab = 1.2, cex.axis = 1.0, cex.main = 1.4)
+hist(vec.permut.test3$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 20yrs")
+hist(vec.permut.test2$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 10yrs")
+hist(vec.permut.test1$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 5yrs")
+hist(vec.permut.test0$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 1yrs")
+hist(vec.permut.test3$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+hist(vec.permut.test2$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+hist(vec.permut.test1$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+hist(vec.permut.test0$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+
+hist(vec.permut.fixedalpha.test3$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to fadeout) = 20yrs")
+hist(vec.permut.fixedalpha.test2$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to fadeout) = 10yrs")
+hist(vec.permut.fixedalpha.test1$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to fadeout) = 5yrs")
+hist(vec.permut.fixedalpha.test0$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to fadeout) = 1yrs")
+hist(vec.permut.fixedalpha.test3$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+hist(vec.permut.fixedalpha.test2$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+hist(vec.permut.fixedalpha.test1$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+hist(vec.permut.fixedalpha.test0$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+
+# Sensitivity (demographic transitions)
+S_b <- S_a %*% t(P) %*% t(M) %*% P
+round(S_b, 2)[1:20, 1:20]
+E_b <- (1 / .92) * B * S_b # regular * because it's a Hadamard production
+round(E_b, 2)
+
+
+
+#-------------------------------------------------------#
+#-- costs of altering alpha/gamma on 30-year pop size --#
+#-------------------------------------------------------#
+#-- better to think about gammas as expected time to fade-out.... --#
+#-- F(x) = 1/beta * (exp (-x / beta))
+#-- where beta = expected survival of system
+#-- so, gammas of interest are 1, 1/2, 1/3, 1/4
+
+timesteps <- 40
+reps <- 10
+yearstofadeout.seq <- seq(1, 15)
+gamma.seq <- 1 / yearstofadeout.seq
+popsize.30.gamma.mat <- matrix(NA, reps, length(gamma.seq))
+popsize.30.gamma.alpha.33.mat <- matrix(NA, reps, length(gamma.seq))
+
+for(i in 1:reps){
+  for(j in 1:length(gamma.seq)){
+    popsize.30.gamma.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = gamma.seq[j], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.alpha.33.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .33, gamma = gamma.seq[j], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
+  }
+}
+
+popsize.30.quants <- matrix(NA, length(gamma.seq), 5)
+popsize.30.alpha.33.quants <- matrix(NA, length(gamma.seq), 5)
+for(j in 1:length(gamma.seq)){
+  popsize.30.quants[j, ] <- quantile(popsize.30.gamma.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
+  popsize.30.alpha.33.quants[j, ] <- quantile(popsize.30.gamma.alpha.33.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
+}
+
+par(mfrow = c(1, 1))
+plot(x = 0, y = 0, xlim = c(0, 16), ylim = c(0, 500), xlab = "Expected years to fade-out (alpha = 0.1)", ylab = "Simulated Pop Size After 30 years")
+for(i in 1:length(yearstofadeout.seq)){
+  segments(x0 = yearstofadeout.seq[i], x1 = yearstofadeout.seq[i], y0 = popsize.30.quants[i, 1], y1 = popsize.30.quants[i, 5])
+  segments(x0 = yearstofadeout.seq[i] - 0.1, x1 = yearstofadeout.seq[i] + 0.1, y0 = popsize.30.quants[i, 3], y1 = popsize.30.quants[i, 3])
+  segments(x0 = yearstofadeout.seq[i] + .2, x1 = yearstofadeout.seq[i] + .2, y0 = popsize.30.alpha.33.quants[i, 1], y1 = popsize.30.alpha.33.quants[i, 5], col = "red", lwd = 2)
+  segments(x0 = yearstofadeout.seq[i] + .1, x1 = yearstofadeout.seq[i] + .3, y0 = popsize.30.alpha.33.quants[i, 3], y1 = popsize.30.alpha.33.quants[i, 3], col = "red", lwd = 2)
+}
+
+#-- Same thing, but over levels of alpha, with gamma fixed at e(fade-out) = 3 and e(fade-out) = 10
+timesteps <- 40
+reps <- 10
+yearstoreintro<- seq(1, 15)
+alpha.seq <- 1 / yearstoreintro
+popsize.30.alpha.gamma.33.mat <- matrix(NA, reps, length(alpha.seq))
+popsize.30.alpha.gamma.1.mat <- matrix(NA, reps, length(alpha.seq))
+
+for(i in 1:reps){
+  for(j in 1:length(alpha.seq)){
+    popsize.30.alpha.gamma.33.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.seq[j], gamma = .33, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.1.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.seq[j], gamma = .1, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
+  }
+}
+
+popsize.alpha.gamma.33.30.quants <- matrix(NA, length(alpha.seq), 5)
+popsize.alpha.gamma.1.30.quants <- matrix(NA, length(alpha.seq), 5)
+for(j in 1:length(gamma.seq)){
+  popsize.alpha.gamma.33.30.quants[j, ] <- quantile(popsize.30.alpha.gamma.33.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
+  popsize.alpha.gamma.1.30.quants[j, ] <- quantile(popsize.30.alpha.gamma.1.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
+}
+
+par(mfrow = c(1, 1))
+plot(x = 0, y = 0, xlim = c(0, 16), ylim = c(0, 500), xlab = "Expected years to reintroduction", ylab = "Simulated Pop Size After 30 years")
+for(i in 1:length(yearstoreintro)){
+  segments(x0 = yearstoreintro[i], x1 = yearstoreintro[i], y0 = popsize.alpha.gamma.33.30.quants[i, 1], y1 = popsize.alpha.gamma.33.30.quants[i, 5])
+  segments(x0 = yearstoreintro[i] - 0.1, x1 = yearstoreintro[i] + 0.1, y0 = popsize.alpha.gamma.33.30.quants[i, 3], y1 = popsize.alpha.gamma.33.30.quants[i, 3])
+  segments(x0 = yearstoreintro[i] + .2, x1 = yearstoreintro[i] + .2, y0 = popsize.alpha.gamma.1.30.quants[i, 1], y1 = popsize.alpha.gamma.1.30.quants[i, 5], col = "red")
+  segments(x0 = yearstoreintro[i] + .1, x1 = yearstoreintro[i] + .3, y0 = popsize.alpha.gamma.1.30.quants[i, 3], y1 = popsize.alpha.gamma.1.30.quants[i, 3], col = "red")
+}
+
+par(mfrow = c(2, 1))
+plot(x = 0, y = 0, xlim = c(1, 16), ylim = c(0, 500), xlab = "Expected years to fade-out (alpha = 0.1)", ylab = "Simulated Pop Size After 30 years")
+for(i in 1:length(yearstofadeout.seq)){
+  segments(x0 = yearstofadeout.seq[i], x1 = yearstofadeout.seq[i], y0 = popsize.30.quants[i, 1], y1 = popsize.30.quants[i, 5])
+  segments(x0 = yearstofadeout.seq[i] - 0.1, x1 = yearstofadeout.seq[i] + 0.1, y0 = popsize.30.quants[i, 3], y1 = popsize.30.quants[i, 3])
+  segments(x0 = yearstofadeout.seq[i] + .2, x1 = yearstofadeout.seq[i] + .2, y0 = popsize.30.alpha.33.quants[i, 1], y1 = popsize.30.alpha.33.quants[i, 5], col = "red", lwd = 2)
+  segments(x0 = yearstofadeout.seq[i] + .1, x1 = yearstofadeout.seq[i] + .3, y0 = popsize.30.alpha.33.quants[i, 3], y1 = popsize.30.alpha.33.quants[i, 3], col = "red", lwd = 2)
+}
+
+plot(x = 0, y = 0, xlim = c(1, 16), ylim = c(0, 500), xlab = "Expected years to reintroduction", ylab = "Simulated Pop Size After 30 years")
+for(i in 1:length(yearstoreintro)){
+  segments(x0 = yearstoreintro[i], x1 = yearstoreintro[i], y0 = popsize.alpha.gamma.33.30.quants[i, 1], y1 = popsize.alpha.gamma.33.30.quants[i, 5])
+  segments(x0 = yearstoreintro[i] - 0.1, x1 = yearstoreintro[i] + 0.1, y0 = popsize.alpha.gamma.33.30.quants[i, 3], y1 = popsize.alpha.gamma.33.30.quants[i, 3])
+  segments(x0 = yearstoreintro[i] + .2, x1 = yearstoreintro[i] + .2, y0 = popsize.alpha.gamma.1.30.quants[i, 1], y1 = popsize.alpha.gamma.1.30.quants[i, 5], col = "red", lwd = 2)
+  segments(x0 = yearstoreintro[i] + .1, x1 = yearstoreintro[i] + .3, y0 = popsize.alpha.gamma.1.30.quants[i, 3], y1 = popsize.alpha.gamma.1.30.quants[i, 3], col = "red", lwd = 2)
+}
+
+
+#------------------------------------------------------------------#
+#-- project population sizes in loop over gammas of .1, .5, .9 ----#
+#------------------------------------------------------------------#
+timesteps <- 30
+reps <- 10
+alpha.range <- c(1, 100)
+gamma.range <- c(1, 100)
+alpha.steps <- 10
+gamma.steps <- 10
+
+timesteps <- 60
+reps <- 100
+popsize.30.gamma.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.30.gamma.1 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.30.gamma.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.30.gamma.5 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.30.gamma.9 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.30.gamma1 <- matrix(NA, ncol = timesteps, nrow = reps)
+
+loglambda.30.gamma.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.30.gamma.1 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.30.gamma.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.30.gamma.5 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.30.gamma.9 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.30.gamma1 <- matrix(NA, ncol = timesteps, nrow = reps)
+
+for(i in 1:reps){
+  project.30.gamma.05 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .05, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  project.30.gamma.1 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .1,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  project.30.gamma.2 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .2,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  project.30.gamma.5 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .5,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  project.30.gamma.9 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .9,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  project.30.gamma1 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = 1,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  
+  popsize.30.gamma.05[i, ] <- project.30.gamma.05$tot.pop.size
+  popsize.30.gamma.1[i, ] <-  project.30.gamma.1$tot.pop.size
+  popsize.30.gamma.2[i, ] <-  project.30.gamma.2$tot.pop.size
+  popsize.30.gamma.5[i, ] <-  project.30.gamma.5$tot.pop.size
+  popsize.30.gamma.9[i, ] <-  project.30.gamma.9$tot.pop.size
+  popsize.30.gamma1[i, ]  <-  project.30.gamma1$tot.pop.size
+  
+  loglambda.30.gamma.05[i, ] <- project.30.gamma.05$log.lambda.s
+  loglambda.30.gamma.1[i, ] <-  project.30.gamma.1$log.lambda.s
+  loglambda.30.gamma.2[i, ] <-  project.30.gamma.2$log.lambda.s
+  loglambda.30.gamma.5[i, ] <-  project.30.gamma.5$log.lambda.s
+  loglambda.30.gamma.9[i, ] <-  project.30.gamma.9$log.lambda.s
+  loglambda.30.gamma1[i, ]  <-  project.30.gamma1$log.lambda.s
+}  
+
+
+# extract 2.5th and 97.5th quantiles --#
+gamma.05.quants <- which(popsize.30.gamma.05[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.05[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gamma.1.quants <- which(popsize.30.gamma.1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.1[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
+gamma.2.quants <- which(popsize.30.gamma.2[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.2[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
+gamma.5.quants <- which(popsize.30.gamma.5[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.5[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
+gamma.9.quants <- which(popsize.30.gamma.9[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.9[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
+gamma1.quants <- which(popsize.30.gamma1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma1[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
+
+gamma.05.meds <- which(popsize.30.gamma.05[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.05[, timesteps - 1], .5, type = 3, na.rm = T)))
+gamma.1.meds <- which(popsize.30.gamma.1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.1[, timesteps - 1], .5, type = 3, na.rm = T)))
+gamma.2.meds <- which(popsize.30.gamma.2[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.2[, timesteps - 1], .5, type = 3, na.rm = T)))
+gamma.5.meds <- which(popsize.30.gamma.5[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.5[, timesteps - 1], .5, type = 3, na.rm = T)))
+gamma.9.meds <- which(popsize.30.gamma.9[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.9[, timesteps - 1], .5, type = 3, na.rm = T)))
+gamma1.meds <- which(popsize.30.gamma1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma1[, timesteps - 1], .5, type = 3, na.rm = T)))
+
+plot.reps <- 100
+par(mfrow = c(1, 5))
+plot(popsize.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "population size", main = "20 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 3, 4)){
+  lines(popsize.30.gamma.05[gamma.05.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.05[gamma.05.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
+abline(h = 400)
+
+plot(popsize.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "10 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in 1:4){
+  lines(popsize.30.gamma.1[gamma.1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.1[gamma.1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
+abline(h = 400)
+
+plot(popsize.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "5 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in 1:4){
+  lines(popsize.30.gamma.2[gamma.2.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.2[gamma.2.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+abline(h = 400)
+
+plot(popsize.30.gamma1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "1 year", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in 1:4){
+  lines(popsize.30.gamma1[gamma1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma1[gamma1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+abline(h = 400)
+
+plot(popsize.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "No disease", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.he[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in 1:3){
+  lines(popsize.he[he.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.he[he.med, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
+abline(h = 400)
+
+# # log-lambda row
+# plot(loglambda.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "population size", main = "20 years", bty = "n")
+# for(i in 2:plot.reps){
+#   lines(loglambda.30.gamma.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline(h = 0, col = "red", lwd = 2)
+# 
+# plot(loglambda.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "10 years", bty = "n")
+# for(i in 2:plot.reps){
+#   lines(loglambda.30.gamma.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline(h = 0, col = "red", lwd = 2)
+# 
+# plot(loglambda.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "5 years", bty = "n")
+# for(i in 2:plot.reps){
+#   lines(loglambda.30.gamma.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline(h = 0, col = "red", lwd = 2)
+# 
+# plot(loglambda.30.gamma1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "1 year", bty = "n")
+# for(i in 2:plot.reps){
+#   lines(loglambda.30.gamma1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline(h = 0, col = "red", lwd = 2)
+# 
+# plot( log.lambda.s.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "No disease", bty = "n")
+# for(i in 2:plot.reps){
+#   lines( log.lambda.s.he[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline(h = 0, col = "red", lwd = 2)
+
+par(mfrow = c(1, 6))
+boxplot(na.omit(as.vector(loglambda.30.gamma.05)), ylim = c(-1.5, 1.5))
+abline(h = 0, col = "red", lwd = 2)
+boxplot(na.omit(as.vector(loglambda.30.gamma.1)), ylim = c(-1.5, 1.5))
+abline(h = 0, col = "red", lwd = 2)
+boxplot(na.omit(as.vector(loglambda.30.gamma.2)), ylim = c(-1.5, 1.5))
+abline(h = 0, col = "red", lwd = 2)
+boxplot(na.omit(as.vector(loglambda.30.gamma.5)), ylim = c(-1.5, 1.5))
+abline(h = 0, col = "red", lwd = 2)
+boxplot(na.omit(as.vector(loglambda.30.gamma.9)), ylim = c(-1.5, 1.5))
+abline(h = 0, col = "red", lwd = 2)
+boxplot(na.omit(as.vector(loglambda.30.gamma1)), ylim = c(-1.5, 1.5))
+abline(h = 0, col = "red", lwd = 2)
+
 
 
 #-----------------------------------------------#
@@ -1431,12 +1728,12 @@ loglambda.30.gamma.9 <- matrix(NA, ncol = timesteps, nrow = reps)
 loglambda.30.gamma1 <- matrix(NA, ncol = timesteps, nrow = reps)
 
 for(i in 1:reps){
-  project.30.gamma.05 <-  project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .05, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  project.30.gamma.1 <-  project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .1, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  project.30.gamma.2 <-  project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .2, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  project.30.gamma.5 <-  project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .5, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  project.30.gamma.9 <-  project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .9, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-  project.30.gamma1 <-  project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = 1, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+  project.30.gamma.05 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .05, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+  project.30.gamma.1 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .1, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+  project.30.gamma.2 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .2, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+  project.30.gamma.5 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .5, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+  project.30.gamma.9 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = .9, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+  project.30.gamma1 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = 0, gamma = 1, he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
   
   popsize.30.gamma.05[i, ] <- project.30.gamma.05$tot.pop.size
   popsize.30.gamma.1[i, ] <-  project.30.gamma.1$tot.pop.size
@@ -1785,74 +2082,74 @@ for(i in 1:length(yearstoreintro)){
 # leg.text <- c("healthy", "persistently infected")
 # legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
 # 
-#--------------------------------------------------------#
-#-- Sensitivies and Elasticities using Vec-permutation --#
-#--------------------------------------------------------#
-
-vec.permut.fun <- function(reps, alpha, gamma){
-  fade.out.elast <- intro.elast <- rep(NA, reps)
-  for(i in 1:reps){
-# P is the vec-permutation matrix.
-P <- matrix(NA, nrow = 18 * 3, ncol = 18 * 3)
-for(j in 1:18){
-  odd.vec <- c(rep(0, j - 1), 1, rep(0, 18 - j))
-    P[j * 3 - 2 , ] <- c(odd.vec, rep(0, 18), rep(0, 18))
-    P[j * 3 - 1, ] <- c(rep(0, 18), odd.vec, rep(0, 18))
-    P[j * 3, ] <- c(rep(0, 18), rep(0, 18), odd.vec)
-}
-
-# B is block diagonal, with 3 17x17 blocks for the 3 environmental states.
-healthy.leslie <- update.leslie.fun(current.state = "healthy", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-spillover.leslie <- update.leslie.fun(current.state = "spillover", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-endemic.leslie <- update.leslie.fun(current.state = "infected", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
-leslie.list <- list(healthy.leslie, spillover.leslie, endemic.leslie)
-B <- bdiag(leslie.list)
-
-# M is block diagonal with 17 3x3 blocks for the 17 demographic states
-#alpha <- 1/10
-#gamma <- 1/20
-small.M <- rbind(c(1 - alpha, alpha, 0), c(gamma, 0, 1 - gamma), c(gamma, 0, 1 - gamma))
-M <- bdiag(list(small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M))
-
-# A is population projection matrix with environmental stochasticity
-A <- t(P) %*% M %*% P %*% B
-A_eigens <- eigen(A) # complex????
-S_a <- sensitivity(A)
-
-# Sensitivity (environmental transitions)
-# assume disease status is updated before demography.
-S_m <- P %*% t(B) %*% S_a %*% t(P)
-round(S_m, 2)[1:10, 1:10]
-#E_m <- (1 / A_eigens$value[1]) * M * S_m # regular * because it's a Hadamard production
-E_m <- (1 / .92) * M * S_m # regular * because it's a Hadamard production
-round(E_m, 2)[1:10, 1:10]
-# compare elasticities of fade-out to elasticity of reintroduction
-fade.out.elast[i] <- sum(E_m[3, 3], E_m[6, 6], E_m[9, 9], E_m[12, 12], E_m[15, 15], E_m[18, 18], E_m[21, 21], E_m[24, 24], E_m[27, 27], E_m[30, 30], E_m[33, 33], E_m[36, 36], E_m[39, 39], E_m[42, 42], E_m[45, 45], E_m[48, 48], E_m[51, 51])
-intro.elast[i] <- sum(E_m[1, 1], E_m[4, 4], E_m[7, 7], E_m[10, 10], E_m[13, 13], E_m[16, 16], E_m[19, 19], E_m[22, 22], E_m[25, 25], E_m[28, 28], E_m[31, 31], E_m[34, 34], E_m[37, 37], E_m[40, 40], E_m[43, 43], E_m[46, 46], E_m[49, 49])
-}
-return(list(fade.out.elast = fade.out.elast, intro.elast = intro.elast))
-}
-
-vec.permut.test1 <- vec.permut.fun(reps = 1000, alpha = 0.2, gamma = 0.1)
-vec.permut.test2 <- vec.permut.fun(reps = 1000, alpha = 0.1, gamma = 0.1)
-vec.permut.test3 <- vec.permut.fun(reps = 1000, alpha = 0.05, gamma = 0.1)
-
-fade.out.elasts <- quantile(vec.permut.test$fade.out.elast, c(0.025, 0.975))
-intro.elasts <- quantile(vec.permut.test$intro.elast, c(0.025, 0.975))
-
-par(mfrow = c(2, 3), cex.lab = 1.2, cex.axis = 1.0, cex.main = 1.4)
-hist(vec.permut.test3$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 20yrs")
-hist(vec.permut.test2$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 10yrs")
-hist(vec.permut.test1$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 5yrs")
-hist(vec.permut.test3$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
-hist(vec.permut.test2$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
-hist(vec.permut.test1$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
-
-# Sensitivity (demographic transitions)
-S_b <- S_a %*% t(P) %*% t(M) %*% P
-round(S_b, 2)[1:20, 1:20]
-E_b <- (1 / .92) * B * S_b # regular * because it's a Hadamard production
-round(E_b, 2)
+# #--------------------------------------------------------#
+# #-- Sensitivies and Elasticities using Vec-permutation --#
+# #--------------------------------------------------------#
+# 
+# vec.permut.fun <- function(reps, alpha, gamma){
+#   fade.out.elast <- intro.elast <- rep(NA, reps)
+#   for(i in 1:reps){
+# # P is the vec-permutation matrix.
+# P <- matrix(NA, nrow = 18 * 3, ncol = 18 * 3)
+# for(j in 1:18){
+#   odd.vec <- c(rep(0, j - 1), 1, rep(0, 18 - j))
+#     P[j * 3 - 2 , ] <- c(odd.vec, rep(0, 18), rep(0, 18))
+#     P[j * 3 - 1, ] <- c(rep(0, 18), odd.vec, rep(0, 18))
+#     P[j * 3, ] <- c(rep(0, 18), rep(0, 18), odd.vec)
+# }
+# 
+# # B is block diagonal, with 3 17x17 blocks for the 3 environmental states.
+# healthy.leslie <- update.leslie.fun(current.state = "healthy", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+# spillover.leslie <- update.leslie.fun(current.state = "spillover", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+# endemic.leslie <- update.leslie.fun(current.state = "infected", he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+# leslie.list <- list(healthy.leslie, spillover.leslie, endemic.leslie)
+# B <- bdiag(leslie.list)
+# 
+# # M is block diagonal with 17 3x3 blocks for the 17 demographic states
+# #alpha <- 1/10
+# #gamma <- 1/20
+# small.M <- rbind(c(1 - alpha, alpha, 0), c(gamma, 0, 1 - gamma), c(gamma, 0, 1 - gamma))
+# M <- bdiag(list(small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M, small.M))
+# 
+# # A is population projection matrix with environmental stochasticity
+# A <- t(P) %*% M %*% P %*% B
+# A_eigens <- eigen(A) # complex????
+# S_a <- sensitivity(A)
+# 
+# # Sensitivity (environmental transitions)
+# # assume disease status is updated before demography.
+# S_m <- P %*% t(B) %*% S_a %*% t(P)
+# round(S_m, 2)[1:10, 1:10]
+# #E_m <- (1 / A_eigens$value[1]) * M * S_m # regular * because it's a Hadamard production
+# E_m <- (1 / .92) * M * S_m # regular * because it's a Hadamard production
+# round(E_m, 2)[1:10, 1:10]
+# # compare elasticities of fade-out to elasticity of reintroduction
+# fade.out.elast[i] <- sum(E_m[3, 3], E_m[6, 6], E_m[9, 9], E_m[12, 12], E_m[15, 15], E_m[18, 18], E_m[21, 21], E_m[24, 24], E_m[27, 27], E_m[30, 30], E_m[33, 33], E_m[36, 36], E_m[39, 39], E_m[42, 42], E_m[45, 45], E_m[48, 48], E_m[51, 51])
+# intro.elast[i] <- sum(E_m[1, 1], E_m[4, 4], E_m[7, 7], E_m[10, 10], E_m[13, 13], E_m[16, 16], E_m[19, 19], E_m[22, 22], E_m[25, 25], E_m[28, 28], E_m[31, 31], E_m[34, 34], E_m[37, 37], E_m[40, 40], E_m[43, 43], E_m[46, 46], E_m[49, 49])
+# }
+# return(list(fade.out.elast = fade.out.elast, intro.elast = intro.elast))
+# }
+# 
+# vec.permut.test1 <- vec.permut.fun(reps = 1000, alpha = 0.2, gamma = 0.1)
+# vec.permut.test2 <- vec.permut.fun(reps = 1000, alpha = 0.1, gamma = 0.1)
+# vec.permut.test3 <- vec.permut.fun(reps = 1000, alpha = 0.05, gamma = 0.1)
+# 
+# fade.out.elasts <- quantile(vec.permut.test$fade.out.elast, c(0.025, 0.975))
+# intro.elasts <- quantile(vec.permut.test$intro.elast, c(0.025, 0.975))
+# 
+# par(mfrow = c(2, 3), cex.lab = 1.2, cex.axis = 1.0, cex.main = 1.4)
+# hist(vec.permut.test3$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 20yrs")
+# hist(vec.permut.test2$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 10yrs")
+# hist(vec.permut.test1$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 5yrs")
+# hist(vec.permut.test3$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+# hist(vec.permut.test2$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+# hist(vec.permut.test1$intro.elast, main = "", ylab = "frequency", xlab = "introduction elasticity", col = "grey80")
+# 
+# # Sensitivity (demographic transitions)
+# S_b <- S_a %*% t(P) %*% t(M) %*% P
+# round(S_b, 2)[1:20, 1:20]
+# E_b <- (1 / .92) * B * S_b # regular * because it's a Hadamard production
+# round(E_b, 2)
 
 #-------------------------------------------------------#
 #-- Figure 2: Leslie Matrix posterior param estimates --#
