@@ -9,9 +9,9 @@ source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornI
 ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
 
 
-#---------------------------------------------#
-#-- Plot IPM posterior estimates -------------#
-#---------------------------------------------#
+#--------------------------------------------------#
+#-- Figure 1. IPM posterior estimates -------------#
+#--------------------------------------------------#
 coda.summary.obj.11 <- summary(ipm11.coda)
 row.names(coda.summary.obj.11[[2]])
 
@@ -38,7 +38,8 @@ inf.wean.2 <- inf.wean[age.class.ind, ]
 
 # plot betas out
 plot.cols <- c("white", "black", "red")
-par(mfrow = c(1, 3))
+#svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/Posteriors_22Dec2014.svg", width = 3, height = 2, pointsize = 8)
+par(mfrow = c(1, 3), mex = 1, oma = c(2, 2, 0, 0), mar = c(4, 5, 1, 1))
 plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of survival", xlab = "Age (years)")
 for(i in 2:19){
   segments(x0 = i, x1 = i, y0 = (exp(he.adsurv.2[i, 1])) / (1 + exp(he.adsurv.2[i, 1])), y1 = exp(he.adsurv.2[i, 5]) / (1 + exp(he.adsurv.2[i, 5])), col = "black", lty = 2, lwd = 2)
@@ -46,6 +47,8 @@ for(i in 2:19){
   segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.adsurv.2[i, 1])) / (1 + exp(inf.adsurv.2[i, 1])), y1 = exp(inf.adsurv.2[i, 5]) / (1 + exp(inf.adsurv.2[i, 5])), col = "red", lty = 1, lwd = 2)
   segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.adsurv.2[i, 3])) / (1 + exp(inf.adsurv.2[i, 3])), y1 = exp(inf.adsurv.2[i, 3]) / (1 + exp(inf.adsurv.2[i, 3])), col = "red", lty = 1, lwd = 2)
 }
+leg.text <- c("Healthy", "Diseased")
+legend("bottomleft", leg.text, col = c("black", "red"), lty = c(2, 1), bty = "n", lwd = c(2, 2))
 
 plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of reproducing", xlab = "Age (years)")
 for(i in 2:19){
@@ -62,6 +65,7 @@ for(i in 2:19){
   segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.wean.2[i, 1])) / (1 + exp(inf.wean.2[i, 1])), y1 = exp(inf.wean.2[i, 5]) / (1 + exp(inf.wean.2[i, 5])), col = "red", lty = 1, lwd = 2)
   segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.wean.2[i, 3])) / (1 + exp(inf.wean.2[i, 3])), y1 = exp(inf.wean.2[i, 3]) / (1 + exp(inf.wean.2[i, 3])), col = "red", lty = 1, lwd = 2)
 }
+#dev.off()
 
 #---------------------------------------------#
 #-- build population projection structures ---#
@@ -89,41 +93,41 @@ posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "b
                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
                      "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
 
-healthy.test <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  
-reps <- 100
-popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
-
-for(i in 1:reps){
-  he.project <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  popsize.he[i, ] <- he.project$tot.pop.size 
-  log.lambda.s.he[i, ] <- he.project$log.lambda.s
-}  
-
-#write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
-#popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
-
-he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
-he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
-
-#par(mfrow = c(2, 1))
-layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
-plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
-for(i in 2:reps){
-  lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-}
-for(j in 1:3){
-  lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
-}
-lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
-
-plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
-for(i in 2:reps){
-  lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-}
-abline( h = 0, lty = 2, col = "red", lwd = 2)
-boxplot(as.vector(log.lambda.s.he[, -c(1:10)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
-abline(h = 0, lty = 2, col = "red", lwd = 2)
+# healthy.test <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+#   
+# reps <- 100
+# popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
+# 
+# for(i in 1:reps){
+#   he.project <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+#   popsize.he[i, ] <- he.project$tot.pop.size 
+#   log.lambda.s.he[i, ] <- he.project$log.lambda.s
+# }  
+# 
+# #write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
+# #popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
+# 
+# he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
+# he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
+# 
+# #par(mfrow = c(2, 1))
+# layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
+# plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
+# for(i in 2:reps){
+#   lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# for(j in 1:3){
+#   lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
+# }
+# lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
+# 
+# plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
+# for(i in 2:reps){
+#   lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+# }
+# abline( h = 0, lty = 2, col = "red", lwd = 2)
+# boxplot(as.vector(log.lambda.s.he[, -c(1:10)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
+# abline(h = 0, lty = 2, col = "red", lwd = 2)
 
 #--------------------------------------------------------------------------#
 #-- Exploration of lambda and age structure in each environmental state ---#
@@ -185,14 +189,14 @@ for(i in 1:1000){
   lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "red", lwd = 2)
   axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile survival (he)", "Juvenile surv (pers)", "Adult survival (he)", "Adult survival (pers)"))
   
-k <- hist(c(healthy.eigenval1, infected.eigenval1), breaks = 15)
-  par(mfrow = c(1, 2), cex.axis = 1.2, cex.lab = 1.5)
+  k <- hist(c(healthy.eigenval1, infected.eigenval1), breaks = 15, plot = F)
+  # par(mfrow = c(1, 2), cex.axis = 1.2, cex.lab = 1.5)
   hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(infected.eigenval1))), breaks = k$breaks, xlab = expression(lambda), main = "Healthy", col = "grey80")
   abline(v = 1, col = "red", lwd = 3)
   abline(v = 1, col = "red", lwd = 3)
   hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(infected.eigenval1))), breaks = k$breaks, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
   abline(v = 1, col = "red", lwd = 3)
-  
+
   # environ-state-specific elasticities
   he.sens <- sensitivity(healthy.leslie.list[[1]])
   he.elast <- (1 / Re(eigen(healthy.leslie.list[[1]])$values[1])) * he.sens * healthy.leslie.list[[1]]
@@ -218,16 +222,20 @@ k <- hist(c(healthy.eigenval1, infected.eigenval1), breaks = 15)
     age.bounds.inf[i, ] <- quantile(abs(age.struct.inf[i, ]), c(0.025, 0.5, 0.975))
   }
   
-  par(mfrow = c(1, 1))
-  plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), type = "l", xlim = c(0.5, 18.5), ylim = c(0, .2), lwd = 2, xlab = "age (years)", ylab = "Expected proportion of pop")
+  par(mfrow = c(1, 2), cex.axis = .8, cex.lab = 1, oma = c(2, 0, 0, 0), mar = c(2, 6, 1, 1))
+  plot(density(healthy.eigenval1), main = "", ylim = c(0, 12), xlim = c(0.7, 1.12), lwd = 2, lty = 2, )
+  lines(density(infected.eigenval1), col = "red", lwd = 2, lty = 1)
+  mtext(side = 1, line = 3, outer = F, cex = 1, expression(paste(lambda)))
+  plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), lty = 2, type = "l", xlim = c(0.5, 18.5), ylim = c(0, .2), lwd = 2, xlab = "age (years)", ylab = "Proportion of \n population")
   segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], y1 = age.bounds.inf[1, 2], lwd = 2, col = "red")
   for(i in 2: dim(age.bounds.he)[1]){
-    segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2)
+    segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2, lty = 2)
     segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "red")
   }
-  leg.text <- c("healthy", "persistently infected")
+  leg.text <- c("healthy", "infected")
   legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
-  
+  mtext(side = 1, line = 3, outer = F, cex = 1, expression("age"))
+
 
 #--------------------------------------------------------#
 #-- Sensitivies and Elasticities using Vec-permutation --#
