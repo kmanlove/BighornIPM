@@ -63,26 +63,6 @@ for(i in 2:19){
   segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.wean.2[i, 3])) / (1 + exp(inf.wean.2[i, 3])), y1 = exp(inf.wean.2[i, 3]) / (1 + exp(inf.wean.2[i, 3])), col = "red", lty = 1, lwd = 2)
 }
 
-par(mfrow = c(2, 2))
-plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "Class")
-for(i in 3:15){
-  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.adsurv[i, 3])) / (1 + exp(beta.posts.adsurv[i, 3])), y1 = exp(beta.posts.adsurv[i, 3]) / (1 + exp(beta.posts.adsurv[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-}
-
-plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of reproducing", xlab = "Class")
-for(i in 3:15){
-  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.repro[i, 1])) / (1 + exp(beta.posts.repro[i, 1])), y1 = (exp(beta.posts.repro[i, 5])) / (1 + exp(beta.posts.repro[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.repro[i, 3])) / (1 + exp(beta.posts.repro[i, 3])), y1 = exp(beta.posts.repro[i, 3]) / (1 + exp(beta.posts.repro[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-}
-
-plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of weaning", xlab = "Class")
-for(i in 3:15){
-  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.wean[i, 1])) / (1 + exp(beta.posts.wean[i, 1])), y1 = (exp(beta.posts.wean[i, 5])) / (1 + exp(beta.posts.wean[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean[i, 3])) / (1 + exp(beta.posts.wean[i, 3])), y1 = exp(beta.posts.wean[i, 3]) / (1 + exp(beta.posts.wean[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-}
-
-
 #---------------------------------------------#
 #-- build population projection structures ---#
 #---------------------------------------------#
