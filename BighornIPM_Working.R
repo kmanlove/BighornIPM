@@ -12,8 +12,8 @@ require(runjags)
 studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/RevisedData_11Sept2013/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
 lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
-compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
+compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
@@ -236,22 +236,22 @@ cat("
     } #r
     
     for(w in 1:n.weans){
-#    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
-    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]]
+    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+#    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]]
     } #w
     
     # get phi estimates for each popyr (j) 
     for(t in 1:n.years){
     for(j in 1:n.pops){
-    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
+#    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
 #    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] 
     for(a in 1:n.ages){
     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]]
     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] 
-    logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] 
+#    logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] 
 #     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
 #     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
-#     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
+     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
 #     #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
     } #a
     } #j
@@ -261,8 +261,8 @@ cat("
      for(t in 1:(n.years)){
 #     time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
 #     time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
-#     time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
-     time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
+     time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
+#     time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
      }
     
     for(d in 1:n.dis.states){
@@ -285,13 +285,13 @@ cat("
 #     tau.time.repro <- pow(sigma.time.repro, -2)
 #     sigma.time2.repro <- pow(sigma.time.repro, 2)   
 #     
-#     sigma.time.wean ~ dunif(0, 10)
-#     tau.time.wean <- pow(sigma.time.wean, -2)
-#     sigma.time2.wean <- pow(sigma.time.wean, 2)   
+    sigma.time.wean ~ dunif(0, 10)
+    tau.time.wean <- pow(sigma.time.wean, -2)
+    sigma.time2.wean <- pow(sigma.time.wean, 2)   
 #     
-    sigma.time.overwinter ~ dunif(0, 10)
-    tau.time.overwinter <- pow(sigma.time.overwinter, -2)
-    sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
+#     sigma.time.overwinter ~ dunif(0, 10)
+#     tau.time.overwinter <- pow(sigma.time.overwinter, -2)
+#     sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
     
     #----------------------------------------#
     #-- Likelihoods of the single datasets --#
@@ -427,8 +427,8 @@ ipm11.inits <- function(){
   list(
 #     sigma.time.adsurv = runif(1, 0, 10),
 #        sigma.time.repro = runif(1, 0, 10),
-#        sigma.time.wean = runif(1, 0, 10), 
-        sigma.time.overwinter = runif(1, 0, 10),
+        sigma.time.wean = runif(1, 0, 10), 
+#        sigma.time.overwinter = runif(1, 0, 10),
        #       mean.p.repro = runif(1, 0, 1),
        sigma.y = runif(1, 0, 10)
   )
@@ -437,7 +437,8 @@ ipm11.inits <- function(){
 
 # parameters to monitor
 #ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter")
-ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.overwinter")
+#ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.overwinter")
+ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "sigma.time.wean")
 #ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "beta.overwinter", "sigma.time.adsurv", "sigma.time.repro", "sigma.time.wean", "sigma.time.overwinter")
 
 # mcmc settings
@@ -473,11 +474,14 @@ row.names(coda.summary.obj.11[[2]])
 # beta.posts.repro <- coda.summary.obj.11[[2]][25:45, ]
 # beta.posts.wean <- coda.summary.obj.11[[2]][46:66, ]
 # 
-beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
-beta.posts.overwinter <- coda.summary.obj.11[[2]][19:21, ]
-beta.posts.repro <- coda.summary.obj.11[[2]][22:39, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][40:57, ]
+# beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
+# beta.posts.overwinter <- coda.summary.obj.11[[2]][19:21, ]
+# beta.posts.repro <- coda.summary.obj.11[[2]][22:39, ]
+# beta.posts.wean <- coda.summary.obj.11[[2]][40:57, ]
 
+beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
+beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][37:54, ]
 # beta.posts.adsurv <- coda.summary.obj.11[[2]][1:15, ]
 # beta.posts.overwinter <- coda.summary.obj.11[[2]][16:18, ]
 # beta.posts.repro <- coda.summary.obj.11[[2]][19:33, ]
@@ -504,9 +508,9 @@ for(i in 3:15){
   segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean[i, 3])) / (1 + exp(beta.posts.wean[i, 3])), y1 = exp(beta.posts.wean[i, 3]) / (1 + exp(beta.posts.wean[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(0.5, 3.5), ylab = "Probability of surviving overwinter", xlab = "Class")
-for(i in 1:3){
-  segments(x0 = i, x1 = i, y0 = ((exp(beta.posts.overwinter[i, 1])) / (1 + exp(beta.posts.overwinter[i, 1]))), y1 = (exp(beta.posts.overwinter[i, 5])) / (1 + exp(beta.posts.overwinter[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.overwinter[i, 3])) / (1 + exp(beta.posts.overwinter[i, 3])), y1 = exp(beta.posts.overwinter[i, 3]) / (1 + exp(beta.posts.overwinter[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-}
+# plot(-1, -1, ylim = c(0, 1), xlim = c(0.5, 3.5), ylab = "Probability of surviving overwinter", xlab = "Class")
+# for(i in 1:3){
+#   segments(x0 = i, x1 = i, y0 = ((exp(beta.posts.overwinter[i, 1])) / (1 + exp(beta.posts.overwinter[i, 1]))), y1 = (exp(beta.posts.overwinter[i, 5])) / (1 + exp(beta.posts.overwinter[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+#   segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.overwinter[i, 3])) / (1 + exp(beta.posts.overwinter[i, 3])), y1 = exp(beta.posts.overwinter[i, 3]) / (1 + exp(beta.posts.overwinter[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+# }
 
