@@ -372,7 +372,7 @@ for(i in 1:length(yearstoreintro)){
 #-- project population sizes in loop over gammas of .1, .5, .9 ----#
 #------------------------------------------------------------------#
 timesteps <- 30
-reps <- 10
+reps <- 100
 alpha.range <- c(1, 100)
 gamma.range <- c(1, 100)
 alpha.steps <- 10
@@ -434,8 +434,9 @@ gamma.9.meds <- which(popsize.30.gamma.9[, timesteps - 1] %in% as.numeric(quanti
 gamma1.meds <- which(popsize.30.gamma1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma1[, timesteps - 1], .5, type = 3, na.rm = T)))
 
 plot.reps <- 100
-par(mfrow = c(1, 5))
-plot(popsize.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "population size", main = "20 years", bty = "n")
+par(mfrow = c(1, 5), oma = c(2, 1, 1, 1), mar = c(3, 4, 2, 0))
+layout(matrix(c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 3, 5, byrow = T))
+plot(popsize.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "population size", main = "20 years", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
@@ -443,9 +444,8 @@ for(j in c(1, 2, 3, 4)){
   lines(popsize.30.gamma.05[gamma.05.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma.05[gamma.05.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
-abline(h = 400)
 
-plot(popsize.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "10 years", bty = "n")
+plot(popsize.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "10 years", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
@@ -453,9 +453,8 @@ for(j in 1:4){
   lines(popsize.30.gamma.1[gamma.1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma.1[gamma.1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
-abline(h = 400)
 
-plot(popsize.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "5 years", bty = "n")
+plot(popsize.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "5 years", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
@@ -463,9 +462,8 @@ for(j in 1:4){
   lines(popsize.30.gamma.2[gamma.2.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma.2[gamma.2.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
-abline(h = 400)
 
-plot(popsize.30.gamma1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "1 year", bty = "n")
+plot(popsize.30.gamma1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "1 year", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
@@ -473,9 +471,8 @@ for(j in 1:4){
   lines(popsize.30.gamma1[gamma1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma1[gamma1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
-abline(h = 400)
 
-plot(popsize.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1000), xlab = "year", ylab = "", main = "No disease", bty = "n")
+plot(popsize.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "No disease", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.he[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
@@ -483,38 +480,39 @@ for(j in 1:3){
   lines(popsize.he[he.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.he[he.med, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
-abline(h = 400)
 
-# # log-lambda row
-# plot(loglambda.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "population size", main = "20 years", bty = "n")
-# for(i in 2:plot.reps){
-#   lines(loglambda.30.gamma.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# abline(h = 0, col = "red", lwd = 2)
-# 
-# plot(loglambda.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "10 years", bty = "n")
-# for(i in 2:plot.reps){
-#   lines(loglambda.30.gamma.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# abline(h = 0, col = "red", lwd = 2)
-# 
-# plot(loglambda.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "5 years", bty = "n")
-# for(i in 2:plot.reps){
-#   lines(loglambda.30.gamma.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# abline(h = 0, col = "red", lwd = 2)
-# 
-# plot(loglambda.30.gamma1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "1 year", bty = "n")
-# for(i in 2:plot.reps){
-#   lines(loglambda.30.gamma1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# abline(h = 0, col = "red", lwd = 2)
-# 
-# plot( log.lambda.s.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-1, 1), xlab = "year", ylab = "", main = "No disease", bty = "n")
-# for(i in 2:plot.reps){
-#   lines( log.lambda.s.he[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# abline(h = 0, col = "red", lwd = 2)
+#--------------------#
+# log-lambda row
+#--------------------#
+plot(loglambda.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-.3, .3), xlab = "year", ylab = "population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(loglambda.30.gamma.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+abline(h = 0, col = "red", lwd = 2)
+
+plot(loglambda.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l",  ylim = c(-.3, .3), xlab = "year", ylab = "", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(loglambda.30.gamma.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+abline(h = 0, col = "red", lwd = 2)
+
+plot(loglambda.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l",  ylim = c(-.3, .3), xlab = "year", ylab = "", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(loglambda.30.gamma.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+abline(h = 0, col = "red", lwd = 2)
+
+plot(loglambda.30.gamma1[1, 11:59] ~ seq(11:59), type = "l",  ylim = c(-.3, .3), xlab = "year", ylab = "", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(loglambda.30.gamma1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+abline(h = 0, col = "red", lwd = 2)
+
+plot( log.lambda.s.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(-.3, .3), xlab = "year", ylab = "", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines( log.lambda.s.he[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+abline(h = 0, col = "red", lwd = 2)
 
 par(mfrow = c(1, 6))
 boxplot(na.omit(as.vector(loglambda.30.gamma.05)), ylim = c(-1.5, 1.5))
