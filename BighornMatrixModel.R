@@ -1050,19 +1050,33 @@ gamma <- 1
 samples.to.draw <- seq(500:1000)
 tot.chains <- 3
 joint.posterior.coda <- ipm11.coda
+# posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
+# "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
+# "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
+# "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6", "beta.overwinter.1",
+# "beta.overwinter.2", "beta.overwinter.3", "beta.repro.1.1", "beta.repro.2.1",
+# "beta.repro.3.1]", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
+# "beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
+# "beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
+# "beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
+# "beta.repro.3.6", "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+# "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
+# "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
+# "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
+
 posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
-"beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
-"beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
-"beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6", "beta.overwinter.1",
-"beta.overwinter.2", "beta.overwinter.3", "beta.repro.1.1", "beta.repro.2.1",
-"beta.repro.3.1]", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
-"beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
-"beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
-"beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
-"beta.repro.3.6", "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
-"beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
-"beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
-"beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
+                     "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
+                     "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
+                     "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
+                     "beta.repro.1.1", "beta.repro.2.1",
+                     "beta.repro.3.1", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
+                     "beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
+                     "beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
+                     "beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
+                     "beta.repro.3.6", "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+                     "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
+                     "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
+                     "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
 
 healthy.test <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
   
