@@ -93,41 +93,41 @@ posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "b
                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
                      "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
 
-# healthy.test <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-#   
-# reps <- 100
-# popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
-# 
-# for(i in 1:reps){
-#   he.project <- healthy.project.fun(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-#   popsize.he[i, ] <- he.project$tot.pop.size 
-#   log.lambda.s.he[i, ] <- he.project$log.lambda.s
-# }  
-# 
-# #write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
-# #popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
-# 
-# he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
-# he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
-# 
-# #par(mfrow = c(2, 1))
-# layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
-# plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
-# for(i in 2:reps){
-#   lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# for(j in 1:3){
-#   lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
-# }
-# lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
-# 
-# plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
-# for(i in 2:reps){
-#   lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
-# }
-# abline( h = 0, lty = 2, col = "red", lwd = 2)
-# boxplot(as.vector(log.lambda.s.he[, -c(1:10)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
-# abline(h = 0, lty = 2, col = "red", lwd = 2)
+healthy.test <- healthy.project.fun(timesteps, sex.ratio = .6, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  
+reps <- 100
+popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
+
+for(i in 1:reps){
+  he.project <- healthy.project.fun(timesteps, sex.ratio = .6, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  popsize.he[i, ] <- he.project$tot.pop.size 
+  log.lambda.s.he[i, ] <- he.project$log.lambda.s
+}  
+
+#write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
+#popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
+
+he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
+he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
+
+#par(mfrow = c(2, 1))
+layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
+plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
+for(i in 2:reps){
+  lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in 1:3){
+  lines(popsize.he[he.quants[j], -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.he[he.med, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = "red", lwd = 2)
+
+plot(log.lambda.s.he[1, -c(1, 2)] ~ seq(3, timesteps), type = "l", ylim = c(-.5, .5), xlab = "year", ylab = expression(paste("log(", lambda, "s)", sep = "")))
+for(i in 2:reps){
+  lines(log.lambda.s.he[i, -c(1, 2)] ~ seq(3, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+abline( h = 0, lty = 2, col = "red", lwd = 2)
+boxplot(as.vector(log.lambda.s.he[, -c(1:10)]), col = "grey80", ylim = c(-.5, .5), ylab = expression(paste("log(", lambda, "s)", sep = "")))
+abline(h = 0, lty = 2, col = "red", lwd = 2)
 
 #--------------------------------------------------------------------------#
 #-- Exploration of lambda and age structure in each environmental state ---#
