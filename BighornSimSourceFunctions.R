@@ -19,7 +19,7 @@ update.status.fun <- function(alpha, gamma, current.state){
 }
 
 # function to update Leslie matrix parameters
-update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
+update.leslie.fun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
   chain <- ceiling(runif(1, 0, tot.chains))
   post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
   names(post.draw) <- posterior.names
@@ -59,7 +59,8 @@ update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.
 #     repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * post.draw$beta.overwinter.1), 3), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 * post.draw$beta.overwinter.1), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 * post.draw$beta.overwinter.1), 5), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * post.draw$beta.overwinter.1), 4))    
 #     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 5), rep(post.draw$beta.adsurv.1.5, 3), 0)    
 #     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 ), 3), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 ), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 ), 5), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 ), 4))    
+#    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 ), 3), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3 ), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4 ), 5), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 ), 4))    
+    repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * sex.ratio), 3), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3  * sex.ratio), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4  * sex.ratio), 5), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * sex.ratio), 4))    
     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 5), rep(post.draw$beta.adsurv.1.5, 3), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
@@ -105,13 +106,13 @@ update.leslie.fun <- function(current.state, samples.to.draw, tot.chains, joint.
 #   return(out.list)
 # }
 
-project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
+project.fun <- function(timesteps, sex.ratio, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
   N[, 1] <- ages.init
   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
   disease.status <- rep("healthy", timesteps)
   for(i in 1:10){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+    new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
     tot.pop.size[i] <- sum(N[ , i])
     if(i == 1){
@@ -121,7 +122,7 @@ project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.draw, tot
     }
   }
   for(i in 11:(timesteps - 1)){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+    new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
     disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
     tot.pop.size[i] <- sum(N[ , i])
@@ -137,13 +138,13 @@ project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.draw, tot
 
 # projection function in absence of disease
 # healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, he.repro.post = he.repro, sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post, inf.surv.post, he.recr = he.recr, pn.recr = pn.recr){
-healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
+healthy.project.fun <- function(timesteps, sex.ratio, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
   N[, 1] <- ages.init
   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
   disease.status <- rep("healthy", timesteps)
   for(i in 1:(timesteps - 1)){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+    new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
     tot.pop.size[i] <- sum(N[ , i])
     if(i == 1){
@@ -156,7 +157,7 @@ healthy.project.fun <- function(timesteps, ages.init, alpha, gamma, samples.to.d
   return(out.list)
 }
 
-popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.steps, gamma.steps){
+popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.steps, gamma.steps, sex.ratio){
   alphas <- 1 / seq(min(alpha.range), max(alpha.range), length.out = alpha.steps)  
   gammas <- 1 / seq(min(gamma.range), max(gamma.range), length.out = gamma.steps)
   alpha.gamma.frame <- expand.grid(alphas, gammas)
@@ -165,7 +166,7 @@ popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.s
   for(i in 1:length(popsize.ij)){
     popsize.ij[[i]] <- loglambda.ij[[i]] <- matrix(NA, nrow = timesteps, ncol = reps)
     for(j in 1:reps){
-      popgrowthsim.ij <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.gamma.frame[i, 1], gamma = alpha.gamma.frame[i, 2], he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
+      popgrowthsim.ij <- project.fun(timesteps = timesteps, sex.ratio, ages.init = ages.init, alpha = alpha.gamma.frame[i, 1], gamma = alpha.gamma.frame[i, 2], he.repro.post = he.repro, sp.repro.post = sp.repro.post, inf.repro.post = pn.repro, he.surv.post = he.surv.post, sp.surv.post = sp.surv.post, inf.surv.post = inf.surv.post, he.recr = he.recr, pn.recr = pn.recr)
       popsize.ij[[i]][, j] <- popgrowthsim.ij$tot.pop.size
       loglambda.ij[[i]][, j] <- popgrowthsim.ij$log.lambda.s
     }
