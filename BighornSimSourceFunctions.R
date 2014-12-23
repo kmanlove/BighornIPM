@@ -210,7 +210,7 @@ vec.permut.fun <- function(reps, alpha, gamma){
     # assume disease status is updated before demography.
     S_m <- P %*% t(B) %*% S_a %*% t(P)
     round(S_m, 2)[1:10, 1:10]
-    E_m <- (1 / A_eigens$value[1]) * M * S_m # regular * because it's a Hadamard production
+    E_m <- (1 / Re(A_eigens$value)[1]) * M * S_m # regular * because it's a Hadamard production
 #    E_m <- (1 / .92) * M * S_m # regular * because it's a Hadamard production
     round(E_m, 2)[1:10, 1:10]
     # compare elasticities of fade-out to elasticity of reintroduction
