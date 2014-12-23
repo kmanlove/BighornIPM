@@ -13,7 +13,9 @@ studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_
 lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
 #compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
@@ -121,8 +123,14 @@ f <- apply(ch, 1, get.first)
 # age class 6 is NOT CURRENTLY MARKED. 
 age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6) 
 
+#-------------------------------------------#
+#-- ewes followed by age and health class --#
+#-------------------------------------------#
+
+
+
 #---------------------------------------#
-#-- CJS reproduction --------------#
+#-- CJS reproduction -------------------#
 #---------------------------------------#
 # This is PRODUCTION, not WEANING --#
 #-- fill in ewes who didn't reproduce --#
@@ -250,7 +258,7 @@ cat("
      }
     
     for(d in 1:n.dis.states){
-    beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
+#    beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
     for(a in 1:n.age.classes){
     beta.adsurv[d , a] ~ dnorm(0, 0.01)T(-10, 10)
     #}
@@ -293,10 +301,10 @@ cat("
     for(a in 2:18){ # loop for age-specific survival and reproduction numbers
     N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t, a - 1], N[j, t - 1, a - 1])
     Njuv.agespec[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], N[j, t, a])
-} #a
+    } #a
     Nad[j, t] <- max(sum(N[j, t, 2:18]) - RemovedEwes[j, t], 1) 
     # subtract (known number of) removed ewes from pop count before doing observation (Oad)
-    Nfall[j, t] <- sum(Nwean[j, t, 2:18])
+#    Nfall[j, t] <- sum(Nwean[j, t, 2:18])
     Njuv[j, t] <- sum(Njuv.agespec[j, t, 2:18])
     Ntot[j, t] <- Nad[j, t] + Njuv[j, t]
     } #t
