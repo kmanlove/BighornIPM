@@ -13,8 +13,8 @@ studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_
 lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
 #compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
-compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+#compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
 
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
@@ -129,33 +129,33 @@ age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6)
 
 
 
-#---------------------------------------#
-#-- CJS reproduction -------------------#
-#---------------------------------------#
-# This is PRODUCTION, not WEANING --#
-#-- fill in ewes who didn't reproduce --#
-ewe.repro.list <- vector("list", dim(ewes.with.teeth)[1])
-for(i in 1:length(ewe.repro.list)){
-  k <- subset(ewes.with.teeth, ID == levels(factor(ewes.with.teeth$ID))[i])
-  years <- seq(k$ENTRY_BIOYR2, k$END_BIOYR)
-  ewe.age.prod <- seq(floor(as.numeric(as.character(k$AENTRY))), floor(as.numeric(as.character(k$AENTRY))) + length(years) - 1)
-  lamb.status <- rep(NA, length(years))
-  pop.name <- rep(as.character(k$END_Population[1]), length(years))
-  for(j in 1:length(years)){
-    lamb.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
-    lamb.status[j] <- ifelse(dim(lamb.year)[1] == 0, 0, 1)
-  }
-  ewe.repro.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.prod, lamb.status))
-}
-
-age.spec.ewe.prod <- do.call(rbind, ewe.repro.list)
-age.spec.ewe.prod$years <- factor(age.spec.ewe.prod$years)
-age.spec.ewe.prod$pop.name <- factor(age.spec.ewe.prod$pop.name)
-ewe.prod.pop <- as.numeric(age.spec.ewe.prod$pop.name)
-ewe.prod.age <- as.numeric(as.character(age.spec.ewe.prod$ewe.age.prod)) + 1
-ewe.prod.year <- as.numeric(factor(age.spec.ewe.prod$years))
-ewe.prod.success <- as.numeric(as.character(age.spec.ewe.prod$lamb.status))
-
+# #---------------------------------------#
+# #-- CJS reproduction -------------------#
+# #---------------------------------------#
+# # This is PRODUCTION, not WEANING --#
+# #-- fill in ewes who didn't reproduce --#
+# ewe.repro.list <- vector("list", dim(ewes.with.teeth)[1])
+# for(i in 1:length(ewe.repro.list)){
+#   k <- subset(ewes.with.teeth, ID == levels(factor(ewes.with.teeth$ID))[i])
+#   years <- seq(k$ENTRY_BIOYR2, k$END_BIOYR)
+#   ewe.age.prod <- seq(floor(as.numeric(as.character(k$AENTRY))), floor(as.numeric(as.character(k$AENTRY))) + length(years) - 1)
+#   lamb.status <- rep(NA, length(years))
+#   pop.name <- rep(as.character(k$END_Population[1]), length(years))
+#   for(j in 1:length(years)){
+#     lamb.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
+#     lamb.status[j] <- ifelse(dim(lamb.year)[1] == 0, 0, 1)
+#   }
+#   ewe.repro.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.prod, lamb.status))
+# }
+# 
+# age.spec.ewe.prod <- do.call(rbind, ewe.repro.list)
+# age.spec.ewe.prod$years <- factor(age.spec.ewe.prod$years)
+# age.spec.ewe.prod$pop.name <- factor(age.spec.ewe.prod$pop.name)
+# ewe.prod.pop <- as.numeric(age.spec.ewe.prod$pop.name)
+# ewe.prod.age <- as.numeric(as.character(age.spec.ewe.prod$ewe.age.prod)) + 1
+# ewe.prod.year <- as.numeric(factor(age.spec.ewe.prod$years))
+# ewe.prod.success <- as.numeric(as.character(age.spec.ewe.prod$lamb.status))
+# 
 
 #----------------------------------#
 #-- 2.4. CJS weaning --------------#
@@ -174,7 +174,7 @@ for(i in 1:length(ewe.wean.list)){
     wean.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
     #    wean.given.lambed.status[j] <- ifelse(dim(wean.given.lambed.year)[1] == 0, NA, ifelse(wean.given.lambed.year$CENSOR2 == 0, 1, 0))
     wean.status[j] <- ifelse(dim(wean.year)[1] == 0, NA, ifelse(wean.year$CENSOR2 == 0, 1, 0))
-#    wean.status[j] <- ifelse(dim(wean.year)[1] == 0, 0, ifelse(wean.year$CENSOR2 == 0, 1, 0))
+#    wean.status[j] <- ifelse(dim(wean.year)[1] == 0, 2, ifelse(wean.year$CENSOR2 == 0, 1, 0))
   }
   ewe.wean.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.wean, wean.status))
 }
@@ -188,6 +188,7 @@ ewe.wean.pop <- as.numeric(age.spec.ewe.wean$pop.name)
 ewe.wean.age <- as.numeric(as.character(age.spec.ewe.wean$ewe.age.wean)) + 1
 ewe.wean.year <- as.numeric(factor(age.spec.ewe.wean$years))
 ewe.wean.success <- as.numeric(as.character(age.spec.ewe.wean$wean.status))
+table(age.spec.ewe.wean$pop.name, age.spec.ewe.wean$wean.status)
 
 
 #------------------------------------#
@@ -229,10 +230,10 @@ cat("
     } #t
     } #i
     
-    for(r in 1:n.repros){
-    logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
-    # reproduction loops over number of repros (not number of ewes)
-    } #r
+#     for(r in 1:n.repros){
+#     logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
+#     # reproduction loops over number of repros (not number of ewes)
+#     } #r
     
     for(w in 1:n.weans){
     logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
@@ -243,7 +244,7 @@ cat("
     for(j in 1:n.pops){
     for(a in 1:n.ages){
      logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
-     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
+#     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
      logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
      #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
     } #a
@@ -253,7 +254,7 @@ cat("
      # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
      for(t in 1:(n.years)){
      time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
-     time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
+#     time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
      time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
      }
     
@@ -273,9 +274,9 @@ cat("
     tau.time.adsurv <- pow(sigma.time.adsurv, -2)
     sigma.time2.adsurv <- pow(sigma.time.adsurv, 2)
     
-    sigma.time.repro ~ dunif(0, 10)
-    tau.time.repro <- pow(sigma.time.repro, -2)
-    sigma.time2.repro <- pow(sigma.time.repro, 2)   
+#     sigma.time.repro ~ dunif(0, 10)
+#     tau.time.repro <- pow(sigma.time.repro, -2)
+#     sigma.time2.repro <- pow(sigma.time.repro, 2)   
     
     sigma.time.wean ~ dunif(0, 10)
     tau.time.wean <- pow(sigma.time.wean, -2)
@@ -294,8 +295,9 @@ cat("
     # repro probs need to be checked....
     # loop to get number of offspring produced by each age-class last year
     for(a in 2:18){
-    Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
-    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
+#    Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
+#    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
+    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], N[j, t, a])  # ewes age first, reproduce second. 
     }
     N[j, t, 1] <- sum(Nwean[j, t, 2:18])
     for(a in 2:18){ # loop for age-specific survival and reproduction numbers
@@ -331,15 +333,15 @@ cat("
     } #t
     } #i
     
-    #-----------------------------------------------------------#
-    #-- 3.3. Likelihood for reproduction data: CJS model --#
-    #-----------------------------------------------------------#
-    for(r in 1 : n.repros){
-    # state process
-    z.repro[r] ~ dbern(mu.repro[r])
-    mu.repro[r] <- phi.individ.repro[r]
-    # might be smart to add observation error in here...
-    } #r
+#     #-----------------------------------------------------------#
+#     #-- 3.3. Likelihood for reproduction data: CJS model --#
+#     #-----------------------------------------------------------#
+#     for(r in 1 : n.repros){
+#     # state process
+#     z.repro[r] ~ dbern(mu.repro[r])
+#     mu.repro[r] <- phi.individ.repro[r]
+#     # might be smart to add observation error in here...
+#     } #r
     
     #-----------------------------------------------------------#
     #-- 3.4. Likelihood for weaning data: CJS model --#
@@ -371,11 +373,11 @@ ipm11.data <- list(z = ch,
                    age.class.ind = age.class.ind,
                    popyr.dis.status = popyr.dis.status,
                    ewe.pop.ind.num = ewe.pop.ind.num,
-                   ewe.prod.pop = ewe.prod.pop,
-                   ewe.prod.age = ewe.prod.age,
-                   ewe.prod.year = ewe.prod.year,
-                   z.repro = ewe.prod.success,
-                   n.repros = dim(age.spec.ewe.prod)[1],
+#                    ewe.prod.pop = ewe.prod.pop,
+#                    ewe.prod.age = ewe.prod.age,
+#                    ewe.prod.year = ewe.prod.year,
+#                   z.repro = ewe.prod.success,
+#                   n.repros = dim(age.spec.ewe.prod)[1],
                    ewe.wean.pop = ewe.wean.pop,
                    ewe.wean.age = ewe.wean.age,
                    ewe.wean.year = ewe.wean.year,
@@ -402,7 +404,7 @@ ch.init <- function(ch, f){
 ipm11.inits <- function(){
   list(
         sigma.time.adsurv = runif(1, 0, 10),
-        sigma.time.repro = runif(1, 0, 10),
+#        sigma.time.repro = runif(1, 0, 10),
         sigma.time.wean = runif(1, 0, 10), 
         sigma.y = runif(1, 0, 10)
   )
@@ -410,7 +412,8 @@ ipm11.inits <- function(){
 
 
 # parameters to monitor
-ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "sigma.time.wean", "sigma.time.repro", "sigma.time.adsurv")
+#ipm11.params <- c("beta.adsurv", "beta.repro", "beta.wean", "sigma.time.wean", "sigma.time.repro", "sigma.time.adsurv")
+ipm11.params <- c("beta.adsurv", "beta.wean", "sigma.time.wean", "sigma.time.adsurv")
 
 # mcmc settings
 ni <- 1000
@@ -446,8 +449,9 @@ coda.summary.obj.11 <- summary(ipm11.coda)
 row.names(coda.summary.obj.11[[2]])
 
 beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
-beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][37:54, ]
+#beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
+#beta.posts.wean <- coda.summary.obj.11[[2]][37:54, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][19:36, ]
 
 # plot betas out
 plot.cols <- c("white", "black", "red")
@@ -458,11 +462,11 @@ for(i in 3:15){
   segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.adsurv[i, 3])) / (1 + exp(beta.posts.adsurv[i, 3])), y1 = exp(beta.posts.adsurv[i, 3]) / (1 + exp(beta.posts.adsurv[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
 }
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of reproducing", xlab = "Class")
-for(i in 3:15){
-  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.repro[i, 1])) / (1 + exp(beta.posts.repro[i, 1])), y1 = (exp(beta.posts.repro[i, 5])) / (1 + exp(beta.posts.repro[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.repro[i, 3])) / (1 + exp(beta.posts.repro[i, 3])), y1 = exp(beta.posts.repro[i, 3]) / (1 + exp(beta.posts.repro[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
-}
+# plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of reproducing", xlab = "Class")
+# for(i in 3:15){
+#   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.repro[i, 1])) / (1 + exp(beta.posts.repro[i, 1])), y1 = (exp(beta.posts.repro[i, 5])) / (1 + exp(beta.posts.repro[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+#   segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.repro[i, 3])) / (1 + exp(beta.posts.repro[i, 3])), y1 = exp(beta.posts.repro[i, 3]) / (1 + exp(beta.posts.repro[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
+# }
 
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of weaning", xlab = "Class")
 for(i in 3:15){
