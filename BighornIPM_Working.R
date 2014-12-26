@@ -12,9 +12,14 @@ require(runjags)
 studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/RevisedData_11Sept2013/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
 lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
+compd.data <- subset(compd.data, !(Pop == "Imnaha" & year <= 1999))
 #compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
-#compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+#compd.data$PNIndLambs <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+#compd.data$PNIndEwes <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+compd.data$PNIndLambs <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+compd.data$PNIndEwes <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
 
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
@@ -72,15 +77,20 @@ n.years <- 2012 - 1997
 y <- Ojuv + Oad
 
 # build j x t matrix of pop-year disease statuses
-popyr.dis.status <- matrix(NA, nrow = length(levels(factor(ewe.pop.ind))), ncol = 2012 - 1997)
+#popyr.dis.status <- matrix(NA, nrow = length(levels(factor(ewe.pop.ind))), ncol = 2012 - 1997)
+popyr.dis.status.lambs <- popyr.dis.status.adults <- matrix(NA, nrow = length(levels(factor(ewe.pop.ind))), ncol = 2012 - 1997)
 for(i in 1:length(levels(factor(ewe.pop.ind)))){
   for(j in 1 : (2012 - 1997)){
     k <- subset(compd.data, as.character(Pop) == as.character(levels(factor(ewe.pop.ind)))[i] & year == (1997 + j))
-    popyr.dis.status[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNInd)
+#    popyr.dis.status[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNInd)
+    popyr.dis.status.lambs[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNIndLambs)
+    popyr.dis.status.adults[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNIndEwes)
   }
 }
 
-popyr.dis.status <- ifelse(is.na(popyr.dis.status) == T, 3, popyr.dis.status)
+#popyr.dis.status <- ifelse(is.na(popyr.dis.status) == T, 3, popyr.dis.status)
+popyr.dis.status.lambs <- ifelse(is.na(popyr.dis.status.lambs) == T, 3, popyr.dis.status.lambs)
+popyr.dis.status.adults <- ifelse(is.na(popyr.dis.status.adults) == T, 3, popyr.dis.status.adults)
 
 # CJS data 
 # recode all entries prior to 1997 with 1997 as entry bioyr (to match with population counts strings in IPM)
@@ -111,6 +121,7 @@ for(i in 1:dim(ch.full)[1]){
 ewe.age <- ifelse(ewe.age == 0, 20, ewe.age)
 ewe.pop.ind.num <- as.numeric(as.factor(ewe.pop.ind))
 
+
 # create vector with occasion of marking:
 get.first <- function(x) min(which(x != 0))
 f.init <- apply(ch.full, 1, get.first)
@@ -123,10 +134,13 @@ f <- apply(ch, 1, get.first)
 # age class 6 is NOT CURRENTLY MARKED. 
 age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6) 
 
-#-------------------------------------------#
-#-- ewes followed by age and health class --#
-#-------------------------------------------#
-
+#---------------------------------------------#
+#-- ewes followed by age, pop, health class --#
+#---------------------------------------------#
+ewes.he.aso <- subset(ewes.with.teeth, (Population == "Asotin" & ENTRY_BIOYR <= 2010 & DEAD == 1))
+ewes.he.bcan <- subset(ewes.with.teeth, (Population == "BigCanyon" & ENTRY_BIOYR <= 1999 & DEAD == 1))
+ewes.he.muir <- subset(ewes.with.teeth, (Population == "MuirCreek" & ENTRY_BIOYR <= 1999 & DEAD == 1))
+ewes.he.imn <- subset(ewes.with.teeth,  (Population == "Imnaha" & ENTRY_BIOYR <= 1999 & DEAD == 1))
 
 
 # #---------------------------------------#
@@ -225,7 +239,8 @@ cat("
     # get phi estimates for each individual (i) 
     for(i in 1:nind){
     for(t in f[i] : (n.years)){
-    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]] + time.re.adsurv[t]
+    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status.adults[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]] + time.re.adsurv[t]
+#    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]] + time.re.adsurv[t]
     #-- this logit pulls out the effect for ewe i's survival prob given her age class and her pop's current disease status
     } #t
     } #i
@@ -236,16 +251,19 @@ cat("
 #     } #r
     
     for(w in 1:n.weans){
-    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status.lambs[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+#    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
     } #w
     
     # get phi estimates for each popyr (j) 
     for(t in 1:n.years){
     for(j in 1:n.pops){
     for(a in 1:n.ages){
-     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
+     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status.adults[j, t], age.class.ind[a]] + time.re.adsurv[t]
+#     logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
 #     logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
-     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
+#     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
+     logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status.lambs[j, t], age.class.ind[a]] + time.re.wean[t]
      #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
     } #a
     } #j
@@ -371,7 +389,9 @@ ipm11.data <- list(z = ch,
                    n.dis.states = length(levels(factor(popyr.dis.status))),
                    ewe.age = ewe.age,
                    age.class.ind = age.class.ind,
-                   popyr.dis.status = popyr.dis.status,
+#                   popyr.dis.status = popyr.dis.status,
+                   popyr.dis.status.adults = popyr.dis.status.adults,
+                   popyr.dis.status.lambs = popyr.dis.status.lambs,
                    ewe.pop.ind.num = ewe.pop.ind.num,
 #                    ewe.prod.pop = ewe.prod.pop,
 #                    ewe.prod.age = ewe.prod.age,
@@ -416,9 +436,9 @@ ipm11.inits <- function(){
 ipm11.params <- c("beta.adsurv", "beta.wean", "sigma.time.wean", "sigma.time.adsurv")
 
 # mcmc settings
-ni <- 1000
+ni <- 20000
 nt <- 3
-nb <- 500
+nb <- 10000
 nc <- 3
 
 # MAY NEED TO REINITIALIZE A NUMBER OF TIMES TO GET APPROPRIATE INITIAL VALUES. 
@@ -438,14 +458,15 @@ ipm11.coda <- coda.samples(ipm11.call,
                            ipm11.params,
                            ni)
 
-# dput(ipm11.coda, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
-# 
-# ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
+#dput(ipm11.coda, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/20000SimChains_26Dec2014")
+#ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/20000SimChains_26Dec2014")
 
 summary(ipm11.coda)
-gelman.diag(ipm11.coda)
+convg.diags <- gelman.diag(ipm11.coda)
+#write.csv(convg.diags[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/GelmanRubinDiags_26Dec2014.csv")
 
 coda.summary.obj.11 <- summary(ipm11.coda)
+#write.csv(coda.summary.obj.11[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/PosteriorQuantiles_26Dec2014.csv")
 row.names(coda.summary.obj.11[[2]])
 
 beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
@@ -455,7 +476,7 @@ beta.posts.wean <- coda.summary.obj.11[[2]][19:36, ]
 
 # plot betas out
 plot.cols <- c("white", "black", "red")
-par(mfrow = c(2, 2))
+par(mfrow = c(1, 2))
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "Class")
 for(i in 3:15){
   segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3 + 1), lwd = 2)
