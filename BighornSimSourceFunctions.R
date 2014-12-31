@@ -63,16 +63,16 @@ update.leslie.fun <- function(current.state, sex.ratio, samples.to.draw, tot.cha
 #     repros <- c(0, rep((post.draw$beta.repro.1.2 * post.draw$beta.wean.1.2 * sex.ratio), 3), rep((post.draw$beta.repro.1.3 * post.draw$beta.wean.1.3  * sex.ratio), 6), rep((post.draw$beta.repro.1.4 * post.draw$beta.wean.1.4  * sex.ratio), 5), rep((post.draw$beta.repro.1.5 * post.draw$beta.wean.1.5 * sex.ratio), 4))    
 #     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 5), rep(post.draw$beta.adsurv.1.5, 3), 0)    
 #     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-    repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 3), rep((post.draw$beta.wean.1.3  * sex.ratio), 6), rep((post.draw$beta.wean.1.4  * sex.ratio), 5), rep((post.draw$beta.wean.1.5 * sex.ratio), 4))    
-    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 5), rep(post.draw$beta.adsurv.1.5, 3), 0)    
+    repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 2), rep((post.draw$beta.wean.1.3  * sex.ratio), 6), rep((post.draw$beta.wean.1.4  * sex.ratio), 6), rep((post.draw$beta.wean.1.5 * sex.ratio), 4))    
+    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 2), rep(post.draw$beta.adsurv.1.3, 6), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 2), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   else {
 #    repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 * post.draw$beta.overwinter.2), 1), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 * post.draw$beta.overwinter.2), 6), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 * post.draw$beta.overwinter.2), 4))    
 #    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 3), 0)    
 #    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-    repros <- c(0, rep((post.draw$beta.repro.2.2 * post.draw$beta.wean.2.2 ), 3), rep((post.draw$beta.repro.2.3 * post.draw$beta.wean.2.3 ), 6), rep((post.draw$beta.repro.2.4 * post.draw$beta.wean.2.4 ), 5), rep((post.draw$beta.repro.2.5 * post.draw$beta.wean.2.5 ), 4))    
-    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 2), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 5), rep(post.draw$beta.adsurv.2.5, 3), 0)    
+    repros <- c(0, rep((post.draw$beta.wean.22 * sex.ratio), 2), rep((post.draw$beta.wean.2.3  * sex.ratio), 6), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 4))    
+    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 2), rep(post.draw$beta.adsurv.2.3, 6), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 2), 0)    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   }
   return(leslie)
@@ -179,7 +179,7 @@ popgrowth.sim.fun <- function(timesteps, reps, alpha.range, gamma.range, alpha.s
   return(outlist)
 }
 
-vec.permut.fun <- function(reps, alpha, gamma){
+vec.permut.fun <- function(reps, alpha, gamma, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
 #  intro.out.elast <- fade.out.elast <- rep(NA, reps)
   # 19 age classes; 2 environmental states. 
   fade.out.elast <- intro.elast <- rep(NA, reps)
@@ -196,8 +196,8 @@ vec.permut.fun <- function(reps, alpha, gamma){
   P <- apply(e.full, c(1, 2), sum)
     
     # B is block diagonal, with 2 19x19 blocks for the 2 environmental states.
-    healthy.leslie <- update.leslie.fun(current.state = "healthy", samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-    endemic.leslie <-  update.leslie.fun(current.state = "infected", samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+    healthy.leslie <- update.leslie.fun(current.state = "healthy", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+    endemic.leslie <-  update.leslie.fun(current.state = "infected", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
     leslie.list <- list(healthy.leslie, endemic.leslie)
   B <- bdiag(leslie.list)
     
