@@ -6,18 +6,18 @@
 require(popbio)
 require(Matrix)
 source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
-ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
+#ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/20000SimChains_26Dec2014")
 
 
 #--------------------------------------------------#
-#-- Figure 1. IPM posterior estimates -------------#
+#-- Figure 2. IPM posterior estimates -------------#
 #--------------------------------------------------#
 coda.summary.obj.11 <- summary(ipm11.coda)
 row.names(coda.summary.obj.11[[2]])
 
 beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
-beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][37:54, ]
+#beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][19:36, ]
 
 # reminder of age-structure for IPM:
 age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6) 
@@ -25,21 +25,21 @@ age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6)
 # restructure posteriors so that age-classes are represented as many times as they contain years
 he.adsurv <- beta.posts.adsurv[c(1, 4, 7, 10, 13, 16), ]
 inf.adsurv <- beta.posts.adsurv[c(1, 4, 7, 10, 13, 16) + 1, ]
-he.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16), ]
-inf.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16) + 1, ]
+# he.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16), ]
+# inf.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16) + 1, ]
 he.wean <- beta.posts.wean[c(1, 4, 7, 10, 13, 16), ]
 inf.wean <- beta.posts.wean[c(1, 4, 7, 10, 13, 16) + 1, ]
 he.adsurv.2 <- he.adsurv[age.class.ind, ]
 inf.adsurv.2 <- inf.adsurv[age.class.ind, ]
-he.repro.2 <- he.repro[age.class.ind, ]
-inf.repro.2 <- inf.repro[age.class.ind, ]
+# he.repro.2 <- he.repro[age.class.ind, ]
+# inf.repro.2 <- inf.repro[age.class.ind, ]
 he.wean.2 <- he.wean[age.class.ind, ]
 inf.wean.2 <- inf.wean[age.class.ind, ]
 
 # plot betas out
 plot.cols <- c("white", "black", "red")
 #svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/Posteriors_22Dec2014.svg", width = 3, height = 2, pointsize = 8)
-par(mfrow = c(1, 3), mex = 1, oma = c(2, 2, 0, 0), mar = c(4, 5, 1, 1))
+par(mfrow = c(1, 2), mex = 1, oma = c(2, 2, 0, 0), mar = c(4, 5, 1, 1))
 plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of survival", xlab = "Age (years)")
 for(i in 2:19){
   segments(x0 = i, x1 = i, y0 = (exp(he.adsurv.2[i, 1])) / (1 + exp(he.adsurv.2[i, 1])), y1 = exp(he.adsurv.2[i, 5]) / (1 + exp(he.adsurv.2[i, 5])), col = "black", lty = 2, lwd = 2)
@@ -50,13 +50,13 @@ for(i in 2:19){
 leg.text <- c("Healthy", "Diseased")
 legend("bottomleft", leg.text, col = c("black", "red"), lty = c(2, 1), bty = "n", lwd = c(2, 2))
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of reproducing", xlab = "Age (years)")
-for(i in 2:19){
-  segments(x0 = i, x1 = i, y0 = (exp(he.repro.2[i, 1])) / (1 + exp(he.repro.2[i, 1])), y1 = exp(he.repro.2[i, 5]) / (1 + exp(he.repro.2[i, 5])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.repro.2[i, 3])) / (1 + exp(he.repro.2[i, 3])), y1 = exp(he.repro.2[i, 3]) / (1 + exp(he.repro.2[i, 3])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.repro.2[i, 1])) / (1 + exp(inf.repro.2[i, 1])), y1 = exp(inf.repro.2[i, 5]) / (1 + exp(inf.repro.2[i, 5])), col = "red", lty = 1, lwd = 2)
-  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.repro.2[i, 3])) / (1 + exp(inf.repro.2[i, 3])), y1 = exp(inf.repro.2[i, 3]) / (1 + exp(inf.repro.2[i, 3])), col = "red", lty = 1, lwd = 2)
-}
+# plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of reproducing", xlab = "Age (years)")
+# for(i in 2:19){
+#   segments(x0 = i, x1 = i, y0 = (exp(he.repro.2[i, 1])) / (1 + exp(he.repro.2[i, 1])), y1 = exp(he.repro.2[i, 5]) / (1 + exp(he.repro.2[i, 5])), col = "black", lty = 2, lwd = 2)
+#   segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.repro.2[i, 3])) / (1 + exp(he.repro.2[i, 3])), y1 = exp(he.repro.2[i, 3]) / (1 + exp(he.repro.2[i, 3])), col = "black", lty = 2, lwd = 2)
+#   segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.repro.2[i, 1])) / (1 + exp(inf.repro.2[i, 1])), y1 = exp(inf.repro.2[i, 5]) / (1 + exp(inf.repro.2[i, 5])), col = "red", lty = 1, lwd = 2)
+#   segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.repro.2[i, 3])) / (1 + exp(inf.repro.2[i, 3])), y1 = exp(inf.repro.2[i, 3]) / (1 + exp(inf.repro.2[i, 3])), col = "red", lty = 1, lwd = 2)
+# }
 
 plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of weaning", xlab = "Age (years)")
 for(i in 2:19){
@@ -83,12 +83,13 @@ posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "b
                      "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
                      "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
                      "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
-                     "beta.repro.1.1", "beta.repro.2.1",
-                     "beta.repro.3.1", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
-                     "beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
-                     "beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
-                     "beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
-                     "beta.repro.3.6", "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+#                      "beta.repro.1.1", "beta.repro.2.1",
+#                      "beta.repro.3.1", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
+#                      "beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
+#                      "beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
+#                      "beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
+#                     "beta.repro.3.6", 
+                      "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
                      "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
                      "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
@@ -99,7 +100,7 @@ reps <- 100
 popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
 
 for(i in 1:reps){
-  he.project <- healthy.project.fun(timesteps, sex.ratio = .6, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  he.project <- healthy.project.fun(timesteps, sex.ratio = .5, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
   popsize.he[i, ] <- he.project$tot.pop.size 
   log.lambda.s.he[i, ] <- he.project$log.lambda.s
 }  
@@ -137,10 +138,11 @@ healthy.leslie.list <- infected.leslie.list <- vector("list", length = 1000)
 healthy.eigenval1 <- infected.eigenval1 <- rep(NA, 1000)
 juvsurv.elast.he <- juvsurv.elast.inf <- adsurv.elast.he <- adsurv.elast.inf <- fecund.elast.he <- fecund.elast.inf <- rep(NA, 1000)
 age.struct.he <- age.struct.inf <- matrix(NA, nrow = 19, ncol = 1000)
+joint.posterior.coda <- ipm11.coda
 
 for(i in 1:1000){
-    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 500:1000, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
-    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 500:1000, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
+    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 10000:20000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5)
+    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 10000:20000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5)
     healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
     infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
     he.eigen.rescale <- sum(Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]))
@@ -240,8 +242,9 @@ for(i in 1:1000){
 #--------------------------------------------------------#
 #-- Sensitivies and Elasticities using Vec-permutation --#
 #--------------------------------------------------------#
-
-vec.permut.test0 <- vec.permut.fun(reps = 100, alpha = 0.9, gamma = 0.1)
+#vec.permut.fun <- function(reps, alpha, gamma, current.state, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names){
+  
+vec.permut.test0 <- vec.permut.fun(reps = 100, alpha = 0.9, gamma = 0.1, sex.ratio = .5, samples.to.draw = 10000:20000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
 vec.permut.test1 <- vec.permut.fun(reps = 100, alpha = 0.2, gamma = 0.1)
 vec.permut.test2 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.1)
 vec.permut.test3 <- vec.permut.fun(reps = 100, alpha = 0.05, gamma = 0.1)
