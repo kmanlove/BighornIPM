@@ -14,8 +14,8 @@ lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/Cl
 compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data <- subset(compd.data, !(Pop == "Imnaha" & year <= 1999))
 #compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-#compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
-compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
+compd.data$PNInd <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+#compd.data$PNInd <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
 #compd.data$PNIndLambs <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
 #compd.data$PNIndEwes <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "Imnaha" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
 compd.data$PNIndLambs <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
@@ -383,10 +383,10 @@ ipm11.data <- list(z = ch,
                    f = f, 
                    nind = dim(ch)[1], 
                    n.years = n.years,
-                   n.pops = dim(popyr.dis.status)[1],
+                   n.pops = dim(popyr.dis.status.adults)[1],
                    n.age.classes = (length(levels(factor(age.class.ind)))),
                    n.ages = 18,
-                   n.dis.states = length(levels(factor(popyr.dis.status))),
+                   n.dis.states = length(levels(factor(popyr.dis.status.adults))),
                    ewe.age = ewe.age,
                    age.class.ind = age.class.ind,
 #                   popyr.dis.status = popyr.dis.status,
@@ -458,15 +458,15 @@ ipm11.coda <- coda.samples(ipm11.call,
                            ipm11.params,
                            ni)
 
-#dput(ipm11.coda, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/20000SimChains_26Dec2014")
-#ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/20000SimChains_26Dec2014")
+#dput(ipm11.coda, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/20000SimChains_26Dec2014")
+#ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/20000SimChains_26Dec2014")
 
 summary(ipm11.coda)
 convg.diags <- gelman.diag(ipm11.coda)
-#write.csv(convg.diags[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/GelmanRubinDiags_26Dec2014.csv")
+#write.csv(convg.diags[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/GelmanRubinDiags_26Dec2014.csv")
 
 coda.summary.obj.11 <- summary(ipm11.coda)
-#write.csv(coda.summary.obj.11[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/PosteriorQuantiles_26Dec2014.csv")
+#write.csv(coda.summary.obj.11[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/PosteriorQuantiles_26Dec2014.csv")
 row.names(coda.summary.obj.11[[2]])
 
 beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
