@@ -1,5 +1,6 @@
-# BHS IPM Round 11 -- no marrays; ewe-age- and disease-status-specific reproduction; ewe-age- and disease-status-specific sls
+# BHS IPM 
 # November 11, 2014
+
 # 0. Load required packages.
 require(rjags)
 require(runjags)
@@ -28,35 +29,27 @@ rams.with.teeth <- subset(studysheep, SEX == "M" & (is.na(Tooth_Age) == F | AENT
 lambs.with.dam.age <- subset(lambs, EWEID %in% levels(factor(ewes.with.teeth$ID)))
 
 # rename populations in ewes.with.teeth
-ewes.with.teeth$END_Population <- ifelse (
-  ewes.with.teeth$END_Population == "AS", "Asotin", ifelse (
-    ewes.with.teeth$END_Population == "BC", "BigCanyon", ifelse (
-      ewes.with.teeth$END_Population == "BB", "BlackButte", ifelse (
-        ewes.with.teeth$END_Population == "IM", "Imnaha", ifelse (
-          ewes.with.teeth$END_Population == "LO", "Lostine", ifelse (
-            ewes.with.teeth$END_Population == "UHCOR", "UHCOR", ifelse (
-              ewes.with.teeth$END_Population == "RB", "Redbird", ifelse (
-                ewes.with.teeth$END_Population == "WE", "Wenaha", ifelse (
-                  ewes.with.teeth$END_Population == "SM", "SheepMountain", ifelse (
-                    ewes.with.teeth$END_Population == "SC", "UpperSaddle", ifelse (
-                      ewes.with.teeth$END_Population == "BRC", "BearCreek", ifelse (
-                        ewes.with.teeth$END_Population == "MU", "MuirCreek", ifelse (
-                          ewes.with.teeth$END_Population == "MY", "MyersCreek", NA)))))))))))))
-ewes.with.teeth <- subset(ewes.with.teeth, is.na(END_Population) == F)
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "AS"] <- "Asotin"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "BC"] <- "BigCanyon"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "BB"] <- "BlackButte"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "BRC"] <- "BearCreek"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "IM"] <- "Imnaha"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "LO"] <- "Lostine"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "MU"] <- "MuirCreek"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "MY"] <- "MyersCreek"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "RB"] <- "Redbird"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "SM"] <- "SheepMountain"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "UHCOR"] <- "UHCOR"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "SC"] <- "UpperSaddle"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "WE"] <- "Wenaha"
 
-#-----------------------#
-#-- INDEX DEFINITIONS --#
-#-----------------------#
-# i = (1, ..., nindividuals) (sampled ewes)
-# j = (1, ..., npops) (pops)
-# t = (1, ..., 2012 - 1997) (years)
-# a = (1, ..., 18) (ewe ages in years)
-# c = (1, ..., 5) (ewe ages in Festa-Bianchet age-classes)
+#----------------------#
+#-- state-space data --#
+#----------------------#
 
-# state-space data
-# cut compd.data down to just the pops in ewes.with.teeth, and just years 1997 and forward
+# cut compd.data down to just the pops in ewes.with.teeth from 1997 forward
 compd.data <- subset(compd.data, Pop %in% levels(factor(ewes.with.teeth$END_Population)) & year >= 1997 & Pop != "UpperSaddle")
-  # pull Upper Saddle because it isn't included when AENTRY isn't used. 
+  # exclude Upper Saddle because it isn't included when AENTRY isn't used. 
 compd.data$Pop <- factor(compd.data$Pop)
 factor.list <- list(compd.data$Pop, compd.data$year)
 Oad <- tapply(compd.data$Ewes, factor.list, sum) # table observed adults in each pop-year
@@ -68,11 +61,8 @@ compd.data$NoFemRel.nonas <- ifelse(is.na(compd.data$NoFemRel) == T, 0, compd.da
 RemovedEwes <- tapply(compd.data$NoFemRem.nonas, factor.list, sum)
 AddedEwes <- tapply(compd.data$NoFemRel.nonas, factor.list, sum)
 for(j in 1:dim(RemovedEwes)[1]){
-#  for(j in 1:12){
-    RemovedEwes[j, ] <- ifelse(is.na(RemovedEwes[j, ]) == T, 0, RemovedEwes[j, ])
+  RemovedEwes[j, ] <- ifelse(is.na(RemovedEwes[j, ]) == T, 0, RemovedEwes[j, ])
   AddedEwes[j, ] <- ifelse(is.na(AddedEwes[j, ]) == T, 0, AddedEwes[j, ])
-  #  Osls[j, ] <- ifelse(is.na(Osls[j, ]) == T, 0, Osls[j, ])
-  #  RadEwes[j, ] <- ifelse(is.na(RadEwes[j, ]) == T, 0, RadEwes[j, ])
 }
 
 count.data <- as.data.frame(cbind(rep(levels(factor(compd.data$year)), each = length(levels(compd.data$Pop))), rep(as.character(levels(factor(compd.data$Pop))), times = length(levels(factor(compd.data$year)))), as.vector(Oad), as.vector(Ojuv), as.vector(RemovedEwes), as.vector(AddedEwes)))
