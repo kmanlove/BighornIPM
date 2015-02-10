@@ -157,18 +157,18 @@ ewe.age <- ifelse (ewe.age == 0, 20, ewe.age)
 ewe.pop.ind.num <- as.numeric(as.factor(ewe.pop.ind))
 
 age.spec.ewe.surv <- do.call(rbind, ewe.surv.list)
-names(age.spec.ewe.surv) <- c("eweid", "years", "pop", "ewe.surv.status", "ewe.age", "ad.pn.status")
-age.spec.ewe.surv$years <- as.numeric(as.character(age.spec.ewe.surv$years))
+names(age.spec.ewe.surv)  <- c("eweid", "years", "pop", "ewe.surv.status", "ewe.age", "ad.pn.status")
+age.spec.ewe.surv$years   <- as.numeric(as.character(age.spec.ewe.surv$years))
 age.spec.ewe.surv$ewe.age <- as.numeric(as.character(age.spec.ewe.surv$ewe.age))
 age.spec.ewe.surv <- subset(age.spec.ewe.surv, years >= 1997 & ewe.age >= 1)
 age.spec.ewe.surv$age.class1 <- age.class.ind[as.numeric(as.character(age.spec.ewe.surv$ewe.age))]
 age.spec.ewe.surv$johnson.age.class1 <- johnson.age.class.ind[as.numeric(as.character(age.spec.ewe.surv$ewe.age))]
 k <- subset(age.spec.ewe.surv, is.na(ad.pn.status) == F)
 ewe.surv.ss.tab <- table(k$age.class1, k$ad.pn.status)
-ewe.surv.age <- as.numeric(age.spec.ewe.surv$ewe.age)
+ewe.surv.age    <- as.numeric(age.spec.ewe.surv$ewe.age)
 ewe.surv.status <- ifelse(as.numeric(age.spec.ewe.surv$ewe.surv.status) == 2, 1, 0)
-ewe.surv.year <- age.spec.ewe.surv$years - 1996
-ewe.surv.pop <- age.spec.ewe.surv$pop
+ewe.surv.year   <- age.spec.ewe.surv$years - 1996
+ewe.surv.pop `  <- age.spec.ewe.surv$pop
 
 # write.csv(age.spec.ewe.surv, "./Data/EweSurvData_TeethAndLeq3_MoviDef.csv") # NOTE: path has changed
 # write.csv(age.spec.ewe.surv, "~./Data/EweSurvData_TeethAndLeq3_ObservedHealthDef.csv") # NOTE: path has changed
@@ -188,7 +188,7 @@ mort.ewes.notaso <- subset(age.spec.ewe.surv,
                            ewe.surv.status == "died" & !(pop == "Asotin") & !(pop == "BigCanyon" & years <= 2000) & !(pop == "MuirCreek" & years <= 2000))
 mort.ewes.aso <- subset(age.spec.ewe.surv, 
                         ewe.surv.status == "died" & (pop == "Asotin" | (pop == "BigCanyon" & years <= 2000) | (pop == "MuirCreek" & years <= 2000)))
-aso.rams <- subset (rams.with.teeth, END_Population == "AS")
+aso.rams   <- subset (rams.with.teeth, END_Population == "AS")
 other.rams <- subset (rams.with.teeth, !(END_Population %in% c("AS", "", "0", "MI", "SD", "SR", "UHCID")))
 tot.marked.ewes <- tapply (compd.data$RadEwes, compd.data$year, sum)
 tot.marked.rams <- tapply (compd.data$RadRams, compd.data$year, sum)
@@ -197,18 +197,19 @@ layout(matrix( c(1, 2, 1, 2, 1, 2, 3, 4), byrow = T, nrow = 4))
 par(oma = c(0, 0, 2, 0), mar = c(3, 5, 1, 1))
 plot(mort.ewes.notaso$ewe.age ~ jitter(mort.ewes.notaso$years, 1), 
      main = "Known-aged ewes", 
-     pch = 1, 
-     cex = 1.2, 
+     pch  = 1, 
+     cex  = 1.2, 
      xlab = "", 
      ylab ="Age at death", 
-     col = "red")
+     col  = "red")
 lines(lowess(mort.ewes.notaso$ewe.age ~ mort.ewes.notaso$years, iter = 30, delta = .3, f = 3/4), 
-      col = "red", lwd = 2)
+    col = "red", lwd = 2)
 leg.text <- c("Movi-Free", "Movi-Infected")
 legend("topleft", leg.text, col = c("black", "red"), pch = c(16, 1), bty = "n")
 
 points(mort.ewes.aso$ewe.age ~ jitter(mort.ewes.aso$years, 1), pch = 16)
-lines(lowess(mort.ewes.aso$ewe.age ~ mort.ewes.aso$years, iter = 30, delta = .3, f = 3/4), ylab = "ewe age")
+lines(lowess(mort.ewes.aso$ewe.age ~ mort.ewes.aso$years, iter = 30, delta = .3, f = 3/4), 
+      ylab = "ewe age")
 
 plot (other.rams$ALS ~ jitter(other.rams$END_BIOYR, 1), 
       col = "red", 
