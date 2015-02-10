@@ -281,12 +281,12 @@ for(i in 1:length(ewe.wean.list))
 age.spec.ewe.wean <- do.call(rbind, ewe.wean.list)
 age.spec.ewe.wean <- subset(age.spec.ewe.wean, is.na(wean.status) == F & is.na(wean.pn.status) == F)
 age.spec.ewe.wean$years <- factor(age.spec.ewe.wean$years)
-age.spec.ewe.wean$pop.name <- factor(age.spec.ewe.wean$pop.name)
+age.spec.ewe.wean$pop.name   <- factor(age.spec.ewe.wean$pop.name)
 age.spec.ewe.wean$age.class1 <- age.class.ind[as.numeric(as.character(age.spec.ewe.wean$ewe.age.wean))]
 wean.ss.tab <- table(age.spec.ewe.wean$age.class1, age.spec.ewe.wean$wean.pn.status)
 
-ewe.wean.pop <- as.numeric(age.spec.ewe.wean$pop.name)
-ewe.wean.age <- as.numeric(as.character(age.spec.ewe.wean$ewe.age.wean)) + 1
+ewe.wean.pop  <- as.numeric(age.spec.ewe.wean$pop.name)
+ewe.wean.age  <- as.numeric(as.character(age.spec.ewe.wean$ewe.age.wean)) + 1
 ewe.wean.year <- as.numeric(as.factor(as.numeric(as.character(age.spec.ewe.wean$years))))
 ewe.wean.success <- as.numeric(as.character(age.spec.ewe.wean$wean.status))
 table(age.spec.ewe.wean$pop.name, age.spec.ewe.wean$wean.status)
@@ -317,7 +317,7 @@ cat("
     for(a in 1:18){ # 
     N[j, 1, a] ~ dpois(10)  # all ages.
     } #a
-    Nad[j, 1] <- sum(N[j, 1, 2:18])
+    Nad[j, 1]  <- sum(N[j, 1, 2:18])
     Njuv[j, 1] <- sum(N[j, 1, 1])
     Ntot[j, 1] <- Nad[j, 1] + Njuv[j, 1]
     } #j
@@ -397,7 +397,7 @@ cat("
     for (t in 1 : (n.years - 1)){
     # add in observation data
     Ojuv[j, t] ~ dpois(Njuv[j, t] + 1)
-    Oad[j, t] ~ dpois(Nad[j, t] + 1)
+    Oad[j, t]  ~ dpois(Nad[j, t] + 1)
     y[j, t] <- Ojuv[j, t] + Oad[j, t]
     } #t
     } #j
@@ -430,7 +430,7 @@ n.occasions <- 16
 # function to create ch.inits
 ch.init <- function(ch, f){
   for(i in 1:dim(ch)[1]){
-    ch[i, 1 : f[i]] <- NA
+    ch[i, 1:f[i]] <- NA
   }
   return(ch)
 }
