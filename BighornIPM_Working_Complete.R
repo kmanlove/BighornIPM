@@ -452,7 +452,6 @@ nt <- 3
 nb <- 2500
 nc <- 3
 
-
 #---------------------------#
 #-- Bundle IPM data --------#
 #---------------------------#
@@ -487,14 +486,15 @@ MoviStatus.call <- jags.model("ipm11.bug",
                                         inits = ipm11.inits,
                                         n.chains = nc,
                                         n.adapt = nb
-)
+                              )
 
 
 update(MoviStatus.call, ni)
 
 MoviStatus.coda <- coda.samples(MoviStatus.call,
                                           ipm11.params,
-                                          ni)
+                                          ni
+                                )
 
 summary(MoviStatus.coda)
 # convg.diags.MoviStatus <- gelman.diag(MoviStatus.coda)
