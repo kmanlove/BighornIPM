@@ -5,66 +5,77 @@
 # require(runjags)
 require(popbio)
 require(Matrix)
+require(MASS)
 source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
-ipm11.coda <- dget("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/22Dec2014")
-
+load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/MoviDefPost_02Feb2015.RData")
+#load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_09Jan2015.RData")
+#load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
+ipm11.coda <- MoviStatus.coda
 
 #--------------------------------------------------#
-#-- Figure 1. IPM posterior estimates -------------#
+#-- Figure 2. IPM posterior estimates -------------#
 #--------------------------------------------------#
 coda.summary.obj.11 <- summary(ipm11.coda)
 row.names(coda.summary.obj.11[[2]])
 
 beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
-beta.posts.repro <- coda.summary.obj.11[[2]][19:36, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][37:54, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][19:36, ]
 
 # reminder of age-structure for IPM:
-age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6) 
-
-# restructure posteriors so that age-classes are represented as many times as they contain years
-he.adsurv <- beta.posts.adsurv[c(1, 4, 7, 10, 13, 16), ]
-inf.adsurv <- beta.posts.adsurv[c(1, 4, 7, 10, 13, 16) + 1, ]
-he.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16), ]
-inf.repro <- beta.posts.repro[c(1, 4, 7, 10, 13, 16) + 1, ]
-he.wean <- beta.posts.wean[c(1, 4, 7, 10, 13, 16), ]
-inf.wean <- beta.posts.wean[c(1, 4, 7, 10, 13, 16) + 1, ]
-he.adsurv.2 <- he.adsurv[age.class.ind, ]
-inf.adsurv.2 <- inf.adsurv[age.class.ind, ]
-he.repro.2 <- he.repro[age.class.ind, ]
-inf.repro.2 <- inf.repro[age.class.ind, ]
-he.wean.2 <- he.wean[age.class.ind, ]
-inf.wean.2 <- inf.wean[age.class.ind, ]
+age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
 
 # plot betas out
-plot.cols <- c("white", "black", "red")
-#svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/Posteriors_22Dec2014.svg", width = 3, height = 2, pointsize = 8)
-par(mfrow = c(1, 3), mex = 1, oma = c(2, 2, 0, 0), mar = c(4, 5, 1, 1))
-plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of survival", xlab = "Age (years)")
-for(i in 2:19){
-  segments(x0 = i, x1 = i, y0 = (exp(he.adsurv.2[i, 1])) / (1 + exp(he.adsurv.2[i, 1])), y1 = exp(he.adsurv.2[i, 5]) / (1 + exp(he.adsurv.2[i, 5])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.adsurv.2[i, 3])) / (1 + exp(he.adsurv.2[i, 3])), y1 = exp(he.adsurv.2[i, 3]) / (1 + exp(he.adsurv.2[i, 3])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.adsurv.2[i, 1])) / (1 + exp(inf.adsurv.2[i, 1])), y1 = exp(inf.adsurv.2[i, 5]) / (1 + exp(inf.adsurv.2[i, 5])), col = "red", lty = 1, lwd = 2)
-  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.adsurv.2[i, 3])) / (1 + exp(inf.adsurv.2[i, 3])), y1 = exp(inf.adsurv.2[i, 3]) / (1 + exp(inf.adsurv.2[i, 3])), col = "red", lty = 1, lwd = 2)
+plot.cols <- c("white", "black", "grey60")
+#svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure2_Posteriors_MoviDef_05Jan2015.svg", width = 3, height = 2, pointsize = 8)
+par(mfrow = c(1, 2), las = 1)
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "", xaxt = "n")
+for(i in 3:15){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.adsurv[i, 3])) / (1 + exp(beta.posts.adsurv[i, 3])), y1 = exp(beta.posts.adsurv[i, 3]) / (1 + exp(beta.posts.adsurv[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
 }
-leg.text <- c("Healthy", "Diseased")
-legend("bottomleft", leg.text, col = c("black", "red"), lty = c(2, 1), bty = "n", lwd = c(2, 2))
+axis(side = 1, at = c(4.5, 7.5, 10.5, 13.5), labels = c("2", "3-7", "8-13", "> 13"))
+mtext(side = 1, line = 2, outer = F, "Ewe age")
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of reproducing", xlab = "Age (years)")
-for(i in 2:19){
-  segments(x0 = i, x1 = i, y0 = (exp(he.repro.2[i, 1])) / (1 + exp(he.repro.2[i, 1])), y1 = exp(he.repro.2[i, 5]) / (1 + exp(he.repro.2[i, 5])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.repro.2[i, 3])) / (1 + exp(he.repro.2[i, 3])), y1 = exp(he.repro.2[i, 3]) / (1 + exp(he.repro.2[i, 3])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.repro.2[i, 1])) / (1 + exp(inf.repro.2[i, 1])), y1 = exp(inf.repro.2[i, 5]) / (1 + exp(inf.repro.2[i, 5])), col = "red", lty = 1, lwd = 2)
-  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.repro.2[i, 3])) / (1 + exp(inf.repro.2[i, 3])), y1 = exp(inf.repro.2[i, 3]) / (1 + exp(inf.repro.2[i, 3])), col = "red", lty = 1, lwd = 2)
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of producing a recruit", xlab = "", xaxt = "n")
+for(i in 3:15){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.wean[i, 1])) / (1 + exp(beta.posts.wean[i, 1])), y1 = (exp(beta.posts.wean[i, 5])) / (1 + exp(beta.posts.wean[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean[i, 3])) / (1 + exp(beta.posts.wean[i, 3])), y1 = exp(beta.posts.wean[i, 3]) / (1 + exp(beta.posts.wean[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
 }
+axis(side = 1, at = c(4.5, 7.5, 10.5, 13.5), labels = c("2", "3-7", "8-13", "> 13"))
+mtext(side = 1, line = 2, outer = F, "Ewe age")
+#dev.off()
 
-plot(-1, -1, ylim = c(0, 1), xlim = c(2, 19), ylab = "Probability of weaning", xlab = "Age (years)")
-for(i in 2:19){
-  segments(x0 = i, x1 = i, y0 = (exp(he.wean.2[i, 1])) / (1 + exp(he.wean.2[i, 1])), y1 = exp(he.wean.2[i, 5]) / (1 + exp(he.wean.2[i, 5])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(he.wean.2[i, 3])) / (1 + exp(he.wean.2[i, 3])), y1 = exp(he.wean.2[i, 3]) / (1 + exp(he.wean.2[i, 3])), col = "black", lty = 2, lwd = 2)
-  segments(x0 = i + .25, x1 = i + .25, y0 = (exp(inf.wean.2[i, 1])) / (1 + exp(inf.wean.2[i, 1])), y1 = exp(inf.wean.2[i, 5]) / (1 + exp(inf.wean.2[i, 5])), col = "red", lty = 1, lwd = 2)
-  segments(x0 = i + .25 - 0.25, x1 = i + .25 + 0.25, y0 = (exp(inf.wean.2[i, 3])) / (1 + exp(inf.wean.2[i, 3])), y1 = exp(inf.wean.2[i, 3]) / (1 + exp(inf.wean.2[i, 3])), col = "red", lty = 1, lwd = 2)
+
+
+
+#---------------------------------------#
+#-- Johnson age-structure --------------#
+#---------------------------------------#
+beta.posts.adsurv <- coda.summary.obj.11[[2]][1:12, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][13:24, ]
+
+# reminder of age-structure for IPM:
+age.class.ind <- c(1, 2, rep(3, 17), 4) 
+
+# plot betas out
+plot.cols <- c("white", "black", "grey60")
+#svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure2_Posteriors_MoviDef_05Jan2015.svg", width = 3, height = 2, pointsize = 8)
+par(mfrow = c(1, 2), las = 1)
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 9), ylab = "Probability of survival", xlab = "Age class", xaxt = "n")
+for(i in 3:9){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.adsurv[i, 1])) / (1 + exp(beta.posts.adsurv[i, 1])), y1 = exp(beta.posts.adsurv[i, 5]) / (1 + exp(beta.posts.adsurv[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.adsurv[i, 3])) / (1 + exp(beta.posts.adsurv[i, 3])), y1 = exp(beta.posts.adsurv[i, 3]) / (1 + exp(beta.posts.adsurv[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
 }
+axis(side = 1, at = c(4.5, 7.5), labels = c("2", ">= 3"))
+mtext(side = 1, line = 2, outer = F, "Ewe age")
+
+plot(-1, -1, ylim = c(0, 1), xlim = c(3, 9), ylab = "Probability of recruitment", xlab = "Class", xaxt = "n")
+for(i in 3:9){
+  segments(x0 = i, x1 = i, y0 = (exp(beta.posts.wean[i, 1])) / (1 + exp(beta.posts.wean[i, 1])), y1 = (exp(beta.posts.wean[i, 5])) / (1 + exp(beta.posts.wean[i, 5])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
+  segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean[i, 3])) / (1 + exp(beta.posts.wean[i, 3])), y1 = exp(beta.posts.wean[i, 3]) / (1 + exp(beta.posts.wean[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
+}
+axis(side = 1, at = c(4.5, 7.5), labels = c("2", ">= 13"))
+mtext(side = 1, line = 2, outer = F, "Ewe age")
 #dev.off()
 
 #---------------------------------------------#
@@ -72,34 +83,32 @@ for(i in 2:19){
 #---------------------------------------------#
 timesteps <- 60
 reps <- 100
-ages.init <- c(100, 20, rep(10, 8), rep(5, 5), rep(3, 4))
+ages.init <- c(75, 55, rep(50, 8), rep(25, 5), rep(7, 4))
 alpha <- .1
 gamma <- 1
-samples.to.draw <- seq(500:1000)
+samples.to.draw <- seq(2500:5000)
 tot.chains <- 3
 joint.posterior.coda <- ipm11.coda
 
 posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
                      "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
                      "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
-                     "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
-                     "beta.repro.1.1", "beta.repro.2.1",
-                     "beta.repro.3.1", "beta.repro.1.2", "beta.repro.2.2",  "beta.repro.3.2", 
-                     "beta.repro.1.3", "beta.repro.2.3", "beta.repro.3.3", "beta.repro.1.4",  
-                     "beta.repro.2.4", "beta.repro.3.4", "beta.repro.1.5", "beta.repro.2.5",  
-                     "beta.repro.3.5", "beta.repro.1.6", "beta.repro.2.6",  
-                     "beta.repro.3.6", "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+                     "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", 
+                     "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
+                      "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
                      "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
-                     "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5", "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6")
+                     "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5",
+"beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6", "sigma.time.adsurv", "sigma.time.wean"
+)
 
-healthy.test <- healthy.project.fun(timesteps, sex.ratio = .6, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+healthy.test <- healthy.project.fun(timesteps, sex.ratio = .5, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = 0)
   
 reps <- 100
 popsize.he <- log.lambda.s.he <- matrix(NA, ncol = timesteps, nrow = reps)
 
 for(i in 1:reps){
-  he.project <- healthy.project.fun(timesteps, sex.ratio = .6, ages.init, alpha, gamma, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  he.project <- healthy.project.fun(timesteps, sex.ratio = .5, ages.init, alpha = 0, gamma = 0, samples.to.draw = seq(500:1000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = 0)
   popsize.he[i, ] <- he.project$tot.pop.size 
   log.lambda.s.he[i, ] <- he.project$log.lambda.s
 }  
@@ -107,12 +116,13 @@ for(i in 1:reps){
 #write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
 #popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
 
-he.quants <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], c(0.025, 0.975), type = 3)))
-he.med <- which(popsize.he[, 40] %in% as.numeric(quantile(popsize.he[, 40], .5, type = 3)))
+he.quants <- which(popsize.he[, timesteps - 1] %in% as.numeric(quantile(popsize.he[, timesteps - 1], c(0.025, .25, .75, 0.975), type = 3)))
+he.med <- which(popsize.he[, timesteps - 1] %in% as.numeric(quantile(popsize.he[, timesteps - 1], .5, type = 3)))
 
 #par(mfrow = c(2, 1))
+par(oma = c(1, 1, 1, 1), mar = c(4, 5, 2, 2))
 layout(matrix(c(1, 1, 1, 1, 1, 2, 2, 2, 2, 3), nrow = 2, byrow = T))
-plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 3000), xlab = "year", ylab = "population size")
+plot(popsize.he[1, -c(1)] ~ seq(2, timesteps), type = "l", ylim = c(0, 1200), xlab = "year", ylab = "population size")
 for(i in 2:reps){
   lines(popsize.he[i, -c(1)] ~ seq(2, timesteps), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
@@ -133,61 +143,114 @@ abline(h = 0, lty = 2, col = "red", lwd = 2)
 #-- Exploration of lambda and age structure in each environmental state ---#
 #--------------------------------------------------------------------------#
 
-healthy.leslie.list <- infected.leslie.list <- vector("list", length = 1000)
-healthy.eigenval1 <- infected.eigenval1 <- rep(NA, 1000)
-juvsurv.elast.he <- juvsurv.elast.inf <- adsurv.elast.he <- adsurv.elast.inf <- fecund.elast.he <- fecund.elast.inf <- rep(NA, 1000)
-age.struct.he <- age.struct.inf <- matrix(NA, nrow = 19, ncol = 1000)
+healthy.leslie.list <- infected.leslie.list <- spillover.leslie.list.1  <- spillover.leslie.list.5 <- vector("list", length = 1000)
+healthy.eigenval1 <- infected.eigenval1 <- spillover.eigenval1.1 <- spillover.eigenval1.5 <-  rep(NA, 1000)
+juvsurv.elast.he <- juvsurv.elast.inf <- juvsurv.elast.sp.1 <- juvsurv.elast.sp.5 <- adsurv.elast.he <- adsurv.elast.inf <- adsurv.elast.sp.1  <- adsurv.elast.sp.5 <- fecund.elast.he <- fecund.elast.inf <- fecund.elast.sp.1 <- fecund.elast.sp.5 <- rep(NA, 1000)
+oldage.elast.he <- oldage.elast.inf <- oldage.elast.sp.1 <- oldage.elast.sp.5 <- rep(NA, 1000)
+age.struct.he <- age.struct.inf <- age.struct.sp.1 <- age.struct.sp.5 <- matrix(NA, nrow = 19, ncol = 1000)
+joint.posterior.coda <- ipm11.coda
+age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
 
 for(i in 1:1000){
-    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 500:1000, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
-    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 500:1000, tot.chains = 3, joint.posterior.coda, posterior.names = posterior.names)
+    healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 2500:5000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = 0)
+    infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 2500:5000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = 0)
+    spillover.leslie.list.1[[i]] <- update.leslie.fun(current.state = "spillover", samples.to.draw = 2500:5000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = .3)
+    spillover.leslie.list.5[[i]] <- update.leslie.fun(current.state = "spillover", samples.to.draw = 2500:5000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = .5)
     healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
     infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
+    spillover.eigenval1.1[i] <- Re(eigen(spillover.leslie.list.1[[i]])$values[1])
+    spillover.eigenval1.5[i] <- Re(eigen(spillover.leslie.list.5[[i]])$values[1])
     he.eigen.rescale <- sum(Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]))
     inf.eigen.rescale <- sum(Re(eigen(infected.leslie.list[[i]])$vectors[, 1]))
+    sp.eigen.rescale.1 <- sum(Re(eigen(spillover.leslie.list.1[[i]])$vectors[, 1]))
+    sp.eigen.rescale.5 <- sum(Re(eigen(spillover.leslie.list.5[[i]])$vectors[, 1]))
     age.struct.he[, i] <- Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]) / he.eigen.rescale
     age.struct.inf[, i] <- Re(eigen(infected.leslie.list[[i]])$vectors[, 1]) / inf.eigen.rescale
-    
+    age.struct.sp.1[, i] <- Re(eigen(spillover.leslie.list.1[[i]])$vectors[, 1]) / sp.eigen.rescale.1
+    age.struct.sp.5[, i] <- Re(eigen(spillover.leslie.list.5[[i]])$vectors[, 1]) / sp.eigen.rescale.5
+       
     he.sens <- sensitivity(healthy.leslie.list[[i]])
     he.elast <- (1 / Re(eigen(healthy.leslie.list[[i]])$values[1])) * he.sens * healthy.leslie.list[[i]]
     fecund.elast.he[i] <- sum(he.elast[1, ])
     juvsurv.elast.he[i] <- sum(he.elast[2, 1], he.elast[3, 2])
     adsurv.elast.he[i] <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+    oldage.elast.he[i] <- sum(he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
     
     inf.sens <- sensitivity(infected.leslie.list[[i]])
     inf.elast <- (1 / Re(eigen(infected.leslie.list[[i]])$values[1])) * inf.sens * infected.leslie.list[[i]]
     fecund.elast.inf[i] <- sum(inf.elast[1, ])
     juvsurv.elast.inf[i] <- sum(inf.elast[2, 1], inf.elast[3, 2])
     adsurv.elast.inf[i] <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+    oldage.elast.inf[i] <- sum(inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+    
+    sp.sens.1 <- sensitivity(spillover.leslie.list.1[[i]])
+    sp.elast.1 <- (1 / Re(eigen(spillover.leslie.list.1[[i]])$values[1])) * sp.sens.1 * spillover.leslie.list.1[[i]]
+    fecund.elast.sp.1[i] <- sum(sp.elast.1[1, ])
+    juvsurv.elast.sp.1[i] <- sum(sp.elast.1[2, 1], sp.elast.1[3, 2])
+    adsurv.elast.sp.1[i] <- sum(sp.elast.1[4, 3], sp.elast.1[5, 4], sp.elast.1[6, 5], sp.elast.1[7, 6], sp.elast.1[8, 7], sp.elast.1[9, 8], sp.elast.1[10, 9], sp.elast.1[11, 10], sp.elast.1[12, 11], sp.elast.1[13, 12], sp.elast.1[14, 13], sp.elast.1[15, 14], sp.elast.1[16, 15], sp.elast.1[17, 16], sp.elast.1[18, 17])
+    oldage.elast.sp.1[i] <- sum(sp.elast.1[13, 12], sp.elast.1[14, 13], sp.elast.1[15, 14], sp.elast.1[16, 15], sp.elast.1[17, 16], sp.elast.1[18, 17])
+    
+    sp.sens.5 <- sensitivity(spillover.leslie.list.5[[i]])
+    sp.elast.5 <- (1 / Re(eigen(spillover.leslie.list.5[[i]])$values[1])) * sp.sens.5 * spillover.leslie.list.5[[i]]
+    fecund.elast.sp.5[i] <- sum(sp.elast.5[1, ])
+    juvsurv.elast.sp.5[i] <- sum(sp.elast.5[2, 1], sp.elast.5[3, 2])
+    adsurv.elast.sp.5[i] <- sum(sp.elast.5[4, 3], sp.elast.5[5, 4], sp.elast.5[6, 5], sp.elast.5[7, 6], sp.elast.5[8, 7], sp.elast.5[9, 8], sp.elast.5[10, 9], sp.elast.5[11, 10], sp.elast.5[12, 11], sp.elast.5[13, 12], sp.elast.5[14, 13], sp.elast.5[15, 14], sp.elast.5[16, 15], sp.elast.5[17, 16], sp.elast.5[18, 17])
+    oldage.elast.sp.5[i] <- sum(sp.elast.5[13, 12], sp.elast.5[14, 13], sp.elast.5[15, 14], sp.elast.5[16, 15], sp.elast.5[17, 16], sp.elast.5[18, 17])
+    
+    print(i)
 }
   
   # 95% intervals on lambda 
-  healthy.cred<- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
-  spillover.cred<- quantile(spillover.eigenval1, c(0.25, 0.5, 0.75))
-  infected.cred<- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
-  
+  healthy.cred <- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
+  infected.cred <- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
+  spillover.cred.1 <- quantile(spillover.eigenval1.1, c(0.25, 0.5, 0.75))
+
   # 95% intervals for fecundity, juvenile survival, and adult survival in each environment (healthy and infected)
   fecund.he <- quantile(fecund.elast.he, c(0.05, 0.5, 0.975))
   fecund.inf <- quantile(fecund.elast.inf, c(.05, 0.5, 0.975))
+  fecund.sp <- quantile(fecund.elast.sp.1, c(.05, 0.5, 0.975))
+  fecund.sp.5 <- quantile(fecund.elast.sp.5, c(.05, 0.5, 0.975))
   juvsurv.he <- quantile(juvsurv.elast.he, c(0.05, 0.5, 0.975))
   juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.05, 0.5, 0.975))
+  juvsurv.sp <- quantile(juvsurv.elast.sp.1, c(0.05, 0.5, 0.975))
+  juvsurv.sp.5 <- quantile(juvsurv.elast.sp.5, c(0.05, 0.5, 0.975))
   adsurv.he <- quantile(adsurv.elast.he, c(0.05, 0.5, 0.975))
   adsurv.inf <- quantile(adsurv.elast.inf, c(0.05, 0.5, 0.975))
-  
-  par(mfrow = c(1, 1), mar = c(4, 8, 2, 2), las = 1, cex.lab = 1.0)
-  plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
-  lines(c(2, 2) ~ c(fecund.inf[1], fecund.inf[3]), lty = 2, col = "red", lwd = 2)
-  lines(c(3, 3) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
-  lines(c(4, 4) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 2, col = "red", lwd = 2)
-  lines(c(5, 5) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
-  lines(c(6, 6) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 2, col = "red", lwd = 2)
+  adsurv.sp <- quantile(adsurv.elast.sp.1, c(0.05, 0.5, 0.975))
+  adsurv.sp.5 <- quantile(adsurv.elast.sp.5, c(0.05, 0.5, 0.975))
+
+  # 95% intervals for ratio of old-age elasticity to all adsurv elasticity 
+  old.ad.ratio.he <- quantile(oldage.elast.he / adsurv.elast.he, c(0.05, 0.25, 0.5, 0.75, 0.975))
+  old.ad.ratio.inf <- quantile(oldage.elast.inf / adsurv.elast.inf, c(0.05, 0.25, 0.5, 0.75, 0.975))
+  old.ad.ratio.sp1 <- quantile(oldage.elast.sp.1 / adsurv.elast.sp.1, c(0.05, 0.25, 0.5, 0.75, 0.975))
+  old.ad.ratio.sp5 <- quantile(oldage.elast.sp.5 / adsurv.elast.sp.5, c(0.05, 0.25, 0.5, 0.75, 0.975))
+
+  par(mfrow = c(1, 1), mar = c(4, 12, 2, 2), las = 1, cex.lab = 1.0)
+  plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 13), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
+  lines(c(2, 2) ~ c(fecund.sp[1], fecund.sp[3]), lty = 2, col = "red", lwd = 2)
+  lines(c(3, 3) ~ c(fecund.sp.5[1], fecund.sp.5[3]), lty = 2, col = "purple", lwd = 2)
+  lines(c(4, 4) ~ c(fecund.inf[1], fecund.inf[3]), lty = 2, col = "blue", lwd = 2)
+  lines(c(5, 5) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
+  lines(c(6, 6) ~ c(juvsurv.sp[1], juvsurv.sp[3]), lty = 2, col = "red", lwd = 2)
+  lines(c(7, 7) ~ c(juvsurv.sp.5[1], juvsurv.sp.5[3]), lty = 2, col = "purple", lwd = 2)
+  lines(c(8, 8) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 2, col = "blue", lwd = 2)
+  lines(c(9, 9) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
+  lines(c(10, 10) ~ c(adsurv.sp[1], adsurv.sp[3]), lty = 2, col = "red", lwd = 2)
+  lines(c(11, 11) ~ c(adsurv.sp.5[1], adsurv.sp.5[3]), lty = 2, col = "purple", lwd = 2)
+  lines(c(12, 12) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 2, col = "blue", lwd = 2)
   lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
-  lines(c(1.75, 2.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 2, col = "red", lwd = 2)
-  lines(c(2.75, 3.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
-  lines(c(3.75, 4.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 2, col = "red", lwd = 2)
-  lines(c(4.75, 5.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
-  lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "red", lwd = 2)
-  axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile survival (he)", "Juvenile surv (pers)", "Adult survival (he)", "Adult survival (pers)"))
+  lines(c(1.75, 2.25) ~ c(fecund.sp[2], fecund.sp[2]), lty = 2, col = "red", lwd = 2)
+  lines(c(2.75, 3.25) ~ c(fecund.sp.5[2], fecund.sp.5[2]), lty = 2, col = "purple", lwd = 2)
+  lines(c(3.75, 4.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 2, col = "blue", lwd = 2)
+  lines(c(4.75, 5.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
+  lines(c(5.75, 6.25) ~ c(juvsurv.sp[2], juvsurv.sp[2]), lty = 2, col = "red", lwd = 2)
+  lines(c(6.75, 7.25) ~ c(juvsurv.sp.5[2], juvsurv.sp.5[2]), lty = 2, col = "purple", lwd = 2)
+  lines(c(7.75, 8.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 2, col = "blue", lwd = 2)
+  lines(c(8.75, 9.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
+  lines(c(9.75, 10.25) ~ c(adsurv.sp[2], adsurv.sp[2]), lty = 2, col = "red", lwd = 2)
+  lines(c(10.75, 11.25) ~ c(adsurv.sp.5[2], adsurv.sp.5[2]), lty = 2, col = "purple", lwd = 2)
+  lines(c(11.75, 12.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "blue", lwd = 2)
+axis(side = 2, at = c(1:12), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (sp .5)", "Fecundity (sp .1)", "Fecundity (pers)", "Juvenile surv (he)", "Juvenile surv (sp .5)", "Juvenile surv (sp .1)", "Juvenile surv (pers)", "Adult surv (he)", "Adult surv (sp .5)", "Adult surv (sp .1)", "Adult surv (pers)"))
   
   k <- hist(c(healthy.eigenval1, infected.eigenval1), breaks = 15, plot = F)
   # par(mfrow = c(1, 2), cex.axis = 1.2, cex.lab = 1.5)
@@ -216,45 +279,312 @@ for(i in 1:1000){
   adsurv.elast.inf <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
   
   # intervals on age-structure in healthy and infected environments 
-  age.bounds.he <- age.bounds.inf <- matrix(NA, nrow = 18, ncol = 3)
+  age.bounds.he <- age.bounds.inf <- age.bounds.sp.1 <- age.bounds.sp.5 <- matrix(NA, nrow = 18, ncol = 3)
   for(i in 1:18){
     age.bounds.he[i, ] <- quantile(abs(age.struct.he[i, ]), c(0.025, 0.5, 0.975))
     age.bounds.inf[i, ] <- quantile(abs(age.struct.inf[i, ]), c(0.025, 0.5, 0.975))
+    age.bounds.sp.1[i, ] <- quantile(abs(age.struct.sp.1[i, ]), c(0.025, 0.5, 0.975))
+    age.bounds.sp.5[i, ] <- quantile(abs(age.struct.sp.5[i, ]), c(0.025, 0.5, 0.975))
   }
   
-  par(mfrow = c(1, 2), cex.axis = .8, cex.lab = 1, oma = c(2, 0, 0, 0), mar = c(2, 6, 1, 1), las = 0)
-  plot(density(healthy.eigenval1), main = "", ylim = c(0, 12), xlim = c(0.7, 1.12), lwd = 2, lty = 2, )
-  lines(density(infected.eigenval1), col = "red", lwd = 2, lty = 1)
-  mtext(side = 1, line = 3, outer = F, cex = 1, expression(paste(lambda)))
-  plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), lty = 2, type = "l", xlim = c(0.5, 18.5), ylim = c(0, .2), lwd = 2, xlab = "age (years)", ylab = "Proportion of \n population")
-  segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], y1 = age.bounds.inf[1, 2], lwd = 2, col = "red")
-  for(i in 2: dim(age.bounds.he)[1]){
-    segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2, lty = 2)
-    segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "red")
-  }
-  leg.text <- c("healthy", "infected")
-  legend("topright", leg.text, col = c("black", "red"), lwd = c(2, 2), bty = "n")
-  mtext(side = 1, line = 3, outer = F, cex = 1, expression("age"))
 
+# gen times
+require(MASS)
+reps <- 100
+gen.time.test.he <- rep(NA, reps)
+gen.time.test.inf <- rep(NA, reps)
+for(i in 1:reps){
+  gen.time.test.he[i] <- GenTimeFun(current.state = "healthy", sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = .3)$gen.time
+  gen.time.test.inf[i] <- GenTimeFun(current.state = "infected", sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = .3)$gen.time
+}
+
+#par(mfrow = c(1, 4), cex.axis = 1, cex.lab = 1, oma = c(3, 7, 0, 2), mar = c(2, 4, 1, 1), las = 2)
+par(mfrow = c(2, 2), cex.axis = 1, cex.lab = 1.2, oma = c(3, 7, 0, 2), mar = c(4, 4, 4, 1), las = 1)
+plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
+lines(c(2, 2) ~ c(fecund.inf[1], fecund.inf[3]), lty = 1, col = "grey60", lwd = 2)
+lines(c(3, 3) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
+lines(c(4, 4) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 1, col = "grey60", lwd = 2)
+lines(c(5, 5) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
+lines(c(6, 6) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 1, col = "grey60", lwd = 2)
+lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(1.75, 2.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 1, col = "grey60", lwd = 2)
+lines(c(2.75, 3.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(3.75, 4.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 1, col = "grey60", lwd = 2)
+lines(c(4.75, 5.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 1, col = "grey60", lwd = 2)
+axis(side = 2, at = c(1:6), cex.axis = 1.2, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile surv (he)", "Juvenile surv (pers)", "Adult surv (he)",  "Adult surv (pers)"))
+leg.text <- c("healthy", "infected")
+legend("bottomright", leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 1), bty = "n", cex = 1.2)
+#mtext(side = 1, line = 4, outer = F, cex = 1, expression(paste("Elasticity of ", lambda, " to vital rate", sep = "")), las = 0)
+
+plot(density(healthy.eigenval1), main = "", ylim = c(0, 20), xlim = c(0.7, 1.12), lwd = 2, lty = 1, xlab = expression(paste(lambda)))
+lines(density(infected.eigenval1), col = "grey60", lwd = 2, lty = 2)
+#  lines(density(spillover.eigenval1.1), col = "purple", lwd = 2, lty = 1)
+#  lines(density(spillover.eigenval1.5), col = "red", lwd = 2, lty = 1)
+abline(v = 1, col = "grey40", lty = 3)
+leg.text <- c("healthy", "infected")
+legend(y = 20, x = .7, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 2), bty = "n", cex = 1.2)
+#mtext(side = 1, line = 4, outer = F, cex = 1, expression(paste(lambda)), las = 1)
+
+plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), lty = 1, type = "l", xlim = c(0.5, 18.5), ylim = c(0, .2), lwd = 2, xlab = "age (years)", ylab = "Proportion of population")
+segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], lty = 1, y1 = age.bounds.inf[1, 2], lwd = 2, col = "grey60")
+for(i in 2: dim(age.bounds.he)[1]){
+  segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2, lty = 1)
+  segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "grey60", lty = 1)
+  #    segments(x0 = i + .5, x1 = i + .5, y0 = age.bounds.sp.1[i, 1], y1 = age.bounds.sp.1[i, 2], lwd = 2, col = "purple")
+  #    segments(x0 = i + .7, x1 = i + .7, y0 = age.bounds.sp.5[i, 1], y1 = age.bounds.sp.5[i, 2], lwd = 2, col = "red")
+}
+leg.text <- c("healthy", "infected")
+legend(y = 0.2, x = 12.5, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 1), bty = "n", cex = 1.2)
+#mtext(side = 1, line = 4, outer = F, cex = 1, expression("Ewe age"), las = 1)
+
+plot(x = 1, y = 1, pch = 0, cex = 0, xlim = c(4.5, 9), ylim = c(0, 1.2), xlab = "Generation time (yrs)", ylab = "Density")
+lines(density(gen.time.test.he), lty = 1, lwd = 2)
+lines(density(gen.time.test.inf), col = "grey60", lwd = 2, lty = 2)
+leg.text <- c("healthy", "infected")
+legend(y = 1.2, x = 7.5, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 2), bty = "n", cex = 1.2)
+#mtext(side = 1, line = 4, outer = F, cex = 1, expression("Generation time (yrs)"), las = 1)
+
+
+
+#------------------------------------------------------------------------------------------------#
+#-- JOHNSON AGE STRCUTURE Exploration of lambda and age structure in each environmental state ---#
+#-------------------------------------------------------------------------------------------------#
+jo.posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
+                     "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
+                     "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
+#                     "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", 
+#                     "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
+                     "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+                     "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
+                     "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
+                     "beta.wean.3.4", 
+#                    "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5",
+#                     "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6", 
+                      "sigma.time.adsurv", "sigma.time.wean"
+)
+
+healthy.leslie.list <- infected.leslie.list <- spillover.leslie.list.1  <- spillover.leslie.list.5 <- vector("list", length = 1000)
+healthy.eigenval1 <- infected.eigenval1 <- spillover.eigenval1.1 <- spillover.eigenval1.5 <-  rep(NA, 1000)
+juvsurv.elast.he <- juvsurv.elast.inf <- juvsurv.elast.sp.1 <- juvsurv.elast.sp.5 <- adsurv.elast.he <- adsurv.elast.inf <- adsurv.elast.sp.1  <- adsurv.elast.sp.5 <- fecund.elast.he <- fecund.elast.inf <- fecund.elast.sp.1 <- fecund.elast.sp.5 <- rep(NA, 1000)
+oldage.elast.he <- oldage.elast.inf <- oldage.elast.sp.1 <- oldage.elast.sp.5 <- rep(NA, 1000)
+age.struct.he <- age.struct.inf <- age.struct.sp.1 <- age.struct.sp.5 <- matrix(NA, nrow = 19, ncol = 1000)
+joint.posterior.coda <- ipm11.coda
+#age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
+
+for(i in 1:1000){
+  healthy.leslie.list[[i]] <- johnson.update.leslie.fun(current.state = "healthy", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = 0)
+  infected.leslie.list[[i]] <- johnson.update.leslie.fun(current.state = "infected", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = 0)
+  spillover.leslie.list.1[[i]] <- johnson.update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = .3)
+  spillover.leslie.list.5[[i]] <- johnson.update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = .5)
+  healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
+  infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
+  spillover.eigenval1.1[i] <- Re(eigen(spillover.leslie.list.1[[i]])$values[1])
+  spillover.eigenval1.5[i] <- Re(eigen(spillover.leslie.list.5[[i]])$values[1])
+  he.eigen.rescale <- sum(Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]))
+  inf.eigen.rescale <- sum(Re(eigen(infected.leslie.list[[i]])$vectors[, 1]))
+  sp.eigen.rescale.1 <- sum(Re(eigen(spillover.leslie.list.1[[i]])$vectors[, 1]))
+  sp.eigen.rescale.5 <- sum(Re(eigen(spillover.leslie.list.5[[i]])$vectors[, 1]))
+  age.struct.he[, i] <- Re(eigen(healthy.leslie.list[[i]])$vectors[, 1]) / he.eigen.rescale
+  age.struct.inf[, i] <- Re(eigen(infected.leslie.list[[i]])$vectors[, 1]) / inf.eigen.rescale
+  age.struct.sp.1[, i] <- Re(eigen(spillover.leslie.list.1[[i]])$vectors[, 1]) / sp.eigen.rescale.1
+  age.struct.sp.5[, i] <- Re(eigen(spillover.leslie.list.5[[i]])$vectors[, 1]) / sp.eigen.rescale.5
+  
+  he.sens <- sensitivity(healthy.leslie.list[[i]])
+  he.elast <- (1 / Re(eigen(healthy.leslie.list[[i]])$values[1])) * he.sens * healthy.leslie.list[[i]]
+  fecund.elast.he[i] <- sum(he.elast[1, ])
+  juvsurv.elast.he[i] <- sum(he.elast[2, 1], he.elast[3, 2])
+  adsurv.elast.he[i] <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+  oldage.elast.he[i] <- sum(he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+  
+  inf.sens <- sensitivity(infected.leslie.list[[i]])
+  inf.elast <- (1 / Re(eigen(infected.leslie.list[[i]])$values[1])) * inf.sens * infected.leslie.list[[i]]
+  fecund.elast.inf[i] <- sum(inf.elast[1, ])
+  juvsurv.elast.inf[i] <- sum(inf.elast[2, 1], inf.elast[3, 2])
+  adsurv.elast.inf[i] <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+  oldage.elast.inf[i] <- sum(inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+  
+  sp.sens.1 <- sensitivity(spillover.leslie.list.1[[i]])
+  sp.elast.1 <- (1 / Re(eigen(spillover.leslie.list.1[[i]])$values[1])) * sp.sens.1 * spillover.leslie.list.1[[i]]
+  fecund.elast.sp.1[i] <- sum(sp.elast.1[1, ])
+  juvsurv.elast.sp.1[i] <- sum(sp.elast.1[2, 1], sp.elast.1[3, 2])
+  adsurv.elast.sp.1[i] <- sum(sp.elast.1[4, 3], sp.elast.1[5, 4], sp.elast.1[6, 5], sp.elast.1[7, 6], sp.elast.1[8, 7], sp.elast.1[9, 8], sp.elast.1[10, 9], sp.elast.1[11, 10], sp.elast.1[12, 11], sp.elast.1[13, 12], sp.elast.1[14, 13], sp.elast.1[15, 14], sp.elast.1[16, 15], sp.elast.1[17, 16], sp.elast.1[18, 17])
+  oldage.elast.sp.1[i] <- sum(sp.elast.1[13, 12], sp.elast.1[14, 13], sp.elast.1[15, 14], sp.elast.1[16, 15], sp.elast.1[17, 16], sp.elast.1[18, 17])
+  
+  sp.sens.5 <- sensitivity(spillover.leslie.list.5[[i]])
+  sp.elast.5 <- (1 / Re(eigen(spillover.leslie.list.5[[i]])$values[1])) * sp.sens.5 * spillover.leslie.list.5[[i]]
+  fecund.elast.sp.5[i] <- sum(sp.elast.5[1, ])
+  juvsurv.elast.sp.5[i] <- sum(sp.elast.5[2, 1], sp.elast.5[3, 2])
+  adsurv.elast.sp.5[i] <- sum(sp.elast.5[4, 3], sp.elast.5[5, 4], sp.elast.5[6, 5], sp.elast.5[7, 6], sp.elast.5[8, 7], sp.elast.5[9, 8], sp.elast.5[10, 9], sp.elast.5[11, 10], sp.elast.5[12, 11], sp.elast.5[13, 12], sp.elast.5[14, 13], sp.elast.5[15, 14], sp.elast.5[16, 15], sp.elast.5[17, 16], sp.elast.5[18, 17])
+  oldage.elast.sp.5[i] <- sum(sp.elast.5[13, 12], sp.elast.5[14, 13], sp.elast.5[15, 14], sp.elast.5[16, 15], sp.elast.5[17, 16], sp.elast.5[18, 17])
+  
+  print(i)
+}
+
+# 95% intervals on lambda 
+healthy.cred <- quantile(healthy.eigenval1, c(0.25, 0.5, 0.75))
+infected.cred <- quantile(infected.eigenval1, c(0.25, 0.5, 0.75))
+spillover.cred.1 <- quantile(spillover.eigenval1.1, c(0.25, 0.5, 0.75))
+
+# 95% intervals for fecundity, juvenile survival, and adult survival in each environment (healthy and infected)
+fecund.he <- quantile(fecund.elast.he, c(0.05, 0.5, 0.975))
+fecund.inf <- quantile(fecund.elast.inf, c(.05, 0.5, 0.975))
+fecund.sp <- quantile(fecund.elast.sp.1, c(.05, 0.5, 0.975))
+fecund.sp.5 <- quantile(fecund.elast.sp.5, c(.05, 0.5, 0.975))
+juvsurv.he <- quantile(juvsurv.elast.he, c(0.05, 0.5, 0.975))
+juvsurv.inf <- quantile(juvsurv.elast.inf, c(0.05, 0.5, 0.975))
+juvsurv.sp <- quantile(juvsurv.elast.sp.1, c(0.05, 0.5, 0.975))
+juvsurv.sp.5 <- quantile(juvsurv.elast.sp.5, c(0.05, 0.5, 0.975))
+adsurv.he <- quantile(adsurv.elast.he, c(0.05, 0.5, 0.975))
+adsurv.inf <- quantile(adsurv.elast.inf, c(0.05, 0.5, 0.975))
+adsurv.sp <- quantile(adsurv.elast.sp.1, c(0.05, 0.5, 0.975))
+adsurv.sp.5 <- quantile(adsurv.elast.sp.5, c(0.05, 0.5, 0.975))
+
+# 95% intervals for ratio of old-age elasticity to all adsurv elasticity 
+old.ad.ratio.he <- quantile(oldage.elast.he / adsurv.elast.he, c(0.05, 0.25, 0.5, 0.75, 0.975))
+old.ad.ratio.inf <- quantile(oldage.elast.inf / adsurv.elast.inf, c(0.05, 0.25, 0.5, 0.75, 0.975))
+old.ad.ratio.sp1 <- quantile(oldage.elast.sp.1 / adsurv.elast.sp.1, c(0.05, 0.25, 0.5, 0.75, 0.975))
+old.ad.ratio.sp5 <- quantile(oldage.elast.sp.5 / adsurv.elast.sp.5, c(0.05, 0.25, 0.5, 0.75, 0.975))
+
+par(mfrow = c(1, 1), mar = c(4, 12, 2, 2), las = 1, cex.lab = 1.0)
+plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 13), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
+lines(c(2, 2) ~ c(fecund.sp[1], fecund.sp[3]), lty = 2, col = "red", lwd = 2)
+lines(c(3, 3) ~ c(fecund.sp.5[1], fecund.sp.5[3]), lty = 2, col = "purple", lwd = 2)
+lines(c(4, 4) ~ c(fecund.inf[1], fecund.inf[3]), lty = 2, col = "blue", lwd = 2)
+lines(c(5, 5) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
+lines(c(6, 6) ~ c(juvsurv.sp[1], juvsurv.sp[3]), lty = 2, col = "red", lwd = 2)
+lines(c(7, 7) ~ c(juvsurv.sp.5[1], juvsurv.sp.5[3]), lty = 2, col = "purple", lwd = 2)
+lines(c(8, 8) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 2, col = "blue", lwd = 2)
+lines(c(9, 9) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
+lines(c(10, 10) ~ c(adsurv.sp[1], adsurv.sp[3]), lty = 2, col = "red", lwd = 2)
+lines(c(11, 11) ~ c(adsurv.sp.5[1], adsurv.sp.5[3]), lty = 2, col = "purple", lwd = 2)
+lines(c(12, 12) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 2, col = "blue", lwd = 2)
+lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(1.75, 2.25) ~ c(fecund.sp[2], fecund.sp[2]), lty = 2, col = "red", lwd = 2)
+lines(c(2.75, 3.25) ~ c(fecund.sp.5[2], fecund.sp.5[2]), lty = 2, col = "purple", lwd = 2)
+lines(c(3.75, 4.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 2, col = "blue", lwd = 2)
+lines(c(4.75, 5.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(5.75, 6.25) ~ c(juvsurv.sp[2], juvsurv.sp[2]), lty = 2, col = "red", lwd = 2)
+lines(c(6.75, 7.25) ~ c(juvsurv.sp.5[2], juvsurv.sp.5[2]), lty = 2, col = "purple", lwd = 2)
+lines(c(7.75, 8.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 2, col = "blue", lwd = 2)
+lines(c(8.75, 9.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(9.75, 10.25) ~ c(adsurv.sp[2], adsurv.sp[2]), lty = 2, col = "red", lwd = 2)
+lines(c(10.75, 11.25) ~ c(adsurv.sp.5[2], adsurv.sp.5[2]), lty = 2, col = "purple", lwd = 2)
+lines(c(11.75, 12.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 2, col = "blue", lwd = 2)
+axis(side = 2, at = c(1:12), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (sp .5)", "Fecundity (sp .1)", "Fecundity (pers)", "Juvenile surv (he)", "Juvenile surv (sp .5)", "Juvenile surv (sp .1)", "Juvenile surv (pers)", "Adult surv (he)", "Adult surv (sp .5)", "Adult surv (sp .1)", "Adult surv (pers)"))
+
+k <- hist(c(healthy.eigenval1, infected.eigenval1), breaks = 15, plot = F)
+# par(mfrow = c(1, 2), cex.axis = 1.2, cex.lab = 1.5)
+hist(healthy.eigenval1, xlim = c(min(min(healthy.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(infected.eigenval1))), breaks = k$breaks, xlab = expression(lambda), main = "Healthy", col = "grey80")
+abline(v = 1, col = "red", lwd = 3)
+abline(v = 1, col = "red", lwd = 3)
+hist(infected.eigenval1, xlim = c(min(min(healthy.eigenval1), min(infected.eigenval1)), max(max(healthy.eigenval1), max(infected.eigenval1))), breaks = k$breaks, ylab = "", xlab = expression(lambda), main = "Persistence", col = "grey80")
+abline(v = 1, col = "red", lwd = 3)
+
+# environ-state-specific elasticities
+he.sens <- sensitivity(healthy.leslie.list[[1]])
+he.elast <- (1 / Re(eigen(healthy.leslie.list[[1]])$values[1])) * he.sens * healthy.leslie.list[[1]]
+round(he.sens, 2)
+round(he.elast, 2)
+fecund.elast.he <- sum(he.elast[1, ])
+juvsurv.elast.he <- sum(he.elast[2, 1], he.elast[3, 2])
+adsurv.elast.he <- sum(he.elast[4, 3], he.elast[5, 4], he.elast[6, 5], he.elast[7, 6], he.elast[8, 7], he.elast[9, 8], he.elast[10, 9], he.elast[11, 10], he.elast[12, 11], he.elast[13, 12], he.elast[14, 13], he.elast[15, 14], he.elast[16, 15], he.elast[17, 16], he.elast[18, 17])
+
+inf.sens <- sensitivity(infected.leslie.list[[1]])
+inf.elast <- (1 / Re(eigen(infected.leslie.list[[1]])$values[1])) * inf.sens * infected.leslie.list[[1]]
+round(inf.sens, 2)
+round(inf.elast, 2)
+fecund.elast.inf <- sum(inf.elast[1, ])
+juvsurv.elast.inf <- sum(inf.elast[2, 1], inf.elast[3, 2])
+#sum(inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9])
+adsurv.elast.inf <- sum(inf.elast[4, 3], inf.elast[5, 4], inf.elast[6, 5], inf.elast[7, 6], inf.elast[8, 7], inf.elast[9, 8], inf.elast[10, 9], inf.elast[11, 10], inf.elast[12, 11], inf.elast[13, 12], inf.elast[14, 13], inf.elast[15, 14], inf.elast[16, 15], inf.elast[17, 16], inf.elast[18, 17])
+
+# intervals on age-structure in healthy and infected environments 
+age.bounds.he <- age.bounds.inf <- age.bounds.sp.1 <- age.bounds.sp.5 <- matrix(NA, nrow = 18, ncol = 3)
+for(i in 1:18){
+  age.bounds.he[i, ] <- quantile(abs(age.struct.he[i, ]), c(0.025, 0.5, 0.975))
+  age.bounds.inf[i, ] <- quantile(abs(age.struct.inf[i, ]), c(0.025, 0.5, 0.975))
+  age.bounds.sp.1[i, ] <- quantile(abs(age.struct.sp.1[i, ]), c(0.025, 0.5, 0.975))
+  age.bounds.sp.5[i, ] <- quantile(abs(age.struct.sp.5[i, ]), c(0.025, 0.5, 0.975))
+}
+
+
+# gen times
+#require(MASS)
+reps <- 100
+gen.time.test.he <- rep(NA, reps)
+gen.time.test.inf <- rep(NA, reps)
+for(i in 1:reps){
+  gen.time.test.he[i] <- Jo.GenTimeFun(current.state = "healthy", sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = jo.posterior.names, intro.cost = .3)$gen.time
+  gen.time.test.inf[i] <- Jo.GenTimeFun(current.state = "infected", sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = jo.posterior.names, intro.cost = .3)$gen.time
+}
+
+par(mfrow = c(1, 4), cex.axis = 1, cex.lab = 1, oma = c(3, 7, 0, 2), mar = c(2, 4, 1, 1), las = 2)
+plot(c(1, 1) ~ c(fecund.he[1], fecund.he[3]), lty = 1, xlim = c(0, 1), ylim = c(0, 7), type = "l", xlab = expression(paste("Elasticity of ", lambda, " to rate", sep = "")), ylab = "", yaxt = "n", lwd = 2)
+lines(c(2, 2) ~ c(fecund.inf[1], fecund.inf[3]), lty = 1, col = "grey60", lwd = 2)
+lines(c(3, 3) ~ c(juvsurv.he[1], juvsurv.he[3]), lty = 1, col = "black", lwd = 2)
+lines(c(4, 4) ~ c(juvsurv.inf[1], juvsurv.inf[3]), lty = 1, col = "grey60", lwd = 2)
+lines(c(5, 5) ~ c(adsurv.he[1], adsurv.he[3]), lty = 1, col = "black", lwd = 2)
+lines(c(6, 6) ~ c(adsurv.inf[1], adsurv.inf[3]), lty = 1, col = "grey60", lwd = 2)
+lines(c(0.75, 1.25) ~ c(fecund.he[2], fecund.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(1.75, 2.25) ~ c(fecund.inf[2], fecund.inf[2]), lty = 1, col = "grey60", lwd = 2)
+lines(c(2.75, 3.25) ~ c(juvsurv.he[2], juvsurv.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(3.75, 4.25) ~ c(juvsurv.inf[2], juvsurv.inf[2]), lty = 1, col = "grey60", lwd = 2)
+lines(c(4.75, 5.25) ~ c(adsurv.he[2], adsurv.he[2]), lty = 1, col = "black", lwd = 2)
+lines(c(5.75, 6.25) ~ c(adsurv.inf[2], adsurv.inf[2]), lty = 1, col = "grey60", lwd = 2)
+axis(side = 2, at = c(1:6), cex.axis = 1.0, labels = c("Fecundity (he)", "Fecundity (pers)", "Juvenile surv (he)", "Juvenile surv (pers)", "Adult surv (he)",  "Adult surv (pers)"))
+leg.text <- c("healthy", "infected")
+legend("bottomright", leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 1), bty = "n", cex = .8)
+mtext(side = 1, line = 4, outer = F, cex = 1, expression(paste("Elasticity of ", lambda, " to vital rate", sep = "")), las = 0)
+
+plot(density(healthy.eigenval1), main = "", ylim = c(0, 20), xlim = c(0.7, 1.12), lwd = 2, lty = 1)
+lines(density(infected.eigenval1), col = "grey60", lwd = 2, lty = 2)
+#  lines(density(spillover.eigenval1.1), col = "purple", lwd = 2, lty = 1)
+#  lines(density(spillover.eigenval1.5), col = "red", lwd = 2, lty = 1)
+abline(v = 1, col = "grey40", lty = 3)
+leg.text <- c("healthy", "infected")
+legend(y = 20, x = .7, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 2), bty = "n", cex = .8)
+mtext(side = 1, line = 4, outer = F, cex = 1, expression(paste(lambda)), las = 1)
+
+plot(age.bounds.he[1, c(1, 3)] ~ c(1, 1), lty = 1, type = "l", xlim = c(0.5, 18.5), ylim = c(0, .2), lwd = 2, xlab = "age (years)", ylab = "Proportion of population")
+segments(x0 = 1 + .3, x1 = 1 + .3, y0 = age.bounds.inf[1, 1], lty = 2, y1 = age.bounds.inf[1, 2], lwd = 2, col = "grey60")
+for(i in 2: dim(age.bounds.he)[1]){
+  segments(x0 = i, x1 = i, y0 = age.bounds.he[i, 1], y1 = age.bounds.he[i, 2], lwd = 2, lty = 1)
+  segments(x0 = i + .3, x1 = i + .3, y0 = age.bounds.inf[i, 1], y1 = age.bounds.inf[i, 2], lwd = 2, col = "grey60", lty = 1)
+  #    segments(x0 = i + .5, x1 = i + .5, y0 = age.bounds.sp.1[i, 1], y1 = age.bounds.sp.1[i, 2], lwd = 2, col = "purple")
+  #    segments(x0 = i + .7, x1 = i + .7, y0 = age.bounds.sp.5[i, 1], y1 = age.bounds.sp.5[i, 2], lwd = 2, col = "red")
+}
+leg.text <- c("healthy", "infected")
+legend(y = 0.2, x = 9, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 2), bty = "n", cex = .8)
+mtext(side = 1, line = 4, outer = F, cex = 1, expression("Ewe age"), las = 1)
+
+plot(x = 1, y = 1, pch = 0, cex = 0, xlim = c(4.5, 9), ylim = c(0, 1.2), xlab = "", ylab = "Density")
+lines(density(gen.time.test.he), lty = 1, lwd = 2)
+lines(density(gen.time.test.inf), col = "grey60", lwd = 2, lty = 2)
+leg.text <- c("healthy", "infected")
+legend(y = 1.2, x = 6, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 2), bty = "n", cex = .8)
+mtext(side = 1, line = 4, outer = F, cex = 1, expression("Generation time (yrs)"), las = 1)
 
 #--------------------------------------------------------#
 #-- Sensitivies and Elasticities using Vec-permutation --#
 #--------------------------------------------------------#
+  
+vec.permut.test0.0 <- vec.permut.fun(n.ages = 19, n.classes = 3, reps = 100, alpha = 0, gamma = 1, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .3)
 
-vec.permut.test0 <- vec.permut.fun(reps = 100, alpha = 0.9, gamma = 0.1)
-vec.permut.test1 <- vec.permut.fun(reps = 100, alpha = 0.2, gamma = 0.1)
-vec.permut.test2 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.1)
-vec.permut.test3 <- vec.permut.fun(reps = 100, alpha = 0.05, gamma = 0.1)
+vec.permut.test0 <- vec.permut.fun(n.ages = 19, n.classes = 3, reps = 100, alpha = 0.9, gamma = 0.1, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .3)
+vec.permut.test1 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.2, gamma = 0.1, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
+vec.permut.test2 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.1, gamma = 0.1, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
+vec.permut.test3 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.05, gamma = 0.1, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
 
-vec.permut.fixedalpha.test0 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.9)
-vec.permut.fixedalpha.test1 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.2)
-vec.permut.fixedalpha.test2 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.1)
-vec.permut.fixedalpha.test3 <- vec.permut.fun(reps = 100, alpha = 0.1, gamma = 0.05)
+vec.permut.fixedalpha.test0 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.1, gamma = 0.9, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
+vec.permut.fixedalpha.test1 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.1, gamma = 0.2, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
+vec.permut.fixedalpha.test2 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.1, gamma = 0.1, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
+vec.permut.fixedalpha.test3 <- vec.permut.fun(n.ages = 19, n.classes = 3, intro.cost = .3, reps = 100, alpha = 0.1, gamma = 0.05, sex.ratio = .5, samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names)
 
-fade.out.elasts <- quantile(vec.permut.test$fade.out.elast, c(0.025, 0.975))
-intro.elasts <- quantile(vec.permut.test$intro.elast, c(0.025, 0.975))
+fade.out.elasts <- quantile(vec.permut.test0$fade.out.elast, c(0.025, 0.975))
+intro.elasts <- quantile(vec.permut.test0$intro.elast, c(0.025, 0.975))
 
-par(mfrow = c(4, 4), cex.lab = 1.2, cex.axis = 1.0, cex.main = 1.4)
+par(mfrow = c(4, 4), cex.lab = 1.2, cex.axis = 1.0, cex.main = 1.0)
 hist(vec.permut.test3$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 20yrs")
 hist(vec.permut.test2$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 10yrs")
 hist(vec.permut.test1$fade.out.elast, ylab = "frequency", xlab = "fade-out elasticity", col = "grey80", main = "E(time to reintro) = 5yrs")
@@ -295,28 +625,24 @@ yearstofadeout.seq <- seq(1, 15)
 gamma.seq <- 1 / yearstofadeout.seq
 popsize.30.gamma.mat <- matrix(NA, reps, length(gamma.seq))
 popsize.30.gamma.alpha.33.mat <- matrix(NA, reps, length(gamma.seq))
+popsize.30.gamma.alpha.05.mat <- matrix(NA, reps, length(gamma.seq))
 
 for(i in 1:reps){
   for(j in 1:length(gamma.seq)){
-    popsize.30.gamma.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = gamma.seq[j], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
-    popsize.30.gamma.alpha.33.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .33, gamma = gamma.seq[j], samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .1, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.alpha.33.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .33, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.alpha.05.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
   }
+  print(i)
 }
 
 popsize.30.quants <- matrix(NA, length(gamma.seq), 5)
 popsize.30.alpha.33.quants <- matrix(NA, length(gamma.seq), 5)
+popsize.30.alpha.05.quants <- matrix(NA, length(gamma.seq), 5)
 for(j in 1:length(gamma.seq)){
   popsize.30.quants[j, ] <- quantile(popsize.30.gamma.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
   popsize.30.alpha.33.quants[j, ] <- quantile(popsize.30.gamma.alpha.33.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
-}
-
-par(mfrow = c(1, 1))
-plot(x = 0, y = 0, xlim = c(0, 16), ylim = c(0, 500), xlab = "Expected years to fade-out (alpha = 0.1)", ylab = "Simulated Pop Size After 30 years")
-for(i in 1:length(yearstofadeout.seq)){
-  segments(x0 = yearstofadeout.seq[i], x1 = yearstofadeout.seq[i], y0 = popsize.30.quants[i, 1], y1 = popsize.30.quants[i, 5])
-  segments(x0 = yearstofadeout.seq[i] - 0.1, x1 = yearstofadeout.seq[i] + 0.1, y0 = popsize.30.quants[i, 3], y1 = popsize.30.quants[i, 3])
-  segments(x0 = yearstofadeout.seq[i] + .2, x1 = yearstofadeout.seq[i] + .2, y0 = popsize.30.alpha.33.quants[i, 1], y1 = popsize.30.alpha.33.quants[i, 5], col = "red", lwd = 2)
-  segments(x0 = yearstofadeout.seq[i] + .1, x1 = yearstofadeout.seq[i] + .3, y0 = popsize.30.alpha.33.quants[i, 3], y1 = popsize.30.alpha.33.quants[i, 3], col = "red", lwd = 2)
+  popsize.30.alpha.05.quants[j, ] <- quantile(popsize.30.gamma.alpha.05.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
 }
 
 #-- Same thing, but over levels of alpha, with gamma fixed at e(fade-out) = 3 and e(fade-out) = 10
@@ -326,44 +652,52 @@ yearstoreintro<- seq(1, 15)
 alpha.seq <- 1 / yearstoreintro
 popsize.30.alpha.gamma.33.mat <- matrix(NA, reps, length(alpha.seq))
 popsize.30.alpha.gamma.1.mat <- matrix(NA, reps, length(alpha.seq))
+popsize.30.alpha.gamma.05.mat <- matrix(NA, reps, length(alpha.seq))
 
 for(i in 1:reps){
   for(j in 1:length(alpha.seq)){
-    popsize.30.alpha.gamma.33.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.seq[j], gamma = .33, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
-    popsize.30.alpha.gamma.1.mat[i, j] <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = alpha.seq[j], gamma = .1, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.33.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .33, samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.1.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .1, samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.05.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .05, samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
   }
+  print(i)
 }
 
 popsize.alpha.gamma.33.30.quants <- matrix(NA, length(alpha.seq), 5)
 popsize.alpha.gamma.1.30.quants <- matrix(NA, length(alpha.seq), 5)
+popsize.alpha.gamma.05.30.quants <- matrix(NA, length(alpha.seq), 5)
 for(j in 1:length(gamma.seq)){
   popsize.alpha.gamma.33.30.quants[j, ] <- quantile(popsize.30.alpha.gamma.33.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
   popsize.alpha.gamma.1.30.quants[j, ] <- quantile(popsize.30.alpha.gamma.1.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
+  popsize.alpha.gamma.05.30.quants[j, ] <- quantile(popsize.30.alpha.gamma.05.mat[, j], c(0.025, 0.25, 0.5, 0.75, 0.975))
 }
 
-par(mfrow = c(1, 1))
-plot(x = 0, y = 0, xlim = c(0, 16), ylim = c(0, 500), xlab = "Expected years to reintroduction", ylab = "Simulated Pop Size After 30 years")
-for(i in 1:length(yearstoreintro)){
-  segments(x0 = yearstoreintro[i], x1 = yearstoreintro[i], y0 = popsize.alpha.gamma.33.30.quants[i, 1], y1 = popsize.alpha.gamma.33.30.quants[i, 5])
-  segments(x0 = yearstoreintro[i] - 0.1, x1 = yearstoreintro[i] + 0.1, y0 = popsize.alpha.gamma.33.30.quants[i, 3], y1 = popsize.alpha.gamma.33.30.quants[i, 3])
-  segments(x0 = yearstoreintro[i] + .2, x1 = yearstoreintro[i] + .2, y0 = popsize.alpha.gamma.1.30.quants[i, 1], y1 = popsize.alpha.gamma.1.30.quants[i, 5], col = "red")
-  segments(x0 = yearstoreintro[i] + .1, x1 = yearstoreintro[i] + .3, y0 = popsize.alpha.gamma.1.30.quants[i, 3], y1 = popsize.alpha.gamma.1.30.quants[i, 3], col = "red")
-}
+# par(mfrow = c(1, 1))
+# plot(x = 0, y = 0, xlim = c(0, 16), ylim = c(0, 500), xlab = "Expected years to reintroduction", ylab = "Simulated Pop Size After 30 years")
+# for(i in 1:length(yearstoreintro)){
+#   segments(x0 = yearstoreintro[i], x1 = yearstoreintro[i], y0 = popsize.alpha.gamma.33.30.quants[i, 1], y1 = popsize.alpha.gamma.33.30.quants[i, 5])
+#   segments(x0 = yearstoreintro[i] - 0.1, x1 = yearstoreintro[i] + 0.1, y0 = popsize.alpha.gamma.33.30.quants[i, 3], y1 = popsize.alpha.gamma.33.30.quants[i, 3])
+#   segments(x0 = yearstoreintro[i] + .2, x1 = yearstoreintro[i] + .2, y0 = popsize.alpha.gamma.1.30.quants[i, 1], y1 = popsize.alpha.gamma.1.30.quants[i, 5], col = "red")
+#   segments(x0 = yearstoreintro[i] + .1, x1 = yearstoreintro[i] + .3, y0 = popsize.alpha.gamma.1.30.quants[i, 3], y1 = popsize.alpha.gamma.1.30.quants[i, 3], col = "red")
+# }
 
 par(mfrow = c(1, 2), oma = c(0, 0, 0, 0), mar = c(4, 4, 1, 1))
-plot(x = 0, y = 0, xlim = c(1, 16), ylim = c(0, 500), xlab = "Expected years to fade-out", ylab = "Pop Size After 30 years")
+plot(x = 0, y = 0, xlim = c(1, 16), ylim = c(0, 1000), xlab = "Expected years to fade-out", ylab = "Pop Size After 30 years")
 lines(popsize.30.quants[, 3] ~ yearstoreintro, col = "black", lty = 2)
 lines(popsize.30.alpha.33.quants[, 3] ~ yearstoreintro, col = "red")
+lines(popsize.30.alpha.05.quants[, 3] ~ yearstoreintro, col = "blue")
 for(i in 1:length(yearstofadeout.seq)){
   segments(x0 = yearstofadeout.seq[i], x1 = yearstofadeout.seq[i], y0 = popsize.30.quants[i, 1], y1 = popsize.30.quants[i, 5], lty = 2)
   segments(x0 = yearstofadeout.seq[i] - 0.1, x1 = yearstofadeout.seq[i] + 0.1, y0 = popsize.30.quants[i, 3], y1 = popsize.30.quants[i, 3])
   segments(x0 = yearstofadeout.seq[i] + .3, x1 = yearstofadeout.seq[i] + .3, y0 = popsize.30.alpha.33.quants[i, 1], y1 = popsize.30.alpha.33.quants[i, 5], col = "red", lwd = 1)
   segments(x0 = yearstofadeout.seq[i] + .2, x1 = yearstofadeout.seq[i] + .4, y0 = popsize.30.alpha.33.quants[i, 3], y1 = popsize.30.alpha.33.quants[i, 3], col = "red", lwd = 1)
+#  segments(x0 = yearstofadeout.seq[i] + .5, x1 = yearstofadeout.seq[i] + .5, y0 = popsize.30.alpha.05.quants[i, 1], y1 = popsize.30.alpha.05.quants[i, 5], col = "blue", lwd = 1)
+#  segments(x0 = yearstofadeout.seq[i] + .4, x1 = yearstofadeout.seq[i] + .6, y0 = popsize.30.alpha.05.quants[i, 3], y1 = popsize.30.alpha.05.quants[i, 3], col = "blue", lwd = 1)
 }
 leg.text <- c("alpha = 0.33", "alpha = 0.1")
 legend("topright", leg.text, col = c("black", "red"), lwd = c(1, 1), lty = c(2, 1), bty = "n", cex = .8)
 
-plot(x = 0, y = 0, xlim = c(1, 16), ylim = c(0, 500), xlab = "Expected years to reintroduction", ylab = "Pop Size After 30 years")
+plot(x = 0, y = 0, xlim = c(1, 16), ylim = c(0, 1000), xlab = "Expected years to reintroduction", ylab = "Pop Size After 30 years")
 lines(popsize.alpha.gamma.33.30.quants[, 3] ~ yearstoreintro, col = "black", lty = 2)
 lines(popsize.alpha.gamma.1.30.quants[, 3] ~ yearstoreintro, col = "red")
 for(i in 1:length(yearstoreintro)){
@@ -371,6 +705,8 @@ for(i in 1:length(yearstoreintro)){
   segments(x0 = yearstoreintro[i] - 0.1, x1 = yearstoreintro[i] + 0.1, y0 = popsize.alpha.gamma.33.30.quants[i, 3], y1 = popsize.alpha.gamma.33.30.quants[i, 3])
   segments(x0 = yearstoreintro[i] + .3, x1 = yearstoreintro[i] + .3, y0 = popsize.alpha.gamma.1.30.quants[i, 1], y1 = popsize.alpha.gamma.1.30.quants[i, 5], col = "red", lwd = 1)
   segments(x0 = yearstoreintro[i] + .2, x1 = yearstoreintro[i] + .4, y0 = popsize.alpha.gamma.1.30.quants[i, 3], y1 = popsize.alpha.gamma.1.30.quants[i, 3], col = "red", lwd = 1)
+#  segments(x0 = yearstoreintro[i] + .5, x1 = yearstoreintro[i] + .5, y0 = popsize.alpha.gamma.05.30.quants[i, 1], y1 = popsize.alpha.gamma.05.30.quants[i, 5], col = "blue", lwd = 1)
+#  segments(x0 = yearstoreintro[i] + .4, x1 = yearstoreintro[i] + .6, y0 = popsize.alpha.gamma.05.30.quants[i, 3], y1 = popsize.alpha.gamma.05.30.quants[i, 3], col = "blue", lwd = 1)
 }
 leg.text2 <- c("gamma = 0.33", "gamma = 0.1")
 legend("topright", leg.text2, col = c("black", "red"), lwd = c(1, 1), lty = c(2, 1), bty = "n", cex = .8)
@@ -380,116 +716,430 @@ legend("topright", leg.text2, col = c("black", "red"), lwd = c(1, 1), lty = c(2,
 #------------------------------------------------------------------#
 #-- project population sizes in loop over gammas of .1, .5, .9 ----#
 #------------------------------------------------------------------#
-timesteps <- 30
+timesteps <- 60
 reps <- 100
 alpha.range <- c(1, 100)
 gamma.range <- c(1, 100)
 alpha.steps <- 10
 gamma.steps <- 10
+samples.to.use.in <- seq(2500, 5000)
+ages.init <- 500 * round(age.struct.he[, 1], 2)
 
 timesteps <- 60
 reps <- 100
-popsize.30.gamma.05 <- matrix(NA, ncol = timesteps, nrow = reps)
-popsize.30.gamma.1 <- matrix(NA, ncol = timesteps, nrow = reps)
-popsize.30.gamma.2 <- matrix(NA, ncol = timesteps, nrow = reps)
-popsize.30.gamma.5 <- matrix(NA, ncol = timesteps, nrow = reps)
-popsize.30.gamma.9 <- matrix(NA, ncol = timesteps, nrow = reps)
-popsize.30.gamma1 <- matrix(NA, ncol = timesteps, nrow = reps)
 
-loglambda.30.gamma.05 <- matrix(NA, ncol = timesteps, nrow = reps)
-loglambda.30.gamma.1 <- matrix(NA, ncol = timesteps, nrow = reps)
-loglambda.30.gamma.2 <- matrix(NA, ncol = timesteps, nrow = reps)
-loglambda.30.gamma.5 <- matrix(NA, ncol = timesteps, nrow = reps)
-loglambda.30.gamma.9 <- matrix(NA, ncol = timesteps, nrow = reps)
-loglambda.30.gamma1 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam.05.alph.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam.2.alph.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam1.alph.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam.05.alph.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam.2.alph.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam1.alph.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam.05.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam.2.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
+popsize.gam1.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
+
+loglambda.gam.05.alph.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam.2.alph.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam1.alph.05 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam.05.alph.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam.2.alph.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam1.alph.2 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam.05.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam.2.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
+loglambda.gam1.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
 
 for(i in 1:reps){
-  project.30.gamma.05 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .05, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  project.30.gamma.1 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .1,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  project.30.gamma.2 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .2,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  project.30.gamma.5 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .5,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  project.30.gamma.9 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = .9,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
-  project.30.gamma1 <- project.fun(timesteps = timesteps, ages.init = ages.init, alpha = .1, gamma = 1,  samples.to.draw, tot.chains, joint.posterior.coda, posterior.names)
+  project.gam.05.alph.05 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.2.alph.05 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam1.alph.05 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.05.alph.2 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.2.alph.2 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam1.alph.2 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.05.alph1 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.2.alph1 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam1.alph1 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
   
-  popsize.30.gamma.05[i, ] <- project.30.gamma.05$tot.pop.size
-  popsize.30.gamma.1[i, ] <-  project.30.gamma.1$tot.pop.size
-  popsize.30.gamma.2[i, ] <-  project.30.gamma.2$tot.pop.size
-  popsize.30.gamma.5[i, ] <-  project.30.gamma.5$tot.pop.size
-  popsize.30.gamma.9[i, ] <-  project.30.gamma.9$tot.pop.size
-  popsize.30.gamma1[i, ]  <-  project.30.gamma1$tot.pop.size
+  popsize.gam.05.alph.05[i, ] <- project.gam.05.alph.05$tot.pop.size
+  popsize.gam.2.alph.05[i, ] <- project.gam.2.alph.05$tot.pop.size
+  popsize.gam1.alph.05[i, ] <- project.gam1.alph.05$tot.pop.size
+  popsize.gam.05.alph.2[i, ] <- project.gam.05.alph.2$tot.pop.size
+  popsize.gam.2.alph.2[i, ] <- project.gam.2.alph.2$tot.pop.size
+  popsize.gam1.alph.2[i, ] <- project.gam1.alph.2$tot.pop.size
+  popsize.gam.05.alph1[i, ] <- project.gam.05.alph1$tot.pop.size
+  popsize.gam.2.alph1[i, ] <- project.gam.2.alph1$tot.pop.size
+  popsize.gam1.alph1[i, ] <- project.gam1.alph1$tot.pop.size
   
-  loglambda.30.gamma.05[i, ] <- project.30.gamma.05$log.lambda.s
-  loglambda.30.gamma.1[i, ] <-  project.30.gamma.1$log.lambda.s
-  loglambda.30.gamma.2[i, ] <-  project.30.gamma.2$log.lambda.s
-  loglambda.30.gamma.5[i, ] <-  project.30.gamma.5$log.lambda.s
-  loglambda.30.gamma.9[i, ] <-  project.30.gamma.9$log.lambda.s
-  loglambda.30.gamma1[i, ]  <-  project.30.gamma1$log.lambda.s
+  loglambda.gam.05.alph.05[i, ] <- project.gam.05.alph.05$log.lambda.s
+  loglambda.gam.2.alph.05[i, ] <- project.gam.2.alph.05$log.lambda.s
+  loglambda.gam1.alph.05[i, ] <- project.gam1.alph.05$log.lambda.s
+  loglambda.gam.05.alph.2[i, ] <- project.gam.05.alph.2$log.lambda.s
+  loglambda.gam.2.alph.2[i, ] <- project.gam.2.alph.2$log.lambda.s
+  loglambda.gam1.alph1[i, ] <- project.gam1.alph1$log.lambda.s
+  loglambda.gam.05.alph1[i, ] <- project.gam.05.alph1$log.lambda.s
+  loglambda.gam.2.alph1[i, ] <- project.gam.2.alph1$log.lambda.s
+  loglambda.gam1.alph.2[i, ] <- project.gam1.alph1$log.lambda.s
+  
+  print(i)
 }  
 
-
 # extract 2.5th and 97.5th quantiles --#
-gamma.05.quants <- which(popsize.30.gamma.05[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.05[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
-gamma.1.quants <- which(popsize.30.gamma.1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.1[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
-gamma.2.quants <- which(popsize.30.gamma.2[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.2[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
-gamma.5.quants <- which(popsize.30.gamma.5[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.5[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
-gamma.9.quants <- which(popsize.30.gamma.9[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.9[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
-gamma1.quants <- which(popsize.30.gamma1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma1[, timesteps - 1], c(0.025, 0.25, 0.75, 0.975), type = 3, na.rm = T)))
+gam.05.alph.05.quants <- which(popsize.gam.05.alph.05[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.05.alph.05[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam.05.alph.2.quants <- which(popsize.gam.05.alph.2[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.05.alph.2[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam.05.alph1.quants <- which(popsize.gam.05.alph1[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.05.alph1[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam.2.alph.05.quants <- which(popsize.gam.2.alph.05[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.2.alph.05[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam.2.alph.2.quants <- which(popsize.gam.2.alph.2[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.2.alph.2[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam.2.alph1.quants <- which(popsize.gam.2.alph1[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.2.alph1[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam1.alph.05.quants <- which(popsize.gam1.alph.05[, timesteps - 1] %in% as.numeric(quantile(popsize.gam1.alph.05[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam1.alph.2.quants <- which(popsize.gam1.alph.2[, timesteps - 1] %in% as.numeric(quantile(popsize.gam1.alph.2[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
+gam1.alph1.quants <- which(popsize.gam1.alph1[, timesteps - 1] %in% as.numeric(quantile(popsize.gam1.alph1[, timesteps - 1], c(0.025, 0.25, 0.5, 0.75, 0.975), type = 3, na.rm = T)))
 
-gamma.05.meds <- which(popsize.30.gamma.05[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.05[, timesteps - 1], .5, type = 3, na.rm = T)))
-gamma.1.meds <- which(popsize.30.gamma.1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.1[, timesteps - 1], .5, type = 3, na.rm = T)))
-gamma.2.meds <- which(popsize.30.gamma.2[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.2[, timesteps - 1], .5, type = 3, na.rm = T)))
-gamma.5.meds <- which(popsize.30.gamma.5[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.5[, timesteps - 1], .5, type = 3, na.rm = T)))
-gamma.9.meds <- which(popsize.30.gamma.9[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma.9[, timesteps - 1], .5, type = 3, na.rm = T)))
-gamma1.meds <- which(popsize.30.gamma1[, timesteps - 1] %in% as.numeric(quantile(popsize.30.gamma1[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam.05.alph.05.meds <- which(popsize.gam.05.alph.05[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.05.alph.05[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam.2.alph.05.meds <- which(popsize.gam.2.alph.05[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.2.alph.05[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam1.alph.05.meds <- which(popsize.gam1.alph.05[, timesteps - 1] %in% as.numeric(quantile(popsize.gam1.alph.05[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam.05.alph.2.meds <- which(popsize.gam.05.alph.2[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.05.alph.2[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam.2.alph.2.meds <- which(popsize.gam.2.alph.2[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.2.alph.2[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam1.alph.2.meds <- which(popsize.gam1.alph.2[, timesteps - 1] %in% as.numeric(quantile(popsize.gam1.alph.2[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam.05.alph1.meds <- which(popsize.gam.05.alph1[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.05.alph1[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam.2.alph1.meds <- which(popsize.gam.2.alph1[, timesteps - 1] %in% as.numeric(quantile(popsize.gam.2.alph1[, timesteps - 1], .5, type = 3, na.rm = T)))
+gam1.alph1.meds <- which(popsize.gam1.alph1[, timesteps - 1] %in% as.numeric(quantile(popsize.gam1.alph1[, timesteps - 1], .5, type = 3, na.rm = T)))
 
 plot.reps <- 100
-par(mfrow = c(1, 5), oma = c(2, 1, 1, 1), mar = c(3, 4, 2, 0))
-layout(matrix(c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 3, 5, byrow = T))
-par(mfrow = c(1, 5), oma = c(2, 1, 1, 1), mar = c(3, 4, 2, 0))
-plot(popsize.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "population size", main = "20 years", bty = "n")
+
+par(mfrow = c(3, 3), oma = c(2, 3, 2, 1))
+# long persistence, rare spillover
+plot(popsize.gam.05.alph.05[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam.05.alph.05[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam.05.alph.05[gam.05.alph.05.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam.05.alph.05[gam.05.alph.05.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2) 
+mtext(side = 2, outer = F, line = 5, "1 intro / 20 yrs", las = 0)
+mtext(side = 3, outer = F, line = 1, "20-yr persistence", las = 1)
+
+plot(popsize.gam.2.alph.05[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam.2.alph.05[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam.2.alph.05[gam.2.alph.05.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam.2.alph.05[gam.2.alph.05.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+mtext(side = 3, outer = F, line = 1, "5-yr persistence", las = 1)
+
+# rapid fade-out, rare spillover
+plot(popsize.gam1.alph.05[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam1.alph.05[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam1.alph.05[gam1.alph.05.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam1.alph.05[gam1.alph.05.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+mtext(side = 3, outer = F, line = 1, "1-yr persistence", las = 1)
+
+### END FIRST ROW
+
+# long persistence, intemediate spillover
+plot(popsize.gam.05.alph.2[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam.05.alph.2[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam.05.alph.2[gam.05.alph.2.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam.05.alph.2[gam.05.alph.2.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+mtext(side = 2, outer = F, line = 5, "1 intro / 5 years", las = 0)
+
+plot(popsize.gam.2.alph.2[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam.2.alph.2[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam.2.alph.2[gam.2.alph.2.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam.2.alph.2[gam.2.alph.2.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+
+# rapid fade-out, rare spillover
+plot(popsize.gam1.alph.2[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam1.alph.2[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam1.alph.2[gam1.alph.2.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam1.alph.2[gam1.alph.2.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+
+### END SECOND ROW
+
+# long persistence, frequent spillover
+plot(popsize.gam.05.alph1[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam.05.alph1[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam.05.alph1[gam.05.alph1.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam.05.alph1[gam.05.alph1.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+mtext(side = 2, outer = F, line = 5, "1 intro / year", las = 0)
+
+plot(popsize.gam.2.alph1[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam.2.alph1[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam.2.alph1[gam.2.alph1.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam.2.alph1[gam.2.alph1.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+
+# rapid fade-out, rare spillover
+plot(popsize.gam1.alph1[1, 1:59] ~ seq(1:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.gam1.alph1[i, 1:59] ~ seq(1:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.gam1.alph1[gam1.alph1.quants[j], 1:59] ~ seq(1:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.gam1.alph1[gam1.alph1.meds, 1:59] ~ seq(1:59), type = "l", col = "red", lwd = 2)  
+
+# check for changepoints
+# require(SiZer)
+# gamma.05.alpha.1.cplb <- gamma.05.alpha.1.cpub <- rep(NA, reps)
+# gamma.1.alpha.1.cplb <- gamma.1.alpha.1.cpub <- rep(NA, reps)
+# gamma.2.alpha.1.cplb <- gamma.2.alpha.1.cpub <- rep(NA, reps)
+# gamma.5.alpha.1.cplb <- gamma.5.alpha.1.cpub <- rep(NA, reps)
+# gamma.9.alpha.1.cplb <- gamma.9.alpha.1.cpub <- rep(NA, reps)
+# gamma.0.alpha.05.cplb <- gamma.0.alpha.05.cpub <- rep(NA, reps)
+# gamma.0.alpha.1.cplb <- gamma.0.alpha.1.cpub <- rep(NA, reps)
+# gamma.0.alpha.2.cplb <- gamma.0.alpha.2.cpub <- rep(NA, reps)
+# gamma.0.alpha.5.cplb <- gamma.0.alpha.5.cpub <- rep(NA, reps)
+# gamma.0.alpha.9.cplb <- gamma.0.alpha.9.cpub <- rep(NA, reps)
+# 
+# pw.test.gam.05.alph.1 <- pw.test.gam.1.alph.1 <- pw.test.gam.2.alph.1 <- pw.test.gam.5.alph.1 <- pw.test.gam.9.alph.1 <- pw.test.gam1.alph.1 <- vector("list", length = reps)
+# pw.test.gam.0.alph.05 <- pw.test.gam.0.alph.1 <- pw.test.gam.0.alph.2 <- pw.test.gam.0.alph.5 <- pw.test.gam.0.alph.9 <- pw.test.gam1.alph.1 <- vector("list", length = reps)
+# 
+# for(i in 1:reps){
+#     pw.test.gam.05.alph.1[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.05[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.05.alpha.1.cplb[i] <- pw.test.gam.05.alph.1[[i]]$intervals[1, 1]
+#     gamma.05.alpha.1.cpub[i] <- pw.test.gam.05.alph.1[[i]]$intervals[2, 1]
+#     print(i)
+# 
+#     pw.test.gam.1.alph.1[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.1[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.1.alpha.1.cplb[i] <- pw.test.gam.1.alph.1[[i]]$intervals[1, 1]
+#     gamma.1.alpha.1.cpub[i] <- pw.test.gam.1.alph.1[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.2.alph.1[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.2[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.2.alpha.1.cplb[i] <- pw.test.gam.2.alph.1[[i]]$intervals[1, 1]
+#     gamma.2.alpha.1.cpub[i] <- pw.test.gam.2.alph.1[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.5.alph.1[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.5[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.5.alpha.1.cplb[i] <- pw.test.gam.5.alph.1[[i]]$intervals[1, 1]
+#     gamma.5.alpha.1.cpub[i] <- pw.test.gam.5.alph.1[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.9.alph.1[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.9[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.9.alpha.1.cplb[i] <- pw.test.gam.9.alph.1[[i]]$intervals[1, 1]
+#     gamma.9.alpha.1.cpub[i] <- pw.test.gam.9.alph.1[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.0.alph.05[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.0.alpha.05[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.0.alpha.05.cplb[i] <- pw.test.gam.0.alph.05[[i]]$intervals[1, 1]
+#     gamma.0.alpha.05.cpub[i] <- pw.test.gam.0.alph.05[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.0.alph.1[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.0.alpha.1[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.0.alpha.1.cplb[i] <- pw.test.gam.0.alph.1[[i]]$intervals[1, 1]
+#     gamma.0.alpha.1.cpub[i] <- pw.test.gam.0.alph.1[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.0.alph.2[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.0.alpha.2[i, -60], middle = 1, CI = T, bootstrap.samples = 250)
+#     gamma.0.alpha.2.cplb[i] <- pw.test.gam.0.alph.2[[i]]$intervals[1, 1]
+#     gamma.0.alpha.2.cpub[i] <- pw.test.gam.0.alph.2[[i]]$intervals[2, 1]
+#     
+#     pw.test.gam.0.alph.5[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.0.alpha.5[i, -60], middle = 1, CI = T, bootstrap.samples = 500)
+#     gamma.0.alpha.5.cplb[i] <- pw.test.gam.0.alph.5[[i]]$intervals[1, 1]
+#     gamma.0.alpha.5.cpub[i] <- pw.test.gam.0.alph.5[[i]]$intervals[2, 1]
+#         
+#     pw.test.gam.0.alph.9[[i]] <- piecewise.linear(seq(1, 59), popsize.30.gamma.0.alpha.9[i, -60], middle = 1, CI = T, bootstrap.samples = 500)
+#     gamma.0.alpha.9.cplb[i] <- pw.test.gam.0.alph.9[[i]]$intervals[1, 1]
+#     gamma.0.alpha.9.cpub[i] <- pw.test.gam.0.alph.9[[i]]$intervals[2, 1]
+#     print(i)
+# }
+
+# y <- popsize.30.gamma.05[1, 1:59]
+# x <- seq(1, 59)
+# 
+# exp.mod <- nls(y ~ M0 * exp(-k * x) + c, start = list(M0 = 680, k = 0.03, c = 0), control = nls.control(maxiter = 500, tol = 1e-04, minFactor = 1/500))
+# y.test <- 680 * exp(-0.05 * x)
+# plot(y.test ~ x, type = "l", ylim = c(0, 1600))
+
+layout(matrix(c(1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 11, 12, 13, 14, 15, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20), 8, 5, byrow = T))
+#par(mfrow = c(2, 5), oma = c(2, 1, 1, 1), mar = c(3, 4, 2, 0))
+plot(popsize.30.gamma.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "20-yr persistence", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
-for(j in c(1, 2, 3, 4)){
+for(j in c(1, 2, 4, 5)){
   lines(popsize.30.gamma.05[gamma.05.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma.05[gamma.05.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
 
-plot(popsize.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "10 years", bty = "n")
+plot(popsize.30.gamma.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "10-yr persistence", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
-for(j in 1:4){
+for(j in c(1, 2, 4, 5)){
   lines(popsize.30.gamma.1[gamma.1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma.1[gamma.1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
 
-plot(popsize.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "5 years", bty = "n")
+plot(popsize.30.gamma.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "5-yr persistence", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.30.gamma.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
-for(j in 1:4){
+for(j in c(1, 2, 4, 5)){
   lines(popsize.30.gamma.2[gamma.2.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.30.gamma.2[gamma.2.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
 
-plot(popsize.30.gamma1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "1 year", bty = "n")
+plot(popsize.30.gamma.5[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "2-yr persistence", bty = "n")
 for(i in 2:plot.reps){
-  lines(popsize.30.gamma1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+  lines(popsize.30.gamma.5[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
-for(j in 1:4){
-  lines(popsize.30.gamma1[gamma1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.30.gamma.5[gamma.5.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
-lines(popsize.30.gamma1[gamma1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+lines(popsize.30.gamma.5[gamma.5.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
 
-plot(popsize.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 800), xlab = "year", ylab = "", main = "No disease", bty = "n")
+plot(popsize.he[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "No disease", bty = "n")
 for(i in 2:plot.reps){
   lines(popsize.he[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
 }
-for(j in 1:3){
+for(j in c(1, 2, 4, 5)){
   lines(popsize.he[he.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
 }
 lines(popsize.he[he.med, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2)  
+mtext(side = 1, outer = T, "Time since introduction (years)")
+
+hist(gamma.05.alpha.1.cpub - gamma.05.alpha.1.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.1.alpha.1.cpub - gamma.1.alpha.1.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.2.alpha.1.cpub - gamma.2.alpha.1.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.5.alpha.1.cpub - gamma.5.alpha.1.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.9.alpha.1.cpub - gamma.9.alpha.1.cplb, main = "", ylab = "", col = "grey60")
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.05.alpha.1.cplb[i], x1 = gamma.05.alpha.1.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.1.alpha.1.cplb[i], x1 = gamma.1.alpha.1.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.2.alpha.1.cplb[i], x1 = gamma.2.alpha.1.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.5.alpha.1.cplb[i], x1 = gamma.5.alpha.1.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.9.alpha.1.cplb[i], x1 = gamma.9.alpha.1.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+
+#
+plot(popsize.30.gamma.0.alpha.9[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "Population size", main = "1 intro / year", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.0.alpha.9[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.30.gamma.0.alpha.9[gamma.0.alpha.9.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.0.alpha.9[gamma.0.alpha.9.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+
+plot(popsize.30.gamma.0.alpha.5[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "1 intro / 2 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.0.alpha.5[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.30.gamma.0.alpha.5[gamma.0.alpha.5.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.0.alpha.5[gamma.0.alpha.5.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+
+plot(popsize.30.gamma.0.alpha.2[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "1 intro every 5 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.0.alpha.2[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.30.gamma.0.alpha.2[gamma.0.alpha.2.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.0.alpha.2[gamma.0.alpha.2.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+
+plot(popsize.30.gamma.0.alpha.1[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "1 intro / 10 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.0.alpha.1[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.30.gamma.0.alpha.1[gamma.0.alpha.1.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.0.alpha.1[gamma.0.alpha.1.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+
+plot(popsize.30.gamma.0.alpha.05[1, 11:59] ~ seq(11:59), type = "l", ylim = c(0, 1600), xlab = "year", ylab = "", main = "1 intro / 20 years", bty = "n")
+for(i in 2:plot.reps){
+  lines(popsize.30.gamma.0.alpha.05[i, 11:59] ~ seq(11:59), type = "l", col = rgb(.35, .35, .35, alpha = .25))
+}
+for(j in c(1, 2, 4, 5)){
+  lines(popsize.30.gamma.0.alpha.05[gamma.0.alpha.05.quants[j], 11:59] ~ seq(11:59), type = "l", col = "black", lwd = 2)  
+}
+lines(popsize.30.gamma.0.alpha.05[gamma.0.alpha.05.meds, 11:59] ~ seq(11:59), type = "l", col = "red", lwd = 2) 
+
+
+hist(gamma.0.alpha.9.cpub - gamma.0.alpha.9.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.0.alpha.5.cpub - gamma.0.alpha.5.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.0.alpha.2.cpub - gamma.0.alpha.2.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.0.alpha.1.cpub - gamma.0.alpha.1.cplb, main = "", ylab = "", col = "grey60")
+hist(gamma.0.alpha.05.cpub - gamma.0.alpha.05.cplb, main = "", ylab = "", col = "grey60")
+
+par(mfrow = c(1, 1))
+plot(x = 0, y = 0, cex = 0, xlim = c(0, 60), ylim = c(0, 0.12))
+#lines(density(gamma.0.alpha.9.cpub - gamma.0.alpha.9.cplb))
+lines(density(gamma.0.alpha.5.cpub - gamma.0.alpha.5.cplb), col = "blue")
+lines(density(gamma.0.alpha.2.cpub - gamma.0.alpha.2.cplb) col = "purple")
+lines(density(gamma.0.alpha.1.cpub - gamma.0.alpha.1.cplb), col = "red")
+lines(density(gamma.0.alpha.05.cpub - gamma.0.alpha.05.cplb), col = "gold")
+
+lines(density(gamma.05.alpha.1.cpub - gamma.05.alpha.1.cplb), col = "lightblue", lty = 2, lwd = 2)
+lines(density(gamma.1.alpha.1.cpub - gamma.1.alpha.1.cplb), col = "violet", lty = 2, lwd = 2)
+lines(density(gamma.2.alpha.1.cpub - gamma.2.alpha.1.cplb), col = "pink", lty = 2, lwd = 2)
+lines(density(gamma.5.alpha.1.cpub - gamma.5.alpha.1.cplb), col = "orange", lty = 2, lwd = 2)
+lines(density(gamma.9.alpha.1.cpub - gamma.9.alpha.1.cplb), col = "yellow", lty = 2, lwd = 2)
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.0.alpha.9.cplb[i], x1 = gamma.0.alpha.9.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.0.alpha.5.cplb[i], x1 = gamma.0.alpha.5.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.0.alpha.2.cplb[i], x1 = gamma.0.alpha.2.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.0.alpha.1.cplb[i], x1 = gamma.0.alpha.1.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+# 
+# plot(x = 1, y = 1, cex = 0, ylim = c(0, 100), xlim = c(0, 60), xlab = "", ylab = "")
+# for(i in 1:plot.reps){
+#   segments(x0 = gamma.0.alpha.05.cplb[i], x1 = gamma.0.alpha.05.cpub[i], y0 = i, y1 = i, col = rgb(.35, .35, .35, alpha = .25))
+# }
+
+
 
 #--------------------#
 # log-lambda row
@@ -539,6 +1189,68 @@ boxplot(na.omit(as.vector(loglambda.30.gamma1)), ylim = c(-1.5, 1.5))
 abline(h = 0, col = "red", lwd = 2)
 
 
+#----------------------------------------------------------------------------------#
+#-- Autocorrelation sensitivies as per Tuljapurkar and Haridas 2006 Ecol Letters --#
+#----------------------------------------------------------------------------------#
+length.in <- 21
+reps <- 100
+alphas <- seq(0.01, 0.99, length.out = length.in)
+gammas <- seq(0.01, 0.99, length.out = length.in)
+W1.med.ic <- W2.med.ic <- ratio.ic <- matrix(NA, nrow = length.in, ncol = length.in)
+W1.med.ic.1 <- W2.med.ic.1 <- ratio.ic.1 <- matrix(NA, nrow = length.in, ncol = length.in)
+W1.med.ic.5 <- W2.med.ic.5 <- ratio.ic.5 <- matrix(NA, nrow = length.in, ncol = length.in)
+alpha.gamma.mat <- matrix(NA, nrow = length.in, ncol = length.in)
+for(i in 1:length.in){
+  for(k in 1:length.in){
+    short.list <- vector("list", reps)
+    short.list.1 <- vector("list", reps)
+    short.list.5 <- vector("list", reps)
+    W1.in <- W2.in <- ratio.in <- W1.in.1 <- W2.in.1 <- ratio.in.1 <- W1.in.5 <- W2.in.5 <- ratio.in.5 <- rep(NA, reps)
+    for(j in 1:reps){
+      short.list[[j]] <- TuljarFunFull(n.states = 19, n.environs = 3, alpha = alphas[i], gamma = gammas[k], sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = .3)
+      short.list.1[[j]] <- TuljarFunFull(n.states = 19, n.environs = 3, alpha = alphas[i], gamma = gammas[k], sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = .1)
+      short.list.5[[j]] <- TuljarFunFull(n.states = 19, n.environs = 3, alpha = alphas[i], gamma = gammas[k], sex.ratio = .5, samples.to.draw = seq(2500, 5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names, intro.cost = .5)
+      W1.in[j] <- short.list[[j]]$W1
+      W2.in[j] <- short.list[[j]]$W2
+      ratio.in[j] <- short.list[[j]]$W1 / short.list[[j]]$W2
+      W1.in.1[j] <- short.list.1[[j]]$W1
+      W2.in.1[j] <- short.list.1[[j]]$W2
+      ratio.in.1[j] <- short.list.1[[j]]$W1 / short.list.1[[j]]$W2
+      W1.in.5[j] <- short.list.5[[j]]$W1
+      W2.in.5[j] <- short.list.5[[j]]$W2
+      ratio.in.5[j] <- short.list.5[[j]]$W1 / short.list.5[[j]]$W2
+    }
+    W1.med.ic[i, k] <- median(W1.in)
+    W2.med.ic[i, k] <- median(W2.in)
+    ratio.ic[i, k] <- median(ratio.in)
+    W1.med.ic.1[i, k] <- median(W1.in.1)
+    W2.med.ic.1[i, k] <- median(W2.in.1)
+    ratio.ic.1[i, k] <- median(ratio.in.1)
+    W1.med.ic.5[i, k] <- median(W1.in.5)
+    W2.med.ic.5[i, k] <- median(W2.in.5)
+    ratio.ic.5[i, k] <- median(ratio.in.5)
+  }
+  print(i)
+}  
+
+par(mfrow = c(1, 2))
+
+svg(filename = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.1.svg", width = 7, height = 8)
+pupilplot(log(abs(ratio.ic.1)), cp = NULL, col = grey(seq(0, 1, length.out = 101)), addContours = FALSE, cscale = TRUE)
+dev.off()
+svg(filename = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.3.svg", width = 7, height = 8)
+pupilplot(log(abs(ratio.ic)), cp = NULL, col = grey(seq(0, 1, length.out = 101)), addContours = FALSE, cscale = TRUE)
+dev.off()
+svg(filename = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.5.svg", width = 7, height = 8)
+pupilplot(log(abs(ratio.ic.5)), cp = NULL, col = grey(seq(0, 1, length.out = 101)), addContours = FALSE, cscale = TRUE)
+dev.off()                                             
+
+image(z = ratio, x = alphas, y = gammas, xlab = "Annual Introduction Rate", ylab = "Annual Fade-out Rate")
+contour(z = ratio, add = T, drawlabels = T)
+
+
+
+pupilplot(ratio, cp = NULL, col = heat.colors(256), addContours = FALSE, cscale = TRUE)
 
 #-----------------------------------------------#
 #-- OLD ----------------------------------------#
