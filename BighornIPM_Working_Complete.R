@@ -1,7 +1,8 @@
-# BHS IPM 
-# Started November 11, 2014
+#-------------------------------#
+#-- BHS IPM --------------------# 
+#-- Started November 11, 2014 --#
+#-------------------------------#
 
-# 0. Load required packages.
 require(rjags)
 require(runjags)
 require(grofit)
