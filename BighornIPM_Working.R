@@ -18,7 +18,8 @@ compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
 
 # extract ewes with tooth ages
-ewes.with.teeth <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
+ewes.with.teeth <- subset(studysheep, SEX == "F" & (is.na(Tooth_Age) == F | AENTRY <= 3))
+#ewes.with.teeth <- subset(studysheep, SEX == "F" & is.na(Tooth_Age) == F)
 
 # extract lambs born to ewes with tooth ages
 lambs.with.dam.age <- subset(lambs, EWEID %in% levels(factor(ewes.with.teeth$ID)))
@@ -99,6 +100,10 @@ sheep.ind4 <- which(ewes.with.teeth$ID == "01QZ70")
 ewes.with.teeth[c(sheep.ind, sheep.ind3, sheep.ind4), ]$ENTRY_BIOYR2 <- 2002
 ewes.with.teeth <- subset(ewes.with.teeth, ID != "02MY39")
 
+# build a x 1 vector of age-class specifications (maps 1:18 age in years to 1:5 age in age-class)
+# age class 6 is NOT CURRENTLY MARKED. 
+age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
+
 # limit to 1997 - 2012 
 # build i x t matrix of observation status for each ewe in each year
 # build i x t matrix of true ewe-ages during each observation year
@@ -110,20 +115,23 @@ for(i in 1:dim(ch.full)[1]){
   k <- subset(ewes.with.teeth, as.character(ID) == as.character(ewes.with.teeth$ID)[i])
   years <- seq(k$ENTRY_BIOYR2, k$END_BIOYR)
   ewe.pop.ind[i] <- as.character(k$END_Population)
-  ewe.surv.status <- rep(NA, length(years))
+  ewe.surv.status <- ewe.surv.pn.status <- rep(NA, length(years))
   ch.full[i, ] <- c(rep(0, (k$ENTRY_BIOYR2[1] - 1996)), rep(1, floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)), rep(0, 2012-(floor(k$END_BIOYR[1]))))         
   ewe.age[i, ] <- c(rep(0, (k$ENTRY_BIOYR2[1] - 1996)),  seq(floor(k$AENTRY), (floor(k$AENTRY) + (floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)))), rep(0, 2012-(floor(k$END_BIOYR[1]) + 1)))    
   for(j in 1:length(years)){
     ewe.surv.status[j] <- ifelse(as.character(years[j]) == as.character(k$END_BIOYR[1]), "died", "survived")
+    ll <- subset(compd.data, Pop == as.character(k$END_Population[1]) & year == years[j])
+#    wean.pn.status[j] <- as.character(ll$PNIndLambs[1])
+    ewe.surv.pn.status[j] <- as.character(ll$PNIndEwes[1])
   }
-  ewe.surv.list[[i]] <- data.frame(cbind(years, rep(ewe.pop.ind[i], length(years)), ewe.surv.status, seq(floor(k$AENTRY), (floor(k$AENTRY) + (floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2))))))
+  ewe.surv.list[[i]] <- data.frame(cbind(years, rep(ewe.pop.ind[i], length(years)), ewe.surv.status, seq(floor(k$AENTRY), (floor(k$AENTRY) + (floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)))), ewe.surv.pn.status))
 }
 
 ewe.age <- ifelse(ewe.age == 0, 20, ewe.age)
 ewe.pop.ind.num <- as.numeric(as.factor(ewe.pop.ind))
 
 age.spec.ewe.surv <- do.call(rbind, ewe.surv.list)
-names(age.spec.ewe.surv) <- c("years", "pop", "ewe.surv.status", "ewe.age")
+names(age.spec.ewe.surv) <- c("years", "pop", "ewe.surv.status", "ewe.age", "ad.pn.status")
 age.spec.ewe.surv$years <- as.numeric(as.character(age.spec.ewe.surv$years))
 age.spec.ewe.surv$ewe.age <- as.numeric(as.character(age.spec.ewe.surv$ewe.age))
 age.spec.ewe.surv <- subset(age.spec.ewe.surv, years >= 1997 & ewe.age >= 1)
@@ -132,14 +140,53 @@ ewe.surv.status <- ifelse(as.numeric(age.spec.ewe.surv$ewe.surv.status) == 2, 1,
 ewe.surv.year <- age.spec.ewe.surv$years - 1996
 ewe.surv.pop <- age.spec.ewe.surv$pop
 
-he.ewe.yrs <- subset(age.spec.ewe.surv, (pop == "Asotin" & years <= 2010) | (pop == "MuirCreek" & years <= 1999) | (pop == "BigCanyon" & years <= 1999)  | (pop == "Imnaha" & years <= 1999))
-he.ewe.yrs$age.class <- ifelse(he.ewe.yrs$ewe.age >= 1 & he.ewe.yrs$ewe.age < 3, 2, 
-                               ifelse(he.ewe.yrs$ewe.age >= 3 & he.ewe.yrs$ewe.age < 7, 3,
-                                      ifelse(he.ewe.yrs$ewe.age >= 7 & he.ewe.yrs$ewe.age < 16, 4,
-                                             ifelse(he.ewe.yrs$ewe.age >= 16, 5, 1))))
-table(he.ewe.yrs$age.class, he.ewe.yrs$ewe.surv.status)
+# he.ewe.yrs <- subset(age.spec.ewe.surv, (pop == "Asotin" & years <= 2010) | (pop == "MuirCreek" & years <= 1999) | (pop == "BigCanyon" & years <= 1999)  | (pop == "Imnaha" & years <= 1999))
+# he.ewe.yrs$age.class <- ifelse(he.ewe.yrs$ewe.age >= 1 & he.ewe.yrs$ewe.age < 3, 2, 
+#                                ifelse(he.ewe.yrs$ewe.age >= 3 & he.ewe.yrs$ewe.age < 7, 3,
+#                                       ifelse(he.ewe.yrs$ewe.age >= 7 & he.ewe.yrs$ewe.age < 16, 4,
+#                                              ifelse(he.ewe.yrs$ewe.age >= 16, 5, 1))))
+# table(he.ewe.yrs$age.class, he.ewe.yrs$ewe.surv.status)
 
+# test age class structure for ewe survival
+age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6)  # Festa-Bianchet's
+age.class.ind2 <- c(1, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6)  # shift all classes forward 1 year
+age.class.ind3 <- c(1, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 6)  # shift classes 4 and 5 back 1 year
+age.class.ind4 <- c(1, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6)  # shift low end of class 4; leave class 5
+age.class.ind5 <- c(1, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6)  # shift both ends of class 4 (include last year of 3 in 4 and first year of 5 in 4)
+age.class.ind6 <- c(1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 6)  # shift both ends of class 4 (include last year of 3 in 4 and first year of 5 in 4)
+age.class.ind7 <- c(1, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 6)  # shift classes 4 and 5 back 1 year
+age.spec.ewe.surv$age.class1 <- age.class.ind[age.spec.ewe.surv$ewe.age]
+age.spec.ewe.surv$age.class2 <- age.class.ind2[age.spec.ewe.surv$ewe.age]
+age.spec.ewe.surv$age.class3 <- age.class.ind3[age.spec.ewe.surv$ewe.age]
+age.spec.ewe.surv$age.class4 <- age.class.ind4[age.spec.ewe.surv$ewe.age]
+age.spec.ewe.surv$age.class5 <- age.class.ind5[age.spec.ewe.surv$ewe.age]
+age.spec.ewe.surv$age.class6 <- age.class.ind6[age.spec.ewe.surv$ewe.age]
+age.ewe.surv.class0.check.lm <- glm(ewe.surv.status ~ factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class1.check.lm <- glm(ewe.surv.status ~ factor(age.class1) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class2.check.lm <- glm(ewe.surv.status ~ factor(age.class2) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class3.check.lm <- glm(ewe.surv.status ~ factor(age.class3) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class4.check.lm <- glm(ewe.surv.status ~ factor(age.class4) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class5.check.lm <- glm(ewe.surv.status ~ factor(age.class5) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class6.check.lm <- glm(ewe.surv.status ~ factor(age.class6) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class7.check.lm <- glm(ewe.surv.status ~ I(as.numeric(as.character(ewe.age)) ^ 2) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class8.check.lm <- glm(ewe.surv.status ~ as.numeric(as.character(ewe.age)) + factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class9.check.lm <- glm(ewe.surv.status ~ as.numeric(as.character(ewe.age)) + I(as.numeric(as.character(ewe.age)) ^ 2) + factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class10.check.lm <- glm(ewe.surv.status ~ factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+age.ewe.surv.class11.check.lm <- glm(ewe.surv.status ~ poly(as.numeric(as.character(ewe.age)), 2) * factor(ad.pn.status), data = age.spec.ewe.surv, family = binomial)
+AIC(age.ewe.surv.class0.check.lm)
+AIC(age.ewe.surv.class1.check.lm)
+AIC(age.ewe.surv.class2.check.lm)
+AIC(age.ewe.surv.class3.check.lm)
+AIC(age.ewe.surv.class4.check.lm)
+AIC(age.ewe.surv.class5.check.lm)
+AIC(age.ewe.surv.class6.check.lm)
+AIC(age.ewe.surv.class7.check.lm)
+AIC(age.ewe.surv.class8.check.lm)
+AIC(age.ewe.surv.class9.check.lm)
+AIC(age.ewe.surv.class10.check.lm)
 
+anova(age.ewe.surv.class8.check.lm, age.ewe.surv.class9.check.lm, test = "LRT")
+anova(age.ewe.surv.class10.check.lm, age.ewe.surv.class11.check.lm, test = "LRT")
 
 # create vector with occasion of marking:
 get.first <- function(x) min(which(x != 0))
@@ -149,9 +196,6 @@ f.init <- apply(ch.full, 1, get.first)
 ch <- ch.full[-which(f.init == "Inf"), ]
 f <- apply(ch, 1, get.first)
 
-# build a x 1 vector of age-class specifications (maps 1:18 age in years to 1:5 age in age-class)
-# age class 6 is NOT CURRENTLY MARKED. 
-age.class.ind <- c(1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 6) 
 
 #---------------------------------------------#
 #-- ewes followed by age, pop, health class --#
@@ -173,25 +217,60 @@ for(i in 1:length(ewe.wean.list)){
   k <- subset(ewes.with.teeth, ID == levels(factor(ewes.with.teeth$ID))[i])
   years <- seq(k$ENTRY_BIOYR2, k$END_BIOYR)
   ewe.age.wean <- seq(floor(as.numeric(as.character(k$AENTRY))), floor(as.numeric(as.character(k$AENTRY))) + length(years) - 1)
-  wean.status <- rep(NA, length(years))
+  wean.status <- wean.pn.status <- rep(NA, length(years))
   pop.name <- rep(as.character(k$END_Population[1]), length(years))
   for(j in 1:length(years)){
     wean.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
     wean.status[j] <- ifelse(dim(wean.year)[1] == 0, NA, ifelse(wean.year$CENSOR2 == 0, 1, 0))
+    ll <- subset(compd.data, Pop == as.character(k$END_Population[1]) & year == years[j])
+    wean.pn.status[j] <- as.character(ll$PNIndLambs[1])
   }
-  ewe.wean.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.wean, wean.status))
+  ewe.wean.list[[i]] <- data.frame(cbind(years, pop.name, ewe.age.wean, wean.status, wean.pn.status))
 }
 
 #-- eliminate ewes who didn't reproduce --#
 age.spec.ewe.wean <- do.call(rbind, ewe.wean.list)
-age.spec.ewe.wean <- subset(age.spec.ewe.wean, is.na(wean.status) == F)
+age.spec.ewe.wean <- subset(age.spec.ewe.wean, is.na(wean.status) == F & is.na(wean.pn.status) == F)
 age.spec.ewe.wean$years <- factor(age.spec.ewe.wean$years)
 age.spec.ewe.wean$pop.name <- factor(age.spec.ewe.wean$pop.name)
+age.spec.ewe.wean$age.class <- age.class.ind[age.spec.ewe.wean$ewe.age]
 ewe.wean.pop <- as.numeric(age.spec.ewe.wean$pop.name)
 ewe.wean.age <- as.numeric(as.character(age.spec.ewe.wean$ewe.age.wean)) + 1
 ewe.wean.year <- as.numeric(as.factor(as.numeric(as.character(age.spec.ewe.wean$years))))
 ewe.wean.success <- as.numeric(as.character(age.spec.ewe.wean$wean.status))
 table(age.spec.ewe.wean$pop.name, age.spec.ewe.wean$wean.status)
+
+# test age class structure
+age.spec.ewe.wean$age.class1 <- age.class.ind[age.spec.ewe.wean$ewe.age.wean]
+age.spec.ewe.wean$age.class2 <- age.class.ind2[age.spec.ewe.wean$ewe.age.wean]
+age.spec.ewe.wean$age.class3 <- age.class.ind3[age.spec.ewe.wean$ewe.age.wean]
+age.spec.ewe.wean$age.class4 <- age.class.ind4[age.spec.ewe.wean$ewe.age.wean]
+age.spec.ewe.wean$age.class5 <- age.class.ind5[age.spec.ewe.wean$ewe.age.wean]
+age.spec.ewe.wean$age.class6 <- age.class.ind6[age.spec.ewe.wean$ewe.age.wean]
+age.class0.check.lm <- glm(wean.status ~ factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class1.check.lm <- glm(wean.status ~ factor(age.class1) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class2.check.lm <- glm(wean.status ~ factor(age.class2) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class3.check.lm <- glm(wean.status ~ factor(age.class3) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class4.check.lm <- glm(wean.status ~ factor(age.class4) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class5.check.lm <- glm(wean.status ~ factor(age.class5) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class6.check.lm <- glm(wean.status ~ factor(age.class6) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+#age.class7.check.lm <- glm(wean.status ~ factor(age.class6) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class7.check.lm <- glm(wean.status ~ I(as.numeric(as.character(ewe.age.wean)) ^ 2) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class10.check.lm <- glm(wean.status ~ factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class11.check.lm <- glm(wean.status ~ poly(as.numeric(as.character(ewe.age.wean)), 2) * factor(wean.pn.status), data = age.spec.ewe.wean, family = binomial)
+age.class12.check.lm <- glm(wean.status ~ poly(as.numeric(as.character(ewe.age.wean)), 2), data = age.spec.ewe.wean, family = binomial)
+AIC(age.class0.check.lm)
+AIC(age.class1.check.lm)
+AIC(age.class2.check.lm)
+AIC(age.class3.check.lm)
+AIC(age.class4.check.lm)
+AIC(age.class5.check.lm)
+AIC(age.class6.check.lm)
+AIC(age.class7.check.lm)
+AIC(age.class12.check.lm)
+
+anova(age.class10.check.lm, age.class11.check.lm, test = "LRT")
+anova(age.class12.check.lm, age.class11.check.lm, test = "LRT")
 
 
 #------------------------------------#
