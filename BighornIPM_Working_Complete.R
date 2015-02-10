@@ -1,5 +1,5 @@
 # BHS IPM 
-# November 11, 2014
+# Started November 11, 2014
 
 # 0. Load required packages.
 require(rjags)
@@ -7,16 +7,28 @@ require(runjags)
 require(grofit)
 
 # 1. Load data.
-
-studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/RevisedData_11Sept2013/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
-lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
-compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
+studysheep <- read.csv("./Data/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
+lambs <- read.csv("./Data/MergedLambData_26Mar2013.csv", header = T)
+compd.data <- read.csv("./Data/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data <- subset(compd.data, !(Pop == "Imnaha" & year <= 1999))
-#compd.data$PNIndLambs <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-#compd.data$PNIndEwes <- compd.data$PNIndLambs <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
-compd.data$PNIndLambs <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 2000) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 2000), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
-compd.data$PNIndEwes <- ifelse((compd.data$Pop == "Asotin" & compd.data$year <= 2010) | (compd.data$Pop == "BigCanyon" & compd.data$year <= 1999) | (compd.data$Pop == "MuirCreek" & compd.data$year <= 1999), 1, ifelse(is.na(compd.data$CLASS) == T, NA, 2))
-
+#compd.data$PNIndLambs <- with(compd.data, 
+#                            ifelse(CLASS == c("HEALTHY", "ADULTS"), 1, 
+#                            ifelse(CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
+#                             )
+#compd.data$PNIndEwes <- with(compd.data, 
+#                             PNIndLambs <- ifelse(CLASS == c("HEALTHY"), 1, 
+#                             ifelse(CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+#                             )
+compd.data$PNIndLambs <- with(compd.data, 
+                              ifelse((Pop == "Asotin" & year <= 2010) |
+                                     (Pop == "BigCanyon" & year <= 2000) | 
+                                     (Pop == "MuirCreek" & year <= 2000), 1, ifelse(is.na(CLASS) == T, NA, 2))
+                             )
+compd.data$PNIndEwes <- with(compd.data, 
+                             ifelse((Pop == "Asotin" & year <= 2010) |
+                                    (Pop == "BigCanyon" & year <= 1999) | 
+                                    (Pop == "MuirCreek" & year <= 1999), 1, ifelse(is.na(CLASS) == T, NA, 2))
+                             )
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
@@ -49,50 +61,52 @@ levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) ==
 
 # cut compd.data down to just the pops in ewes.with.teeth from 1997 forward
 compd.data <- subset(compd.data, Pop %in% levels(factor(ewes.with.teeth$END_Population)) & year >= 1997 & Pop != "UpperSaddle")
-  # exclude Upper Saddle because it isn't included when AENTRY isn't used. 
+# exclude Upper Saddle because it isn't included when AENTRY isn't used. 
 compd.data$Pop <- factor(compd.data$Pop)
 factor.list <- list(compd.data$Pop, compd.data$year)
-Oad <- tapply(compd.data$Ewes, factor.list, sum) # table observed adults in each pop-year
+Oad  <- tapply(compd.data$Ewes, factor.list, sum) # table observed adults in each pop-year
 Ojuv <- tapply(compd.data$Lambs, factor.list, sum) # table observed lambs in each pop-year
+
 compd.data$NoFemRem.nonas <- ifelse(is.na(compd.data$NoFemRem) == T, 0, compd.data$NoFemRem)
 compd.data$NoFemRel.nonas <- ifelse(is.na(compd.data$NoFemRel) == T, 0, compd.data$NoFemRel)
-#Osls <- round(tapply(compd.data$RadEwesWLambs * compd.data$SumLambSurv, factor.list, sum))
-#RadEwes <- round(tapply(compd.data$RadEwes, factor.list, sum))
 RemovedEwes <- tapply(compd.data$NoFemRem.nonas, factor.list, sum)
-AddedEwes <- tapply(compd.data$NoFemRel.nonas, factor.list, sum)
-for(j in 1:dim(RemovedEwes)[1]){
+AddedEwes   <- tapply(compd.data$NoFemRel.nonas, factor.list, sum)
+for (j in 1:dim(RemovedEwes)[1]) 
+{
   RemovedEwes[j, ] <- ifelse(is.na(RemovedEwes[j, ]) == T, 0, RemovedEwes[j, ])
-  AddedEwes[j, ] <- ifelse(is.na(AddedEwes[j, ]) == T, 0, AddedEwes[j, ])
+  AddedEwes[j, ]   <- ifelse(is.na(AddedEwes[j, ]) == T, 0, AddedEwes[j, ])
 }
 
 count.data <- as.data.frame(cbind(rep(levels(factor(compd.data$year)), each = length(levels(compd.data$Pop))), rep(as.character(levels(factor(compd.data$Pop))), times = length(levels(factor(compd.data$year)))), as.vector(Oad), as.vector(Ojuv), as.vector(RemovedEwes), as.vector(AddedEwes)))
 names(count.data) <- c("Year", "Pop", "Observed Ewes", "Observed Lambs", "Removed Ewes", "Added Ewes")
-#write.csv(count.data, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/MoviDefCountData_27Jan2015.csv")
+# write.csv(count.data, "./Data/MoviDefCountData_27Jan2015.csv") # NOTE that this path has changed. 
 
 n.years <- 2012 - 1996
 
 # pop counts 
+
 y <- Ojuv + Oad # total ewes and lambs observed in each pop-year
 
 # build j x t matrix of pop-year disease statuses (separate for lambs and adults, to separate out winter outbreak events)
 popyr.dis.status.lambs <- popyr.dis.status.adults <- matrix(NA, nrow = length(levels(factor(compd.data$Pop))), ncol = 2012 - 1996)
-for(i in 1:length(levels(factor(compd.data$Pop)))){
-  for(j in 1 : (2012 - 1996)){
+for (i in 1:length(levels(factor(compd.data$Pop))))
+{
+  for (j in 1:(2012 - 1996))
+  {
     k <- subset(compd.data, as.character(Pop) == as.character(levels(factor(compd.data$Pop)))[i] & year == (1996 + j))
-    popyr.dis.status.lambs[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNIndLambs)
+    popyr.dis.status.lambs[i, j]  <- ifelse(dim(k)[1] == 0, NA, k$PNIndLambs)
     popyr.dis.status.adults[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNIndEwes)
   }
 }
-
-#popyr.dis.status <- ifelse(is.na(popyr.dis.status) == T, 3, popyr.dis.status)
-popyr.dis.status.lambs <- ifelse(is.na(popyr.dis.status.lambs) == T, 3, popyr.dis.status.lambs)
+popyr.dis.status.lambs  <- ifelse(is.na(popyr.dis.status.lambs) == T, 3, popyr.dis.status.lambs)
 popyr.dis.status.adults <- ifelse(is.na(popyr.dis.status.adults) == T, 3, popyr.dis.status.adults)
 
 # CJS data 
+
 # recode all entries prior to 1997 with 1997 as entry bioyr (to match with population counts strings in IPM)
 ewes.with.teeth$ENTRY_BIOYR2 <- ifelse(ewes.with.teeth$ENTRY_BIOYR <= 1996, 1996, ewes.with.teeth$ENTRY_BIOYR)
 # recode a few specific animals to have entry bioyrs no earlier than the first year with compd.data for their resident population
-sheep.ind <- which(ewes.with.teeth$ID == "02MY33")
+sheep.ind <-  which(ewes.with.teeth$ID == "02MY33")
 sheep.ind2 <- which(ewes.with.teeth$ID == "02MY39") # she needs to come out -- died on 04/20/02.
 sheep.ind3 <- which(ewes.with.teeth$ID == "02MY41")
 sheep.ind4 <- which(ewes.with.teeth$ID == "01QZ70")
@@ -101,31 +115,44 @@ ewes.with.teeth[c(sheep.ind, sheep.ind3, sheep.ind4), ]$ENTRY_BIOYR2 <- 2002
 # also pull out Upper Saddle sheep (which only get in when AENTRY is used)
 ewes.with.teeth <- subset(ewes.with.teeth, ID != "02MY39" & END_Population != "UpperSaddle")
 
-
 # build a x 1 vector of age-class specifications (maps 1:18 age in years to 1:5 age in age-class)
 # age class 6 is NOT CURRENTLY MARKED. 
+# Festa-Bianchet (PRSB 2006) age-structure
 age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
-#johnson.age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6) 
+# Johnson (2010 Ecol apps) age structure
+# johnson.age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 6) 
 
 ewe.surv.list <- vector("list", dim(ewes.with.teeth)[1])
 ch.full <- ch.full2 <- ewe.age <- matrix(NA, nrow = dim(ewes.with.teeth)[1], ncol = 2012 - 1996)
 ewe.pop.ind <- rep(NA, dim(ewes.with.teeth)[1])
-for(i in 1:dim(ch.full)[1]){
+for (i in 1 : dim(ch.full)[1])
+{
   k <- subset(ewes.with.teeth, as.character(ID) == as.character(ewes.with.teeth$ID)[i])
   years <- seq(k$ENTRY_BIOYR2, k$END_BIOYR)
   ewe.pop.ind[i] <- as.character(k$END_Population)
   ewe.surv.status <- ewe.surv.pn.status <- rep(NA, length(years))
-  ch.full[i, ] <- c(rep(0, (k$ENTRY_BIOYR2[1] - 1996)), rep(1, floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)), rep(0, 2012-(floor(k$END_BIOYR[1]))))         
-  ewe.age[i, ] <- c(rep(0, (k$ENTRY_BIOYR2[1] - 1996)),  seq(floor(k$AENTRY), (floor(k$AENTRY) + (floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)))), rep(0, 2012-(floor(k$END_BIOYR[1]) + 1)))    
-  for(j in 1:length(years)){
+  ch.full[i, ] <- c(rep(0, (k$ENTRY_BIOYR2[1] - 1996)),
+                    rep(1, floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)),
+                    rep(0, 2012 - floor(k$END_BIOYR[1])))
+  ewe.age[i, ] <- c(rep(0, (k$ENTRY_BIOYR2[1] - 1996)),
+                    seq(floor(k$AENTRY), floor(k$AENTRY) + floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)),
+                    rep(0, 2012 - (floor(k$END_BIOYR[1]) + 1)))
+  for (j in 1 : length(years))
+  {
     ewe.surv.status[j] <- ifelse(as.character(years[j]) == as.character(k$END_BIOYR[1]), "died", "survived")
     ll <- subset(compd.data, Pop == as.character(k$END_Population[1]) & year == years[j])
     ewe.surv.pn.status[j] <- as.character(ll$PNIndEwes[1])
   }
-  ewe.surv.list[[i]] <- data.frame(cbind(rep(as.character(ewes.with.teeth$ID)[i], length(years)), years, rep(ewe.pop.ind[i], length(years)), ewe.surv.status, seq(floor(k$AENTRY), (floor(k$AENTRY) + (floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)))), ewe.surv.pn.status))
+  ewe.surv.list[[i]] <- data.frame(cbind(rep(as.character(ewes.with.teeth$ID)[i], length(years)),
+                                         years,
+                                         rep(ewe.pop.ind[i], length(years)),
+                                         ewe.surv.status,
+                                         seq(floor(k$AENTRY), floor(k$AENTRY) + floor(k$END_BIOYR) - floor(k$ENTRY_BIOYR2)),
+                                         ewe.surv.pn.status)
+                                   )
 }
 
-ewe.age <- ifelse(ewe.age == 0, 20, ewe.age)
+ewe.age <- ifelse (ewe.age == 0, 20, ewe.age)
 ewe.pop.ind.num <- as.numeric(as.factor(ewe.pop.ind))
 
 age.spec.ewe.surv <- do.call(rbind, ewe.surv.list)
@@ -142,59 +169,81 @@ ewe.surv.status <- ifelse(as.numeric(age.spec.ewe.surv$ewe.surv.status) == 2, 1,
 ewe.surv.year <- age.spec.ewe.surv$years - 1996
 ewe.surv.pop <- age.spec.ewe.surv$pop
 
-#write.csv(age.spec.ewe.surv, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/EweSurvData_TeethAndLeq3_MoviDef.csv")
-#write.csv(age.spec.ewe.surv, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/EweSurvData_TeethAndLeq3_ObservedHealthDef.csv")
+# write.csv(age.spec.ewe.surv, "./Data/EweSurvData_TeethAndLeq3_MoviDef.csv") # NOTE: path has changed
+# write.csv(age.spec.ewe.surv, "~./Data/EweSurvData_TeethAndLeq3_ObservedHealthDef.csv") # NOTE: path has changed
 
 # create vector with occasion of marking:
-get.first <- function(x) min(which(x != 0))
-f.init <- apply(ch.full, 1, get.first)
+get.first <- function(x) min (which (x != 0))
+f.init <- apply (ch.full, 1, get.first)
 
 # for now, pull out ewes who didn't survive their collaring year (whose rows in ch are entirely 0's)
 ch <- ch.full[-which(f.init == "Inf"), ]
-f <- apply(ch, 1, get.first)
+f  <- apply (ch, 1, get.first)
 
 #----------------------------------------------#
 #-- check ages at mortality through time...----#
 #----------------------------------------------#
-mort.ewes.notaso <- subset(age.spec.ewe.surv, ewe.surv.status == "died" & !(pop == "Asotin") & !(pop == "BigCanyon" & years <= 2000) & !(pop == "MuirCreek" & years <= 2000))
-mort.ewes.aso <- subset(age.spec.ewe.surv, ewe.surv.status == "died" & (pop == "Asotin" | (pop == "BigCanyon" & years <= 2000) | (pop == "MuirCreek" & years <= 2000)))
-layout(matrix(c(1, 2, 1, 2, 1, 2, 3, 4), byrow = T, nrow = 4))
+mort.ewes.notaso <- subset(age.spec.ewe.surv, 
+                           ewe.surv.status == "died" & !(pop == "Asotin") & !(pop == "BigCanyon" & years <= 2000) & !(pop == "MuirCreek" & years <= 2000))
+mort.ewes.aso <- subset(age.spec.ewe.surv, 
+                        ewe.surv.status == "died" & (pop == "Asotin" | (pop == "BigCanyon" & years <= 2000) | (pop == "MuirCreek" & years <= 2000)))
+aso.rams <- subset (rams.with.teeth, END_Population == "AS")
+other.rams <- subset (rams.with.teeth, !(END_Population %in% c("AS", "", "0", "MI", "SD", "SR", "UHCID")))
+tot.marked.ewes <- tapply (compd.data$RadEwes, compd.data$year, sum)
+tot.marked.rams <- tapply (compd.data$RadRams, compd.data$year, sum)
+
+layout(matrix( c(1, 2, 1, 2, 1, 2, 3, 4), byrow = T, nrow = 4))
 par(oma = c(0, 0, 2, 0), mar = c(3, 5, 1, 1))
-plot(mort.ewes.notaso$ewe.age ~ jitter(mort.ewes.notaso$years, 1), main = "Known-aged ewes", pch = 1, cex = 1.2, xlab = "", ylab ="Age at death", col = "red")
-lines(lowess(mort.ewes.notaso$ewe.age ~ mort.ewes.notaso$years, iter = 30, delta = .3, f = 3/4), col = "red", lwd = 2)
+plot(mort.ewes.notaso$ewe.age ~ jitter(mort.ewes.notaso$years, 1), 
+     main = "Known-aged ewes", 
+     pch = 1, 
+     cex = 1.2, 
+     xlab = "", 
+     ylab ="Age at death", 
+     col = "red")
+lines(lowess(mort.ewes.notaso$ewe.age ~ mort.ewes.notaso$years, iter = 30, delta = .3, f = 3/4), 
+      col = "red", lwd = 2)
 leg.text <- c("Movi-Free", "Movi-Infected")
 legend("topleft", leg.text, col = c("black", "red"), pch = c(16, 1), bty = "n")
 
 points(mort.ewes.aso$ewe.age ~ jitter(mort.ewes.aso$years, 1), pch = 16)
 lines(lowess(mort.ewes.aso$ewe.age ~ mort.ewes.aso$years, iter = 30, delta = .3, f = 3/4), ylab = "ewe age")
 
-x <- seq(1998, 2010)
-y <- .5235 * x + (-1040)
+plot (other.rams$ALS ~ jitter(other.rams$END_BIOYR, 1), 
+      col = "red", 
+      ylab = "Age at death", 
+      cex = 1.2, 
+      main = "Known-aged rams", 
+      xlab = "")
+points (aso.rams$ALS ~ jitter(aso.rams$END_BIOYR, 1), col = "black", pch = 16)
+lines (lowess(aso.rams$ALS ~ aso.rams$END_BIOYR, f = 3/4), col = "black")
+lines (lowess(other.rams$ALS ~ other.rams$END_BIOYR, f = 3/4), lwd = 2, col = "red")
 
-aso.rams <- subset(rams.with.teeth, END_Population == "AS")
-other.rams <- subset(rams.with.teeth, !(END_Population %in% c("AS", "", "0", "MI", "SD", "SR", "UHCID")))
-plot(other.rams$ALS ~ jitter(other.rams$END_BIOYR, 1), col = "red", ylab = "Age at death", cex = 1.2, main = "Known-aged rams", xlab = "")
-points(aso.rams$ALS ~ jitter(aso.rams$END_BIOYR, 1), col = "black", pch = 16)
-lines(lowess(aso.rams$ALS ~ aso.rams$END_BIOYR, f = 3/4), col = "black")
-lines(lowess(other.rams$ALS ~ other.rams$END_BIOYR, f = 3/4), lwd = 2, col = "red")
+plot (tot.marked.ewes[-c(1, length(tot.marked.ewes))] ~ seq(1998, 2011), 
+      ylim = c(0, 120), 
+      type = "p", 
+      xlab = "", 
+      ylab = "# collared")
+lines(lowess (tot.marked.ewes[-c(1, length(tot.marked.ewes))] ~ seq(1998, 2011)))
+plot(tot.marked.rams[-c(1, length(tot.marked.rams))] ~ seq(1998, 2011), 
+     ylim = c(0, 60), 
+     type = "p", 
+     xlab = "", 
+     ylab = "# collared")
+lines(lowess (tot.marked.rams[-c(1, length(tot.marked.rams))] ~ seq(1998, 2011)))
 
-tot.marked.ewes <- tapply(compd.data$RadEwes, compd.data$year, sum)
-tot.marked.rams <- tapply(compd.data$RadRams, compd.data$year, sum)
-plot(tot.marked.ewes[-c(1, length(tot.marked.ewes))] ~ seq(1998, 2011), ylim = c(0, 120), type = "p", xlab = "", ylab = "# collared")
-lines(lowess(tot.marked.ewes[-c(1, length(tot.marked.ewes))] ~ seq(1998, 2011)))
-plot(tot.marked.rams[-c(1, length(tot.marked.rams))] ~ seq(1998, 2011), ylim = c(0, 60), type = "p", xlab = "", ylab = "# collared")
-lines(lowess(tot.marked.rams[-c(1, length(tot.marked.rams))] ~ seq(1998, 2011)))
-
-rams.healthy <- subset(rams.with.teeth, (END_Population == "AS" & ENTRY_BIOYR <= 2010) | (END_Population == "BC" & ENTRY_BIOYR <= 1999) | (END_Population == "MU" & ENTRY_BIOYR <= 1999))
-rams.notaso <- subset(rams.with.teeth, !(END_Population == "AS" & ENTRY_BIOYR <= 2010) & !(END_Population == "BC" & ENTRY_BIOYR <= 1999) & !(END_Population == "MY" & ENTRY_BIOYR <= 1999))
+# rams.healthy <- subset(rams.with.teeth, 
+#                        (END_Population == "AS" & ENTRY_BIOYR <= 2010) | (END_Population == "BC" & ENTRY_BIOYR <= 1999) | (END_Population == "MU" & ENTRY_BIOYR <= 1999))
+# rams.notaso <- subset(rams.with.teeth, 
+#                         !(END_Population == "AS" & ENTRY_BIOYR <= 2010) & !(END_Population == "BC" & ENTRY_BIOYR <= 1999) & !(END_Population == "MY" & ENTRY_BIOYR <= 1999))
 
 #---------------------------------------------#
 #-- ewes followed by age, pop, health class --#
 #---------------------------------------------#
-ewes.he.aso <- subset(ewes.with.teeth, (Population == "Asotin" & ENTRY_BIOYR <= 2010 & DEAD == 1))
+ewes.he.aso  <- subset(ewes.with.teeth, (Population == "Asotin" & ENTRY_BIOYR <= 2010 & DEAD == 1))
 ewes.he.bcan <- subset(ewes.with.teeth, (Population == "BigCanyon" & ENTRY_BIOYR <= 1999 & DEAD == 1))
 ewes.he.muir <- subset(ewes.with.teeth, (Population == "MuirCreek" & ENTRY_BIOYR <= 1999 & DEAD == 1))
-ewes.he.imn <- subset(ewes.with.teeth,  (Population == "Imnaha" & ENTRY_BIOYR <= 1999 & DEAD == 1))
+ewes.he.imn  <- subset(ewes.with.teeth, (Population == "Imnaha" & ENTRY_BIOYR <= 1999 & DEAD == 1))
 
 #----------------------------------#
 #-- 2.4. CJS weaning --------------#
@@ -202,19 +251,28 @@ ewes.he.imn <- subset(ewes.with.teeth,  (Population == "Imnaha" & ENTRY_BIOYR <=
 # This is weaning without production: get a 1 for weaning, 0 for censoring, NA for no record in lamb data  --#
 # CENSOR2 == 0 implies lamb survived; CENSOR2 == 1 implies lamb died
 ewe.wean.list <- vector("list", dim(ewes.with.teeth)[1])
-for(i in 1:length(ewe.wean.list)){
+for(i in 1:length(ewe.wean.list))
+{
   k <- subset(ewes.with.teeth, ID == levels(factor(ewes.with.teeth$ID))[i])
   years <- seq(k$ENTRY_BIOYR2, k$END_BIOYR)
-  ewe.age.wean <- seq(floor(as.numeric(as.character(k$AENTRY))), floor(as.numeric(as.character(k$AENTRY))) + length(years) - 1)
+  ewe.age.wean <- seq(floor(as.numeric(as.character(k$AENTRY))), 
+                      floor(as.numeric(as.character(k$AENTRY))) + length(years) - 1)
   wean.status <- wean.pn.status <- rep(NA, length(years))
   pop.name <- rep(as.character(k$END_Population[1]), length(years))
-  for(j in 1:length(years)){
+  for(j in 1:length(years))
+  {
     wean.year <- subset(lambs, EWEID == levels(factor(ewes.with.teeth$ID))[i] & YEAR == years[j])
     wean.status[j] <- ifelse(dim(wean.year)[1] == 0, NA, ifelse(wean.year$CENSOR2 == 0, 1, 0))
     ll <- subset(compd.data, Pop == as.character(k$END_Population[1]) & year == years[j])
     wean.pn.status[j] <- as.character(ll$PNIndLambs[1])
   }
-  ewe.wean.list[[i]] <- data.frame(cbind(rep(levels(factor(ewes.with.teeth$ID))[i], length(years)), years, pop.name, ewe.age.wean, wean.status, wean.pn.status))
+  ewe.wean.list[[i]] <- data.frame(cbind(rep(levels(factor(ewes.with.teeth$ID))[i], length(years)), 
+                                         years, 
+                                         pop.name, 
+                                         ewe.age.wean, 
+                                         wean.status, 
+                                         wean.pn.status)
+                                   )
 }
 
 #-- eliminate ewes who didn't reproduce --#
@@ -232,7 +290,7 @@ ewe.wean.success <- as.numeric(as.character(age.spec.ewe.wean$wean.status))
 table(age.spec.ewe.wean$pop.name, age.spec.ewe.wean$wean.status)
 table(age.spec.ewe.wean$age.class1, age.spec.ewe.wean$wean.pn.status)
 
-#write.csv(age.spec.ewe.wean, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/EweWeanData_TeethAndLeq3_MoviDef.csv")
+# write.csv(age.spec.ewe.wean, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/EweWeanData_TeethAndLeq3_MoviDef.csv")
 
 #------------------------------------#
 #-- IPM -----------------------------#
