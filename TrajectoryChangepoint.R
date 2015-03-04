@@ -59,6 +59,7 @@ PopTrajectoryBoot <- function(popdata, nboot)
 {
   boot.trajectory <- matrix(NA, nrow = nboot, ncol = dim(popdata)[1])
   changepoint.lb <- changepoint.ub <- rep(NA, nboot)
+  slope1.est <- slope2.est <- rep(NA, nboot)
   slope1.lb <- slope1.ub <- rep(NA, nboot)
   slope2.lb <- slope2.ub <- rep(NA, nboot)
   popdata$Diffs <- rep(NA, dim(popdata)[1])
@@ -76,17 +77,16 @@ PopTrajectoryBoot <- function(popdata, nboot)
   changepoint.ub[j] <- pw.fit$intervals[2, 1]
   slope1.lb[j] <- pw.fit$intervals[1, 2]
   slope1.ub[j] <- pw.fit$intervals[2, 2]
+  slope1.est[j] <- pw.fit$model$coef[2]
+  slope2.est[j] <- pw.fit$model$coef[3]
   slope2.lb[j] <- pw.fit$intervals[1, 4]
   slope2.ub[j] <- pw.fit$intervals[2, 4]
   print(j)
   }
-  return(list(changepoint.lb, changepoint.ub, slope1.lb, slope1.ub, slope2.lb, slope2.ub))
+  return(list(changepoint.lb, changepoint.ub, slope1.est, slope2.est, slope1.lb, slope1.ub, slope2.lb, slope2.ub))
 }
 
 aso.boot.test <- PopTrajectoryBoot(popdata = aso, nboot = 20)
-hist(aso.boot.test[[2]] - aso.boot.test[[1]], xlim = c(0, 22), col = "grey80")
-abline(v = aso.pw$intervals[2, 1] - aso.pw$intervals[1, 1], col = "red", lwd = 2)
-
 bb.boot.test <- PopTrajectoryBoot(popdata = bb, nboot = 20)
 bc.boot.test <- PopTrajectoryBoot(popdata = bc, nboot = 20)
 im.boot.test <- PopTrajectoryBoot(popdata = im, nboot = 20)
@@ -96,6 +96,28 @@ mu.boot.test <- PopTrajectoryBoot(popdata = mu, nboot = 20)
 my.boot.test <- PopTrajectoryBoot(popdata = my, nboot = 20)
 rb.boot.test <- PopTrajectoryBoot(popdata = rb, nboot = 20)
 we.boot.test <- PopTrajectoryBoot(popdata = we, nboot = 20)
+
+par(mfrow = c(3, 4))
+hist(aso.boot.test[[2]] - aso.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Asotin")
+abline(v = aso.pw$intervals[2, 1] - aso.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(bb.boot.test[[2]] - bb.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Black Butte")
+abline(v = bb.pw$intervals[2, 1] - bb.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(bc.boot.test[[2]] - bc.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Big Canyon")
+abline(v = bc.pw$intervals[2, 1] - bc.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(im.boot.test[[2]] - im.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Imnaha")
+abline(v = im.pw$intervals[2, 1] - im.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(lo.boot.test[[2]] - lo.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Lostine")
+abline(v = lo.pw$intervals[2, 1] - mv.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(mv.boot.test[[2]] - mv.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Mountain View")
+abline(v = mv.pw$intervals[2, 1] - mv.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(mu.boot.test[[2]] - mu.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Muir Creek")
+abline(v = mu.pw$intervals[2, 1] - mu.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(my.boot.test[[2]] - my.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Myers Creek")
+abline(v = my.pw$intervals[2, 1] - my.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(rb.boot.test[[2]] - rb.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Redbird")
+abline(v = rb.pw$intervals[2, 1] - rb.pw$intervals[1, 1], col = "red", lwd = 2)
+hist(we.boot.test[[2]] - we.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Wenaha")
+abline(v = we.pw$intervals[2, 1] - we.pw$intervals[1, 1], col = "red", lwd = 2)
 
 par(mfrow = c(3, 4))
 hist(aso.boot.test[[2]] - aso.boot.test[[1]], xlim = c(0, 22), col = "grey80", main = "Asotin")
