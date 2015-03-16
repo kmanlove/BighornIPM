@@ -7,10 +7,13 @@ require(popbio)
 require(Matrix)
 require(MASS)
 source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
-load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/MoviDefPost_02Feb2015.RData")
+load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/ObservedHealthPost_18Feb2015.RData")
 #load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_09Jan2015.RData")
 #load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
 ipm11.coda <- MoviStatus.coda
+ipm11.coda <- ObservedHealthStatus.coda
+ipm11.coda <- ObservedHealthStatusCollarsOnly.coda
+ipm11.coda <- ObservedHealthStatusCountsOnly.coda
 
 #--------------------------------------------------#
 #-- Figure 2. IPM posterior estimates -------------#
@@ -317,7 +320,7 @@ leg.text <- c("healthy", "infected")
 legend("bottomright", leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 1), bty = "n", cex = 1.2)
 #mtext(side = 1, line = 4, outer = F, cex = 1, expression(paste("Elasticity of ", lambda, " to vital rate", sep = "")), las = 0)
 
-plot(density(healthy.eigenval1), main = "", ylim = c(0, 20), xlim = c(0.7, 1.12), lwd = 2, lty = 1, xlab = expression(paste(lambda)))
+plot(density(healthy.eigenval1), main = "", ylim = c(0, 20), xlim = c(0.7, 1.3), lwd = 2, lty = 1, xlab = expression(paste(lambda)))
 lines(density(infected.eigenval1), col = "grey60", lwd = 2, lty = 2)
 #  lines(density(spillover.eigenval1.1), col = "purple", lwd = 2, lty = 1)
 #  lines(density(spillover.eigenval1.5), col = "red", lwd = 2, lty = 1)
@@ -338,7 +341,7 @@ leg.text <- c("healthy", "infected")
 legend(y = 0.2, x = 12.5, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lty = c(1, 1), bty = "n", cex = 1.2)
 #mtext(side = 1, line = 4, outer = F, cex = 1, expression("Ewe age"), las = 1)
 
-plot(x = 1, y = 1, pch = 0, cex = 0, xlim = c(4.5, 9), ylim = c(0, 1.2), xlab = "Generation time (yrs)", ylab = "Density")
+plot(x = 1, y = 1, pch = 0, cex = 0, xlim = c(0.5, 9), ylim = c(0, 1.2), xlab = "Generation time (yrs)", ylab = "Density")
 lines(density(gen.time.test.he), lty = 1, lwd = 2)
 lines(density(gen.time.test.inf), col = "grey60", lwd = 2, lty = 2)
 leg.text <- c("healthy", "infected")
@@ -353,9 +356,9 @@ legend(y = 1.2, x = 7.5, leg.text, col = c("black", "grey60"), lwd = c(2, 2), lt
 jo.posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
                      "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
                      "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
-#                     "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", 
+                     "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", 
 #                     "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
-                     "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+#                     "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
                      "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
                      "beta.wean.3.4", 
@@ -373,10 +376,14 @@ joint.posterior.coda <- ipm11.coda
 #age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
 
 for(i in 1:1000){
-  healthy.leslie.list[[i]] <- johnson.update.leslie.fun(current.state = "healthy", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = 0)
-  infected.leslie.list[[i]] <- johnson.update.leslie.fun(current.state = "infected", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = 0)
-  spillover.leslie.list.1[[i]] <- johnson.update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = .3)
-  spillover.leslie.list.5[[i]] <- johnson.update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = .5)
+#  healthy.leslie.list[[i]] <- johnson.update.leslie.fun(current.state = "healthy", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = 0)
+#  infected.leslie.list[[i]] <- johnson.update.leslie.fun(current.state = "infected", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = 0)
+#  spillover.leslie.list.1[[i]] <- johnson.update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = .3)
+#  spillover.leslie.list.5[[i]] <- johnson.update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = jo.posterior.names, sex.ratio = .5, intro.cost = .5)
+  healthy.leslie.list[[i]] <- update.leslie.fun(current.state = "healthy", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = 0)
+  infected.leslie.list[[i]] <- update.leslie.fun(current.state = "infected", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = 0)
+  spillover.leslie.list.1[[i]] <- update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = .3)
+  spillover.leslie.list.5[[i]] <- update.leslie.fun(current.state = "spillover", samples.to.draw = 1000:2000, tot.chains = 3, joint.posterior.coda = joint.posterior.coda, posterior.names = posterior.names, sex.ratio = .5, intro.cost = .5)
   healthy.eigenval1[i] <- Re(eigen(healthy.leslie.list[[i]])$values[1]) # strip off only real part of eigenvalue
   infected.eigenval1[i] <- Re(eigen(infected.leslie.list[[i]])$values[1])
   spillover.eigenval1.1[i] <- Re(eigen(spillover.leslie.list.1[[i]])$values[1])
@@ -629,9 +636,9 @@ popsize.30.gamma.alpha.05.mat <- matrix(NA, reps, length(gamma.seq))
 
 for(i in 1:reps){
   for(j in 1:length(gamma.seq)){
-    popsize.30.gamma.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .1, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
-    popsize.30.gamma.alpha.33.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .33, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
-    popsize.30.gamma.alpha.05.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .1, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1, johnson = F, fixed.start.time = T)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.alpha.33.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .33, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1, johnson = F, fixed.start.time = T)$tot.pop.size[timesteps - 1]
+    popsize.30.gamma.alpha.05.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = gamma.seq[j], samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1, johnson = F, fixed.start.time = T)$tot.pop.size[timesteps - 1]
   }
   print(i)
 }
@@ -656,9 +663,9 @@ popsize.30.alpha.gamma.05.mat <- matrix(NA, reps, length(alpha.seq))
 
 for(i in 1:reps){
   for(j in 1:length(alpha.seq)){
-    popsize.30.alpha.gamma.33.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .33, samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
-    popsize.30.alpha.gamma.1.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .1, samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
-    popsize.30.alpha.gamma.05.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .05, samples.to.draw = seq(1000:2000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.33.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .33, samples.to.draw = seq(2500:5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1, johnson = F, fixed.start.time = T)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.1.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .1, samples.to.draw = seq(2500:5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1, johnson = F, fixed.start.time = T)$tot.pop.size[timesteps - 1]
+    popsize.30.alpha.gamma.05.mat[i, j] <- project.fun(timesteps = timesteps, sex.ratio = .5, ages.init = ages.init, alpha = alpha.seq[j], gamma = .05, samples.to.draw = seq(2500:5000), tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, intro.cost = .1, johnson = F, fixed.start.time = T)$tot.pop.size[timesteps - 1]
   }
   print(i)
 }
@@ -749,15 +756,15 @@ loglambda.gam.2.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
 loglambda.gam1.alph1 <- matrix(NA, ncol = timesteps, nrow = reps)
 
 for(i in 1:reps){
-  project.gam.05.alph.05 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam.2.alph.05 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam1.alph.05 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam.05.alph.2 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam.2.alph.2 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam1.alph.2 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam.05.alph1 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam.2.alph1 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
-  project.gam1.alph1 <- project.fun(timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.05.alph.05 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.2.alph.05 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam1.alph.05 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .05, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.05.alph.2 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.2.alph.2 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam1.alph.2 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .2, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.05.alph1 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .05, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam.2.alph1 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .2, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
+  project.gam1.alph1 <- project.fun(johnson = F, timesteps = timesteps, intro.cost = .1, sex.ratio = .5, ages.init = ages.init, alpha = .9, gamma = .9, samples.to.draw = samples.to.use.in, tot.chains = 3, joint.posterior.coda = ipm11.coda, posterior.names = posterior.names, fixed.start.time = T)
   
   popsize.gam.05.alph.05[i, ] <- project.gam.05.alph.05$tot.pop.size
   popsize.gam.2.alph.05[i, ] <- project.gam.2.alph.05$tot.pop.size
