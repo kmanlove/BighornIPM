@@ -12,24 +12,24 @@ studysheep <- read.csv("./Data/Study_sheep_toothage_original_012612.csv", header
 lambs <- read.csv("./Data/MergedLambData_26Mar2013.csv", header = T)
 compd.data <- read.csv("./Data/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data <- subset(compd.data, !(Pop == "Imnaha" & year <= 1999))
-#compd.data$PNIndLambs <- with(compd.data, 
-#                            ifelse(CLASS == c("HEALTHY", "ADULTS"), 1, 
-#                            ifelse(CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
-#                             )
-#compd.data$PNIndEwes <- with(compd.data, 
-#                             PNIndLambs <- ifelse(CLASS == c("HEALTHY"), 1, 
-#                             ifelse(CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
-#                             )
 compd.data$PNIndLambs <- with(compd.data, 
-                              ifelse((Pop == "Asotin" & year <= 2010) |
-                                     (Pop == "BigCanyon" & year <= 2000) | 
-                                     (Pop == "MuirCreek" & year <= 2000), 1, ifelse(is.na(CLASS) == T, NA, 2))
-                             )
+                           ifelse(CLASS == c("HEALTHY"), 1, 
+                           ifelse(CLASS %in% c("ADULTS", "ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
+                            )
 compd.data$PNIndEwes <- with(compd.data, 
-                             ifelse((Pop == "Asotin" & year <= 2010) |
-                                    (Pop == "BigCanyon" & year <= 1999) | 
-                                    (Pop == "MuirCreek" & year <= 1999), 1, ifelse(is.na(CLASS) == T, NA, 2))
-                             )
+                            PNIndLambs <- ifelse(CLASS == c("HEALTHY"), 1, 
+                            ifelse(CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
+                            )
+# compd.data$PNIndLambs <- with(compd.data, 
+#                               ifelse((Pop == "Asotin" & year <= 2010) |
+#                                      (Pop == "BigCanyon" & year <= 2000) | 
+#                                      (Pop == "MuirCreek" & year <= 2000), 1, ifelse(is.na(CLASS) == T, NA, 2))
+#                              )
+# compd.data$PNIndEwes <- with(compd.data, 
+#                              ifelse((Pop == "Asotin" & year <= 2010) |
+#                                     (Pop == "BigCanyon" & year <= 1999) | 
+#                                     (Pop == "MuirCreek" & year <= 1999), 1, ifelse(is.na(CLASS) == T, NA, 2))
+#                              )
 compd.data <- compd.data[-476, ]
 compd.data$Pop <- factor(compd.data$Pop)
 compd.data <- subset(compd.data, year >= 1997 & year <= 2012)
@@ -49,12 +49,16 @@ levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) ==
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "IM"] <- "Imnaha"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "LO"] <- "Lostine"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "MU"] <- "MuirCreek"
+levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "MV"] <- "MountainView"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "MY"] <- "MyersCreek"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "RB"] <- "Redbird"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "SM"] <- "SheepMountain"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "UHCOR"] <- "UHCOR"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "SC"] <- "UpperSaddle"
 levels(ewes.with.teeth$END_Population)[levels(ewes.with.teeth$END_Population) == "WE"] <- "Wenaha"
+
+ewes.with.teeth <- subset(ewes.with.teeth, !(END_Population %in% c("", "0", "MI", "SD", "SR")))
+ewes.with.teeth$END_Population <- factor(ewes.with.teeth$END_Population)
 
 #----------------------#
 #-- state-space data --#
@@ -99,7 +103,7 @@ for (i in 1:length(levels(factor(compd.data$Pop))))
     popyr.dis.status.adults[i, j] <- ifelse(dim(k)[1] == 0, NA, k$PNIndEwes)
   }
 }
-popyr.dis.status.lambs  <- ifelse(is.na(popyr.dis.status.lambs) == T, 3, popyr.dis.status.lambs)
+popyr.dis.status.lambs  <- ifelse(is.na(popyr.dis.status.lambs)  == T, 3, popyr.dis.status.lambs)
 popyr.dis.status.adults <- ifelse(is.na(popyr.dis.status.adults) == T, 3, popyr.dis.status.adults)
 
 # CJS data 
@@ -107,7 +111,7 @@ popyr.dis.status.adults <- ifelse(is.na(popyr.dis.status.adults) == T, 3, popyr.
 # recode all entries prior to 1997 with 1997 as entry bioyr (to match with population counts strings in IPM)
 ewes.with.teeth$ENTRY_BIOYR2 <- ifelse(ewes.with.teeth$ENTRY_BIOYR <= 1996, 1996, ewes.with.teeth$ENTRY_BIOYR)
 # recode a few specific animals to have entry bioyrs no earlier than the first year with compd.data for their resident population
-sheep.ind <-  which(ewes.with.teeth$ID == "02MY33")
+sheep.ind  <- which(ewes.with.teeth$ID == "02MY33")
 sheep.ind2 <- which(ewes.with.teeth$ID == "02MY39") # she needs to come out -- died on 04/20/02.
 sheep.ind3 <- which(ewes.with.teeth$ID == "02MY41")
 sheep.ind4 <- which(ewes.with.teeth$ID == "01QZ70")
@@ -162,13 +166,13 @@ age.spec.ewe.surv$years   <- as.numeric(as.character(age.spec.ewe.surv$years))
 age.spec.ewe.surv$ewe.age <- as.numeric(as.character(age.spec.ewe.surv$ewe.age))
 age.spec.ewe.surv <- subset(age.spec.ewe.surv, years >= 1997 & ewe.age >= 1)
 age.spec.ewe.surv$age.class1 <- age.class.ind[as.numeric(as.character(age.spec.ewe.surv$ewe.age))]
-age.spec.ewe.surv$johnson.age.class1 <- johnson.age.class.ind[as.numeric(as.character(age.spec.ewe.surv$ewe.age))]
+#age.spec.ewe.surv$johnson.age.class1 <- johnson.age.class.ind[as.numeric(as.character(age.spec.ewe.surv$ewe.age))]
 k <- subset(age.spec.ewe.surv, is.na(ad.pn.status) == F)
 ewe.surv.ss.tab <- table(k$age.class1, k$ad.pn.status)
 ewe.surv.age    <- as.numeric(age.spec.ewe.surv$ewe.age)
 ewe.surv.status <- ifelse(as.numeric(age.spec.ewe.surv$ewe.surv.status) == 2, 1, 0)
 ewe.surv.year   <- age.spec.ewe.surv$years - 1996
-ewe.surv.pop `  <- age.spec.ewe.surv$pop
+ewe.surv.pop    <- age.spec.ewe.surv$pop
 
 # write.csv(age.spec.ewe.surv, "./Data/EweSurvData_TeethAndLeq3_MoviDef.csv") # NOTE: path has changed
 # write.csv(age.spec.ewe.surv, "~./Data/EweSurvData_TeethAndLeq3_ObservedHealthDef.csv") # NOTE: path has changed
@@ -456,50 +460,50 @@ nc <- 3
 #-- Bundle IPM data --------#
 #---------------------------#
 
-MoviStatus.data <- list(
-  ewe.surv.pop = ewe.surv.pop,
-  ewe.surv.age = ewe.surv.age,
-  ewe.surv.year = ewe.surv.year,
-  z.adsurv = ewe.surv.status,
-  n.adsurvs = length(ewe.surv.status),
-  n.years = n.years,
-  n.pops = dim(popyr.dis.status.adults)[1],
-  n.age.classes = (length(levels(factor(age.class.ind)))),
-  n.ages = 18,
-  n.dis.states = length(levels(factor(popyr.dis.status.adults))),
-  age.class.ind = age.class.ind,
-  popyr.dis.status.adults = popyr.dis.status.adults,
-  popyr.dis.status.lambs = popyr.dis.status.lambs,
-  ewe.wean.pop = ewe.wean.pop,
-  ewe.wean.age = ewe.wean.age,
-  ewe.wean.year = ewe.wean.year,
-  z.wean = ewe.wean.success,
-  n.weans = dim(age.spec.ewe.wean)[1],
-  Ojuv = Ojuv,
-  Oad = Oad,
-  AddedEwes = AddedEwes,
-  RemovedEwes = RemovedEwes
-)
-
-MoviStatus.call <- jags.model("ipm11.bug",
-                                        data = MoviStatus.data,
-                                        inits = ipm11.inits,
-                                        n.chains = nc,
-                                        n.adapt = nb
-                              )
-
-
-update(MoviStatus.call, ni)
-
-MoviStatus.coda <- coda.samples(MoviStatus.call,
-                                          ipm11.params,
-                                          ni
-                                )
-
-summary(MoviStatus.coda)
-# convg.diags.MoviStatus <- gelman.diag(MoviStatus.coda)
-# #write.csv(convg.diags.MoviStatus[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/GelmanRubinDiags_09Jan2015.csv")
-save(MoviStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/MoviDefPost_07Feb2015.RData")
+# MoviStatus.data <- list(
+#   ewe.surv.pop = ewe.surv.pop,
+#   ewe.surv.age = ewe.surv.age,
+#   ewe.surv.year = ewe.surv.year,
+#   z.adsurv = ewe.surv.status,
+#   n.adsurvs = length(ewe.surv.status),
+#   n.years = n.years,
+#   n.pops = dim(popyr.dis.status.adults)[1],
+#   n.age.classes = (length(levels(factor(age.class.ind)))),
+#   n.ages = 18,
+#   n.dis.states = length(levels(factor(popyr.dis.status.adults))),
+#   age.class.ind = age.class.ind,
+#   popyr.dis.status.adults = popyr.dis.status.adults,
+#   popyr.dis.status.lambs = popyr.dis.status.lambs,
+#   ewe.wean.pop = ewe.wean.pop,
+#   ewe.wean.age = ewe.wean.age,
+#   ewe.wean.year = ewe.wean.year,
+#   z.wean = ewe.wean.success,
+#   n.weans = dim(age.spec.ewe.wean)[1],
+#   Ojuv = Ojuv,
+#   Oad = Oad,
+#   AddedEwes = AddedEwes,
+#   RemovedEwes = RemovedEwes
+# )
+# 
+# MoviStatus.call <- jags.model("ipm11.bug",
+#                                         data = MoviStatus.data,
+#                                         inits = ipm11.inits,
+#                                         n.chains = nc,
+#                                         n.adapt = nb
+#                               )
+# 
+# 
+# update(MoviStatus.call, ni)
+# 
+# MoviStatus.coda <- coda.samples(MoviStatus.call,
+#                                           ipm11.params,
+#                                           ni
+#                                 )
+# 
+# summary(MoviStatus.coda)
+# # convg.diags.MoviStatus <- gelman.diag(MoviStatus.coda)
+# # #write.csv(convg.diags.MoviStatus[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/GelmanRubinDiags_09Jan2015.csv")
+# save(MoviStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/MoviDefPost_07Feb2015.RData")
 # 
 # coda.summary.obj.MoviStatus <- summary(MoviStatus.coda)
 # #write.csv(coda.summary.obj.MoviStatus[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/PosteriorQuantiles_09Jan2015.csv")
@@ -524,52 +528,52 @@ save(MoviStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsA
 #  }
 # 
 # 
-# ObservedHealthStatus.data <- list(
-#  ewe.surv.pop = ewe.surv.pop,
-#   ewe.surv.age = ewe.surv.age,
-#   ewe.surv.year = ewe.surv.year,
-#   z.adsurv = ewe.surv.status,
-#   n.adsurvs = length(ewe.surv.status),
-#   n.years = n.years,
-#   n.pops = dim(popyr.dis.status.adults)[1],
-#   n.age.classes = (length(levels(factor(age.class.ind)))),
-#   n.ages = 18,
-#   n.dis.states = length(levels(factor(popyr.dis.status.adults))),
-#   age.class.ind = age.class.ind,
-#   popyr.dis.status.adults = popyr.dis.status.adults,
-#   popyr.dis.status.lambs = popyr.dis.status.lambs,
-#   ewe.wean.pop = ewe.wean.pop,
-#   ewe.wean.age = ewe.wean.age,
-#   ewe.wean.year = ewe.wean.year,
-#   z.wean = ewe.wean.success,
-#   n.weans = dim(age.spec.ewe.wean)[1],
-#   Ojuv = Ojuv,
-#   Oad = Oad,
-#   AddedEwes = AddedEwes,
-#   RemovedEwes = RemovedEwes
-# )
-# 
-# 
-# 
+ObservedHealthStatus.data <- list(
+ ewe.surv.pop = ewe.surv.pop,
+  ewe.surv.age = ewe.surv.age,
+  ewe.surv.year = ewe.surv.year,
+  z.adsurv = ewe.surv.status,
+  n.adsurvs = length(ewe.surv.status),
+  n.years = n.years,
+  n.pops = dim(popyr.dis.status.adults)[1],
+  n.age.classes = (length(levels(factor(age.class.ind)))),
+  n.ages = 18,
+  n.dis.states = length(levels(factor(popyr.dis.status.adults))),
+  age.class.ind = age.class.ind,
+  popyr.dis.status.adults = popyr.dis.status.adults,
+  popyr.dis.status.lambs = popyr.dis.status.lambs,
+  ewe.wean.pop = ewe.wean.pop,
+  ewe.wean.age = ewe.wean.age,
+  ewe.wean.year = ewe.wean.year,
+  z.wean = ewe.wean.success,
+  n.weans = dim(age.spec.ewe.wean)[1],
+  Ojuv = Ojuv,
+  Oad = Oad,
+  AddedEwes = AddedEwes,
+  RemovedEwes = RemovedEwes
+)
+
+
+
  
-# # call JAGS from R
-# ObservedHealthStatus.call <- jags.model("ipm11.bug",
-#                                   data = ObservedHealthStatus.data,
-#                                   inits = ipm11.inits,
-#                                   n.chains = nc,
-#                                   n.adapt = nb
-# )
-# 
-# update(ObservedHealthStatus.call, ni)
-# 
-# ObservedHealthStatus.coda <- coda.samples(ObservedHealthStatus.call,
-#                                     ipm11.params,
-#                                     ni)
-# 
-# summary(ObservedHealthStatus.coda)
-# convg.diags.ObservedHealth <- gelman.diag(ObservedHealthStatus.coda)
+# call JAGS from R
+ObservedHealthStatus.call <- jags.model("ipm11.bug",
+                                  data = ObservedHealthStatus.data,
+                                  inits = ipm11.inits,
+                                  n.chains = nc,
+                                  n.adapt = nb
+)
+
+update(ObservedHealthStatus.call, ni)
+
+ObservedHealthStatus.coda <- coda.samples(ObservedHealthStatus.call,
+                                    ipm11.params,
+                                    ni)
+
+summary(ObservedHealthStatus.coda)
+convg.diags.ObservedHealth <- gelman.diag(ObservedHealthStatus.coda)
 # write.csv(convg.diags.ObservedHealth[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/GelmanRubinDiags_09Jan2015.csv")
-# save(ObservedHealthStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_09Jan2015.RData")
+# save(ObservedHealthStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_18Feb2015.RData")
 # 
 # coda.summary.obj.ObservedHealthStatus <- summary(ObservedHealthStatus.coda)
 # write.csv(coda.summary.obj.ObservedHealthStatus[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/PosteriorQuantiles_09Jan2015.csv")
@@ -593,8 +597,8 @@ save(MoviStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsA
 #   segments(x0 = i - 0.25, x1 = i + 0.25, y0 = (exp(beta.posts.wean.ObservedHealthStatus[i, 3])) / (1 + exp(beta.posts.wean.ObservedHealthStatus[i, 3])), y1 = exp(beta.posts.wean.ObservedHealthStatus[i, 3]) / (1 + exp(beta.posts.wean.ObservedHealthStatus[i, 3])), col = plot.cols[(i %% 3 + 1)], lty = (i %% 3), lwd = 2)
 # }
 # 
-
-
+# 
+# 
 #---------------------------------------#
 #-- Models with Johnson age structure --#
 #---------------------------------------#
