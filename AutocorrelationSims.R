@@ -123,7 +123,7 @@ incid += trans[3]; // incidence is cumulative recoveries;
 rmeas <- 'cases = rnbinom_mu(theta,rho*incid);'
 dmeas <- 'lik = dnbinom_mu(cases,theta,rho * incid,give_log);'
 
-pomp(
+sir <- pomp(
   data = data.frame(
     cases = NA,
     time = seq(0, 10, by = 1 / 52)
@@ -134,29 +134,42 @@ pomp(
   rmeasure = Csnippet(rmeas),
   rprocess = euler.sim(
     step.fun = Csnippet(sir.step),
-    delta.t=1/52/20
+    delta.t = 1 / 52 / 20
   ),
   statenames=c("S","I","R","incid"),
   paramnames=c(
-    "gamma","mu","theta","beta",
-    "N","rho",
-    "S.0","I.0","R.0"
+    "gamma",
+    "mu",
+    "theta",
+    "beta",
+    "N",
+    "rho",
+    "S.0",
+    "I.0",
+    "R.0"
   ),
-  zeronames=c("incid"),
-  initializer=function(params, t0, ...) {
-    x0 <- c(S=0,I=0,R=0,incid=0)
-    fracs <- params[c("S.0","I.0","R.0")]
-    x0[1:3] <- round(params['N'] * fracs/sum(fracs))
+  zeronames = c("incid"),
+  initializer= function(params, t0, ...) {
+    x0 <- c(S = 0, I = 0, R = 0, incid = 0)
+    fracs <- params[c("S.0", "I.0", "R.0")]
+    x0[1:3] <- round(params['N'] * fracs / sum(fracs))
     x0
   },
   params=c(
-    N=500000,beta=400,
-    gamma=26,mu=1/50,rho=0.1,theta=100,
-    S.0=26/400,I.0=0.002,R.0=1
+    N = 500000, 
+    beta = 400,
+    gamma = 26,
+    mu = 1/50,
+    rho = 0.1, 
+    theta = 100,
+    S.0 = 26/400,
+    I.0 = 0.002,
+    R.0 = 1
   )
-) -> sir
+)
 
 simulate(sir,seed=1914679908L) -> sir
+
 
 plot(sir)
 
@@ -291,3 +304,126 @@ mtext("(f)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 plot(rate.through.time.si ~ seq(1:521), type = "l", xaxt = "n", xlab = "Time (years)", ylim = c(0.9, 1.13), ylab = "Vital rate through time")
 axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10))
 mtext("(g)", side = 3, adj = 0.15, line = -1.5, cex = .8)
+
+
+#------------------------------------#
+#-- SIR sims for Figure 2C ----------#
+#------------------------------------#
+
+sir.step <- '
+double rate[6]; // transition rates
+double trans[6]; // transition numbers
+// compute the transition rates
+rate[0] = mu
+*
+N; // birth into susceptible class
+rate[1] = beta
+*
+I/N; // force of infection
+rate[2] = mu; // death from susceptible class
+rate[3] = gamma; // recovery
+rate[4] = mu; // death from infectious class
+rate[5] = mu; // death from recovered class
+// compute the transition numbers
+trans[0] = rpois(rate[0]
+*
+dt); // births are Poisson
+reulermultinom(2,S,&rate[1],dt,&trans[1]);
+reulermultinom(2,I,&rate[3],dt,&trans[3]);
+reulermultinom(1,R,&rate[5],dt,&trans[5]);
+// balance the equations
+S += trans[0]-trans[1]-trans[2];
+I += trans[1]-trans[3]-trans[4];
+R += trans[3]-trans[5];
+incid += trans[3]; // incidence is cumulative recoveries;
+'
+
+
+N.levels <- c(100, 1000, 10000)
+Ro.levels <- c(1.25, 3.0, 9, 18)
+gamma.levels <- c(1/10, 1/100, 1/1000)
+beta.levels  <- (Ro.levels * (mu + gamma.levels) * mu) / ((1 - p) * nu)
+param.mat <- as.data.frame(expand.grid(list(N.levels, beta.levels, gamma.levels)))
+names(param.mat) <- c("N", "beta", "gamma")
+
+rmeas <- 'cases = rnbinom_mu(theta, rho*incid);'
+dmeas <- 'lik = dnbinom_mu(cases, theta, rho * incid, give_log);'
+
+
+sir.sim <- function(param.mat, reps){
+  sir.test <- sir.test.sim <- sir.test.data <- fade.out <- vector("list", dim(param.mat)[1])
+  for(i in 1:dim(param.mat)[1]){
+    sir.test[[i]] <- pomp(
+      data = data.frame(
+        cases = NA,
+        time = seq(0, 100, by = 1 / 52)
+      ),
+      times = "time",
+      t0 = -1 / 52,
+      dmeasure = Csnippet(dmeas),
+      rmeasure = Csnippet(rmeas),
+      rprocess = euler.sim(
+        step.fun = Csnippet(sir.step),
+        delta.t = 1 / 52 / 20
+      ),
+      statenames=c("S","I","R","incid"),
+      paramnames=c(
+        "gamma",
+        "mu",
+        "theta",
+        "beta",
+        "N",
+        "rho",
+        "S.0",
+        "I.0",
+        "R.0"
+      ),
+      zeronames = c("incid"),
+      initializer= function(params, t0, ...) {
+        x0 <- c(S = 0, I = 0, R = 0, incid = 0)
+        fracs <- params[c("S.0", "I.0", "R.0")]
+        x0[1:3] <- round(params['N'] * fracs / sum(fracs))
+        x0
+      },
+      params=c(
+        N = param.mat$N[i], 
+        beta = param.mat$beta[i],
+        gamma = param.mat$gamma[i],
+        mu = 1/20,
+        rho = 1, 
+        theta = N,
+        S.0 = (N - 1) / N,
+        I.0 = 1 / N,
+        R.0 = 0
+      )
+    )
+    sir.test.sim[[i]] <- vector("list", reps)
+    sir.test.data[[i]] <- vector("list", reps)
+    fade.out[[i]] <- rep(NA, reps)
+    for(j in 1:reps){
+#      sir.test.sim[[i]][[j]] <- simulate(sir.test[[i]], seed = paste(i, j, "1914679908", sep = ""))
+      seed.in <- as.numeric(paste(i, j, sep = ""))
+      sir.test.sim[[i]][[j]] <- simulate(sir.test[[i]], seed = seed.in)
+      sir.test.data[[i]][[j]] <- as.data.frame(sir.test.sim[[i]][[j]])
+      fade.out[[i]][j] <- min(which(sir.test.data[[i]][[j]]$I == 0))
+    } # reps
+    print(i)
+  } # param mat
+  
+  return(list(fade.out = fade.out, sir.test.sim = sir.test.sim, sir.test.data = sir.test.data))
+  
+}
+
+sir.sim.batch <- sir.sim(param.mat, reps = 10)
+
+param.mat.with.sims <- matrix(NA, nrow = dim(param.mat)[1], ncol = dim(param.mat)[2] + reps)
+for(i in 1:dim(param.mat)[1]){
+  param.mat.with.sims[i, ] <- unlist(c(param.mat[i, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
+}
+
+param.mat.with.sims
+
+plot(sir.sim.batch$sir.test.sim[[1]][[1]])
+plot(sir.sim.batch$sir.test.sim[[2]][[1]])
+plot(sir.sim.batch$sir.test.sim[[2]][[2]])
+plot(sir.sim.batch$sir.test.sim[[3]][[1]])
