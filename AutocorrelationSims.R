@@ -337,7 +337,7 @@ I += trans[1]-trans[3]-trans[4];
 R += trans[3]-trans[5];
 incid += trans[3]; // incidence is cumulative recoveries;
 '
-
+# test
 
 N.levels <- c(100, 1000, 10000)
 Ro.levels <- c(1.25, 3.0, 9, 18)
