@@ -451,4 +451,44 @@ sims_201_216 <- read.csv("./Data/SimmedSIRs/ParamMatSims_201_216.csv")
 full.simmed.data <- rbind(sims_1_50[1:50, ], sims_51_100[1:50, ], sims_101_150[1:50, ], sims_151_200[1:50, ], sims_201_216[1:16, ])
 full.simmed.data$Q025 <- full.simmed.data$Q25 <- full.simmed.data$Q50 <- full.simmed.data$Q75 <- full.simmed.data$Q975 <- rep(NA, dim(full.simmed.data)[1])
 
+full.simmed.data[is.infinite(as.matrix(full.simmed.data))] <- 10000
 
+for(i in 1:dim(full.simmed.data)[1]){
+  # recode infinite values as 10000
+#   full.simmed.data[i, 4:53] <- ifelse(is.infinite(full.simmed.data[i, 4:53]) == T, 10000, full.simmed.data[i, 4:53])
+#   full.simmed.data$Q25[i] <- quantile(full.simmed.data[i, 4:53], 0.25)
+#   full.simmed.data$Q50[i] <- quantile(full.simmed.data[i, 4:53], 0.5)
+#   full.simmed.data$Q75[i] <- quantile(full.simmed.data[i, 4:53], 0.75)
+#   full.simmed.data$Q975[i] <- quantile(full.simmed.data[i, 4:53], 0.975)
+  
+  # extract quantiles
+  full.simmed.data$Q025[i] <- quantile(full.simmed.data[i, 4:53], 0.025)
+  full.simmed.data$Q25[i] <- quantile(full.simmed.data[i, 4:53], 0.25)
+  full.simmed.data$Q50[i] <- quantile(full.simmed.data[i, 4:53], 0.5)
+  full.simmed.data$Q75[i] <- quantile(full.simmed.data[i, 4:53], 0.75)
+  full.simmed.data$Q975[i] <- quantile(full.simmed.data[i, 4:53], 0.975)
+}
+
+names(full.simmed.data) <- c("ParamSet", "N", "Ro", "gamma", seq(1:50), "Q025", "Q25", "Q50", "Q75", "Q975")
+
+gamma.1 <- subset(full.simmed.data, full.simmed.data$gamma == 0.1)
+gamma.001 <- subset(full.simmed.data, full.simmed.data$gamma == 0.001)
+
+get.ccs <- function(data, gamma.in){
+  # split data on levels of Ro
+  CCS <- rep(NA, length(levels(factor(data$Ro))))
+  Nvals <- levels(factor(data$N))
+  for(j in 1:length(levels(factor(data$Ro)))){
+    k <- subset(data, Ro == levels(factor(data$Ro))[j])
+    CCS[j] <- k$N[which.min(abs((unlist(k$Q50)) - 365))]
+  }
+  plot.data <- as.data.frame(cbind(CCS, levels(factor(data$Ro)), rep(gamma.in, length(CCS))))
+  names(plot.data) <- c("CCS", "Ro", "gamma")
+  return(plot.data)
+}
+
+gamma.1.ccs <- get.ccs(data = gamma.1, gamma.in = .1)
+gamma.001.ccs <- get.ccs(data = gamma.001, gamma.in = .001)
+
+plot(as.numeric(as.character(gamma.1.ccs$CCS)) ~ as.numeric(as.character(gamma.1.ccs$Ro)), pch = 16, col = "black", type = "b")
+points(as.numeric(as.character(gamma.001.ccs$CCS)) ~ as.numeric(as.character(gamma.001.ccs$Ro)), pch = 16, col = "red", type = "b")
