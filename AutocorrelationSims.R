@@ -309,6 +309,7 @@ mtext("(g)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 #------------------------------------#
 #-- SIR sims for Figure 2C ----------#
 #------------------------------------#
+require(pomp)
 
 sir.step <- '
 double rate[6]; // transition rates
@@ -339,9 +340,16 @@ incid += trans[3]; // incidence is cumulative recoveries;
 '
 # test
 
-N.levels <- c(100, 1000, 10000)
-Ro.levels <- c(1.25, 3.0, 9, 18)
+N.levels <- c(100, 250, 500, 750, 1000, 2500, 5000,7500, 10000)
+Ro.levels <- c(1.25, 1.7, 3.0, 6, 9, 12, 15, 18)
 gamma.levels <- c(1/10, 1/100, 1/1000)
+nu <- .7
+mu <- 1 / (20 * 365)
+collar.prop <- .25
+N <- 1000
+delta <- 1 / (.15 * collar.prop * N)
+p <- .1 # probability of dying from infection
+
 beta.levels  <- (Ro.levels * (mu + gamma.levels) * mu) / ((1 - p) * nu)
 param.mat <- as.data.frame(expand.grid(list(N.levels, beta.levels, gamma.levels)))
 names(param.mat) <- c("N", "beta", "gamma")
@@ -414,16 +422,33 @@ sir.sim <- function(param.mat, reps){
   
 }
 
-sir.sim.batch <- sir.sim(param.mat, reps = 10)
+sir.sim.batch <- sir.sim(param.mat[201:216, ], reps = 50)
 
-param.mat.with.sims <- matrix(NA, nrow = dim(param.mat)[1], ncol = dim(param.mat)[2] + reps)
-for(i in 1:dim(param.mat)[1]){
-  param.mat.with.sims[i, ] <- unlist(c(param.mat[i, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
+param.mat.with.sims <- matrix(NA, nrow = 16, ncol = dim(param.mat)[2] + reps)
+for(i in 1:dim(param.mat.with.sims)[1]){
+  param.mat.with.sims[i, ] <- unlist(c(param.mat[i + 200, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
 }
 
 param.mat.with.sims
+
+# write.csv(param.mat.with.sims, "./Data/SimmedSIRs/ParamMatSims_201_216.csv")
 
 plot(sir.sim.batch$sir.test.sim[[1]][[1]])
 plot(sir.sim.batch$sir.test.sim[[2]][[1]])
 plot(sir.sim.batch$sir.test.sim[[2]][[2]])
 plot(sir.sim.batch$sir.test.sim[[3]][[1]])
+
+#----------------------#
+#-- plot simmed data --#
+#----------------------#
+# read in simmed data
+sims_1_50 <- read.csv("./Data/SimmedSIRs/ParamMatSims_1_50.csv")
+sims_51_100 <- read.csv("./Data/SimmedSIRs/ParamMatSims_51_100.csv")
+sims_101_150 <- read.csv("./Data/SimmedSIRs/ParamMatSims_101_150.csv")
+sims_151_200 <- read.csv("./Data/SimmedSIRs/ParamMatSims_151_200.csv")
+sims_201_216 <- read.csv("./Data/SimmedSIRs/ParamMatSims_201_216.csv")
+
+full.simmed.data <- rbind(sims_1_50[1:50, ], sims_51_100[1:50, ], sims_101_150[1:50, ], sims_151_200[1:50, ], sims_201_216[1:16, ])
+full.simmed.data$Q025 <- full.simmed.data$Q25 <- full.simmed.data$Q50 <- full.simmed.data$Q75 <- full.simmed.data$Q975 <- rep(NA, dim(full.simmed.data)[1])
+
+
