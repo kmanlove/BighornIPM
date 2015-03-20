@@ -327,7 +327,6 @@ axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10
 mtext("(d)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 plot(prev.sir.y.t.plus.1 ~ prev.sir.y[-length(prev.sir.y)], xlab = "Rate at t", ylab = "Rate at t + 1", type = "l", xlim = c(1.096, 1.0965), ylim = c(1.096, 1.0965))
 mtext("(e)", side = 3, adj = 0.15, line = -1.5, cex = .8)
-
 plot(si.data$I ~ si.data$time, type = "l", ylab = "Prevalence", xlab = "Time (years)")
 mtext("(f)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 acf(si.data$I, lag.max = 520, main = "", xaxt = "n")
@@ -338,8 +337,6 @@ axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10
 mtext("(h)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 plot(prev.si.y.t.plus.1 ~ prev.si.y[-length(prev.si.y)], type = "l", xlab = "Rate at time t", ylab = "Rate at time t + 1")
 mtext("(i)", side = 3, adj = 0.15, line = -1.5, cex = .8)
-
-# Ricker diagram of vital rate at t vs vital rate at t + 1
 
 
 #------------------------------------#
