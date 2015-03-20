@@ -157,12 +157,18 @@ sir <- pomp(
   },
   params=c(
     N = 500000, 
+#    N = 5000, 
     beta = 400,
+#    beta = 350,
+#    gamma = 36,
     gamma = 26,
     mu = 1/50,
+#    mu = 1/5,
     rho = 0.1, 
     theta = 100,
-    S.0 = 26/400,
+#    S.0 = 26/400,
+ S.0 = 30/400,
+#S.0 = 1/4,
     I.0 = 0.002,
     R.0 = 1
   )
@@ -170,8 +176,8 @@ sir <- pomp(
 
 simulate(sir,seed=1914679908L) -> sir
 
-
 plot(sir)
+
 
 si.step <- '
 double rate[4]; // transition rates
@@ -224,8 +230,22 @@ si <- pomp(
     x0
   },
   params=c(
-    N=500000,beta=1.0001,mu=1/50,rho=0.1,theta=100,
+    N=5000,beta=1.0001,mu=1/50,rho=0.1,theta=100,
     S.0=200/400,I.0=0.002
+#     #    N = 500000, 
+#     N = 5000, 
+#     #    beta = 400,
+#     beta = 1.00010,
+# #    gamma = 26,
+#     #    gamma = 26,
+#     #    mu = 1/50,
+#     mu = 1/5,
+#     rho = 0.1, 
+#     theta = 100,
+#     #    S.0 = 26/400,
+#     S.0 = 26/40,
+#     I.0 = 0.002,
+#     R.0 = 1
   )
 )
 
@@ -274,16 +294,25 @@ plot(y ~ x, type = "l", ylab = "Host vital rate", xlab = "Pathogen prevalence")
 
 prev.si <- round(si.data$I / 500000, 3) * 1000 + 1
 prev.sir <- round(sir.data$I / 500000, 3) * 1000 + 1
-
+prev.si <- round(si.data$I / (si.data$I + si.data$S), 3) * 1000 + 1
+prev.sir <- round(sir.data$I / (sir.data$S + sir.data$I + sir.data$R), 3) * 1000 + 1
+prev.si.y <- A + ((K - A) / ((1 + (Q) * exp(-1 * B *(prev.si - M * 1000))) ^ (1 / v)))
+prev.sir.y <- A + ((K - A) / ((1 + (Q) * exp(-1 * B *(prev.sir - M * 1000))) ^ (1 / v)))
+prev.si.y.t.plus.1 <- prev.si.y[-1]
+prev.sir.y.t.plus.1 <- prev.sir.y[-1]
+  
 rate.through.time.si <- y[prev.si]
 rate.through.time.sir <- y[prev.sir]
 
 plot(rate.through.time.si ~ seq(1:521), type = "l")
 plot(rate.through.time.sir ~ seq(1:521), type = "l")
 
+rate.through.time.si.t.plus.1 <- rate.through.time.si[-1]
+rate.through.time.sir.t.plus.1 <- rate.through.time.sir[-1]
+
 
 # figure 0
-layout(matrix(c(1, 2, 3, 4, 1, 5, 6, 7), byrow = T, nrow = 2))
+layout(matrix(c(1, 2, 3, 4, 5, 1, 6, 7, 8, 9), byrow = T, nrow = 2))
 par(oma = c(0, 1, 0, 0), mex = .8)
 plot(y ~ x, type = "l", ylab = "Host vital rate", xlab = "Pathogen prevalence", xaxt = "n")
 axis(side = 1, at = c(0, 250, 500, 750, 1000), labels = c(0, .25, .5, .75, 1.0))
@@ -293,17 +322,24 @@ mtext("(b)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 acf(sir.data$I / (sir.data$S + sir.data$I + sir.data$R), lag.max = 520, main = "", xaxt = "n")
 axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10))
 mtext("(c)", side = 3, adj = 0.15, line = -1.5, cex = .8)
-plot(rate.through.time.sir ~ seq(1:521), type = "l", xaxt = "n", ylim = c(1.096, 1.101), xlab = "Time (years)", ylab = "Vital rate through time")
+plot(prev.sir.y ~ seq(1:521), type = "l", xaxt = "n", ylim = c(1.096, 1.0965), xlab = "Time (years)", ylab = "Vital rate through time")
 axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10))
 mtext("(d)", side = 3, adj = 0.15, line = -1.5, cex = .8)
-plot(si.data$I ~ si.data$time, type = "l", ylab = "Prevalence", xlab = "Time (years)")
+plot(prev.sir.y.t.plus.1 ~ prev.sir.y[-length(prev.sir.y)], xlab = "Rate at t", ylab = "Rate at t + 1", type = "l", xlim = c(1.096, 1.0965), ylim = c(1.096, 1.0965))
 mtext("(e)", side = 3, adj = 0.15, line = -1.5, cex = .8)
+
+plot(si.data$I ~ si.data$time, type = "l", ylab = "Prevalence", xlab = "Time (years)")
+mtext("(f)", side = 3, adj = 0.15, line = -1.5, cex = .8)
 acf(si.data$I, lag.max = 520, main = "", xaxt = "n")
 axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10))
-mtext("(f)", side = 3, adj = 0.15, line = -1.5, cex = .8)
-plot(rate.through.time.si ~ seq(1:521), type = "l", xaxt = "n", xlab = "Time (years)", ylim = c(0.9, 1.13), ylab = "Vital rate through time")
-axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10))
 mtext("(g)", side = 3, adj = 0.15, line = -1.5, cex = .8)
+plot(prev.si.y ~ seq(1:521), type = "l", xaxt = "n", xlab = "Time (years)", ylim = c(0.9, 1.13), ylab = "Vital rate through time")
+axis(side = 1, at = c(0, 200, 400, 600, 800, 1000), labels = c(0, 2, 4, 6, 8, 10))
+mtext("(h)", side = 3, adj = 0.15, line = -1.5, cex = .8)
+plot(prev.si.y.t.plus.1 ~ prev.si.y[-length(prev.si.y)], type = "l", xlab = "Rate at time t", ylab = "Rate at time t + 1")
+mtext("(i)", side = 3, adj = 0.15, line = -1.5, cex = .8)
+
+# Ricker diagram of vital rate at t vs vital rate at t + 1
 
 
 #------------------------------------#
@@ -340,8 +376,8 @@ incid += trans[3]; // incidence is cumulative recoveries;
 '
 # test
 
-N.levels <- c(100, 250, 500, 750, 1000, 2500, 5000,7500, 10000)
-Ro.levels <- c(1.25, 1.7, 3.0, 6, 9, 12, 15, 18)
+N.levels <- exp(seq(log(10), log(100000), length.out = 15))
+Ro.levels <- exp(seq(log(1), log(18), length.out = 10))
 gamma.levels <- c(1/10, 1/100, 1/1000)
 nu <- .7
 mu <- 1 / (20 * 365)
@@ -422,16 +458,17 @@ sir.sim <- function(param.mat, reps){
   
 }
 
-sir.sim.batch <- sir.sim(param.mat[201:216, ], reps = 50)
+reps.in <- 100
+sir.sim.batch <- sir.sim(param.mat[351:400, ], reps = reps.in)
 
-param.mat.with.sims <- matrix(NA, nrow = 16, ncol = dim(param.mat)[2] + reps)
+param.mat.with.sims <- matrix(NA, nrow = 50, ncol = dim(param.mat)[2] + reps.in)
 for(i in 1:dim(param.mat.with.sims)[1]){
-  param.mat.with.sims[i, ] <- unlist(c(param.mat[i + 200, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
+  param.mat.with.sims[i, ] <- unlist(c(param.mat[i + 350, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
 }
 
 param.mat.with.sims
 
-# write.csv(param.mat.with.sims, "./Data/SimmedSIRs/ParamMatSims_201_216.csv")
+write.csv(param.mat.with.sims, "./Data/SimmedSIRs/ParamMatSims2_351_400.csv")
 
 plot(sir.sim.batch$sir.test.sim[[1]][[1]])
 plot(sir.sim.batch$sir.test.sim[[2]][[1]])
@@ -442,36 +479,43 @@ plot(sir.sim.batch$sir.test.sim[[3]][[1]])
 #-- plot simmed data --#
 #----------------------#
 # read in simmed data
-sims_1_50 <- read.csv("./Data/SimmedSIRs/ParamMatSims_1_50.csv")
-sims_51_100 <- read.csv("./Data/SimmedSIRs/ParamMatSims_51_100.csv")
-sims_101_150 <- read.csv("./Data/SimmedSIRs/ParamMatSims_101_150.csv")
-sims_151_200 <- read.csv("./Data/SimmedSIRs/ParamMatSims_151_200.csv")
-sims_201_216 <- read.csv("./Data/SimmedSIRs/ParamMatSims_201_216.csv")
+sims_1_50 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_1_50.csv")
+sims_51_100 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_51_100.csv")
+sims_101_150 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_101_150.csv")
+sims_151_200 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_151_200.csv")
+sims_201_250 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_201_250.csv")
+sims_251_300 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_251_300.csv")
+sims_301_350 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_301_350.csv")
+sims_351_400 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_351_400.csv")
+sims_401_450 <- read.csv("./Data/SimmedSIRs/ParamMatSims2_401_450.csv")
 
-full.simmed.data <- rbind(sims_1_50[1:50, ], sims_51_100[1:50, ], sims_101_150[1:50, ], sims_151_200[1:50, ], sims_201_216[1:16, ])
+full.simmed.data <- rbind(sims_1_50[1:50, ], 
+                          sims_51_100[1:50, ], 
+                          sims_101_150[1:50, ], 
+                          sims_151_200[1:50, ], 
+                          sims_201_250[1:50, ],
+                          sims_251_300[1:50, ], 
+                          sims_301_350[1:50, ],
+                          sims_351_400[1:50, ], 
+                          sims_401_450[1:50, ]
+                          )
 full.simmed.data$Q025 <- full.simmed.data$Q25 <- full.simmed.data$Q50 <- full.simmed.data$Q75 <- full.simmed.data$Q975 <- rep(NA, dim(full.simmed.data)[1])
 
-full.simmed.data[is.infinite(as.matrix(full.simmed.data))] <- 10000
+full.simmed.data[is.infinite(as.matrix(full.simmed.data))] <- 100000
 
 for(i in 1:dim(full.simmed.data)[1]){
-  # recode infinite values as 10000
-#   full.simmed.data[i, 4:53] <- ifelse(is.infinite(full.simmed.data[i, 4:53]) == T, 10000, full.simmed.data[i, 4:53])
-#   full.simmed.data$Q25[i] <- quantile(full.simmed.data[i, 4:53], 0.25)
-#   full.simmed.data$Q50[i] <- quantile(full.simmed.data[i, 4:53], 0.5)
-#   full.simmed.data$Q75[i] <- quantile(full.simmed.data[i, 4:53], 0.75)
-#   full.simmed.data$Q975[i] <- quantile(full.simmed.data[i, 4:53], 0.975)
-  
   # extract quantiles
-  full.simmed.data$Q025[i] <- quantile(full.simmed.data[i, 4:53], 0.025)
-  full.simmed.data$Q25[i] <- quantile(full.simmed.data[i, 4:53], 0.25)
-  full.simmed.data$Q50[i] <- quantile(full.simmed.data[i, 4:53], 0.5)
-  full.simmed.data$Q75[i] <- quantile(full.simmed.data[i, 4:53], 0.75)
-  full.simmed.data$Q975[i] <- quantile(full.simmed.data[i, 4:53], 0.975)
+  full.simmed.data$Q025[i] <- quantile(full.simmed.data[i, 4:103], 0.025)
+  full.simmed.data$Q25[i] <- quantile(full.simmed.data[i, 4:103], 0.25)
+  full.simmed.data$Q50[i] <- quantile(full.simmed.data[i, 4:103], 0.5)
+  full.simmed.data$Q75[i] <- quantile(full.simmed.data[i, 4:103], 0.75)
+  full.simmed.data$Q975[i] <- quantile(full.simmed.data[i, 4:103], 0.975)
 }
 
-names(full.simmed.data) <- c("ParamSet", "N", "Ro", "gamma", seq(1:50), "Q025", "Q25", "Q50", "Q75", "Q975")
+names(full.simmed.data) <- c("ParamSet", "N", "Ro", "gamma", seq(1:100), "Q025", "Q25", "Q50", "Q75", "Q975")
 
 gamma.1 <- subset(full.simmed.data, full.simmed.data$gamma == 0.1)
+gamma.01 <- subset(full.simmed.data, full.simmed.data$gamma == 0.01)
 gamma.001 <- subset(full.simmed.data, full.simmed.data$gamma == 0.001)
 
 get.ccs <- function(data, gamma.in){
@@ -488,7 +532,9 @@ get.ccs <- function(data, gamma.in){
 }
 
 gamma.1.ccs <- get.ccs(data = gamma.1, gamma.in = .1)
+gamma.01.ccs <- get.ccs(data = gamma.01, gamma.in = .01)
 gamma.001.ccs <- get.ccs(data = gamma.001, gamma.in = .001)
 
-plot(as.numeric(as.character(gamma.1.ccs$CCS)) ~ as.numeric(as.character(gamma.1.ccs$Ro)), pch = 16, col = "black", type = "b")
+plot(as.numeric(as.character(gamma.1.ccs$CCS)) ~ as.numeric(as.character(gamma.1.ccs$Ro)), ylim = c(10, 10000), log = "xy", pch = 16, col = "black", type = "b")
 points(as.numeric(as.character(gamma.001.ccs$CCS)) ~ as.numeric(as.character(gamma.001.ccs$Ro)), pch = 16, col = "red", type = "b")
+points(as.numeric(as.character(gamma.01.ccs$CCS)) ~ as.numeric(as.character(gamma.01.ccs$Ro)), pch = 16, col = "blue", type = "b")
