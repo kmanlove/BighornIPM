@@ -1,0 +1,180 @@
+
+    model{
+    
+    #--------------------------#
+    #-- Define priors ---------#
+    #--------------------------#
+    #-- state-space --#
+    # observation error
+    tauy <- pow(sigma.y, -2)
+    sigma.y ~ dunif(0, 50)
+    sigma2.y <- pow(sigma.y, 2)
+    
+    # initial population sizes. switch to Poisson to get integer-valued group sizes
+    for(j in 1:n.pops){ #N[j = pop, t = year, a = age.class]. leave Njuv, Nad, Ntot as 2-D.
+    for(a in 1:18){ # 
+    N[j, 1, a] ~ dpois(10)  # all ages.
+    } #a
+    Nad[j, 1] <- sum(N[j, 1, 2:18])
+    Njuv[j, 1] <- sum(N[j, 1, 1])
+    Ntot[j, 1] <- Nad[j, 1] + Njuv[j, 1]
+    } #j
+    
+    #-- survival and recapture probabilities for CJS --#
+    #-- NOTE: for CJS, need phi calculated specifically for each individual during each year. 
+    #-- So, CJS phis need to loop over nind and n.years. --#
+    # get phi estimates for each individual (i) 
+    for(i in 1:nind){
+    for(t in f[i] : (n.years)){
+    logit(phi.individ.adsurv[i, t]) <- beta.adsurv[popyr.dis.status[ewe.pop.ind.num[i], t], age.class.ind[ewe.age[i, t]]] + time.re.adsurv[t]
+    #-- this logit pulls out the effect for ewe i's survival prob given her age class and her pop's current disease status
+    } #t
+    } #i
+    
+    for(r in 1:n.repros){
+    logit(phi.individ.repro[r]) <- beta.repro[popyr.dis.status[ewe.prod.pop[r], ewe.prod.year[r]], age.class.ind[ewe.prod.age[r]]] + time.re.repro[ewe.prod.year[r]]
+    # reproduction needs to be in its own loop, over number of repros (not number of ewes)
+    } #r
+    
+    for(w in 1:n.weans){
+    # begin krm mods Dec 10
+    logit(phi.individ.wean[w]) <- alpha.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]]] + beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+    #    logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+    # end KRM mods Dec 10
+    # reproduction needs to be in its own loop, over number of weans (not number of ewes)
+    } #w
+    
+    # get phi estimates for each popyr (j) 
+    for(t in 1:n.years){
+    for(j in 1:n.pops){
+    logit(phi.popyr.overwinter[j, t]) <- beta.overwinter[popyr.dis.status[j, t]] + time.re.overwinter[t]
+    # krm addition 10 Dec
+    logit(phi.popyr.wean.agg.age[j, t]) <- alpha.wean[popyr.dis.status[j, t]] + time.re.wean[t]
+    # end krm addition 10 dec
+    for(a in 1:n.ages){
+    logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status[j, t], age.class.ind[a]] + time.re.adsurv[t]
+    logit(phi.popyr.repro[j, t, a]) <- beta.repro[popyr.dis.status[j, t], age.class.ind[a]] + time.re.repro[t]
+    # begin krm mods Dec 10
+    logit(phi.popyr.wean[j, t, a]) <- alpha.wean[popyr.dis.status[j, t]] + beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
+    #    logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status[j, t], age.class.ind[a]] + time.re.wean[t]
+    # end krm mods Dec 10
+    #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
+    } #a
+    } #j
+    } #t
+    
+    # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
+    for(t in 1:(n.years)){
+    time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
+    time.re.repro[t] ~ dnorm(0, tau.time.repro) #-- random system-wide year effect
+    time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
+    time.re.overwinter[t] ~ dnorm(0, tau.time.overwinter) #-- random system-wide year effect
+    }
+    
+    for(d in 1:n.dis.states){
+    beta.overwinter[d] ~ dnorm(0, 0.01)T(-10, 10) # overwinter survival isn't mapped to ewe age. 
+    # krm addition 10 Dec
+    alpha.wean[d] ~ dnorm(0, 0.01)T(-10, 10)
+    # end KRM addition 10 Dec
+    for(a in 1:n.age.classes){
+    beta.adsurv[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+    beta.repro[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+    beta.wean[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+    }
+    }
+    
+    # hyperpriors for time.re's
+    sigma.time.adsurv ~ dunif(0, 10)
+    tau.time.adsurv <- pow(sigma.time.adsurv, -2)
+    sigma.time2.adsurv <- pow(sigma.time.adsurv, 2)
+    
+    sigma.time.repro ~ dunif(0, 10)
+    tau.time.repro <- pow(sigma.time.repro, -2)
+    sigma.time2.repro <- pow(sigma.time.repro, 2)   
+    
+    sigma.time.wean ~ dunif(0, 10)
+    tau.time.wean <- pow(sigma.time.wean, -2)
+    sigma.time2.wean <- pow(sigma.time.wean, 2)   
+    
+    sigma.time.overwinter ~ dunif(0, 10)
+    tau.time.overwinter <- pow(sigma.time.overwinter, -2)
+    sigma.time2.overwinter <- pow(sigma.time.overwinter, 2)   
+    
+    #----------------------------------------#
+    #-- Likelihoods of the single datasets --#
+    #----------------------------------------#
+    
+    #-------------------------------------------------------------------#
+    #-- 3.1. Likelihood for population count data (state-space model) --#
+    #-------------------------------------------------------------------#
+    # 3.1.1. System process
+    for(j in 1:n.pops){
+    for(t in 2 : (n.years - 1)){
+    # repro probs need to be checked....
+    # loop to get number of offspring produced by each age-class last year
+    for(a in 2:18){
+    Nrepro[j, t, a] ~ dbin(phi.popyr.repro[j, t - 1, a - 1], N[j, t - 1, a - 1])
+    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], Nrepro[j, t, a]) 
+    # Note: Weaning updates are from last year in this version of the model
+    }
+    N[j, t, 1] <- sum(Nwean[j, t, 2:18])
+    for(a in 2:18){
+    N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t - 1, a - 1], N[j, t - 1, a - 1])
+    } #a
+    Nad[j, t] <- max(sum(N[j, t, 2:18]) - RemovedEwes[j, t], 1) 
+    # subtract (known number of) removed ewes from pop count before doing observation (Oad)
+    #    Nad[j, t] <- sum(N[j, t, 2:18])
+    Nfall[j, t] <- sum(Nwean[j, t, 2:18])
+    Njuv[j, t] ~ dbin(phi.popyr.overwinter[j, t], Nfall[j, t])
+    Ntot[j, t] <- Nad[j, t] + Njuv[j, t]
+    } #t
+    
+    # 3.1.2. Observation process
+    for (t in 1 : (n.years - 1)){
+    # add in my observation data
+    # krm addition 10 Dec
+    #    Osls[j, t] ~ dbin(phi.popyr.wean[j, t, a], RadEwes[j, t])
+    Osls[j, t] ~ dbin(phi.popyr.wean.agg.age[j, t], RadEwes[j, t])
+    # end krm revision 10 Dec
+    # need to modify model for beta.wean. Right now, all age-classes estimated independently. Need
+    # single fixed effect to apply here (since I don't have ages on all RadEwes; need adjustment based solely on pop and year.)
+    Ojuv[j, t] ~ dpois(Njuv[j, t] + 1)
+    Oad[j, t] ~ dpois(Nad[j, t] + 1)
+    y[j, t] <- Ojuv[j, t] + Oad[j, t]
+    } #t
+    } #j
+    
+    #-----------------------------------------------------------#
+    #-- 3.2. Likelihood for adult survival data: CJS model --#
+    #-----------------------------------------------------------#
+    for(i in 1 : nind){
+    # define state at first cpature
+    z[i, f[i]] ~ dbern(1)
+    for(t in (f[i] + 1) : n.years){
+    # state process
+    z[i, t] ~ dbern(mu.adsurv[i, t])
+    mu.adsurv[i, t] <- phi.individ.adsurv[i, t - 1] * z[i, t - 1] 
+    } #t
+    } #i
+    
+    #-----------------------------------------------------------#
+    #-- 3.3. Likelihood for reproduction data: CJS model --#
+    #-----------------------------------------------------------#
+    for(r in 1 : n.repros){
+    # state process
+    z.repro[r] ~ dbern(mu.repro[r])
+    mu.repro[r] <- phi.individ.repro[r]
+    # might be smart to add observation error in here...
+    } #r
+    
+    #-----------------------------------------------------------#
+    #-- 3.4. Likelihood for weaning data: CJS model --#
+    #-----------------------------------------------------------#
+    for(w in 1 : n.weans){
+    # state process
+    z.wean[w] ~ dbern(mu.wean[w])
+    mu.wean[w] <- phi.individ.wean[w]
+    # might be smart to add observation error in here...
+    } #w
+    
+    }

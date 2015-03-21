@@ -433,8 +433,8 @@ sir.sim <- function(param.mat, reps){
         mu = 1/20,
         rho = 1, 
         theta = N,
-        S.0 = (N - 1) / N,
-        I.0 = 1 / N,
+        S.0 = (param.mat$N[i] - 1) / param.mat$N[i],
+        I.0 = (1 / param.mat$N[i]),
         R.0 = 0
       )
     )
@@ -456,16 +456,16 @@ sir.sim <- function(param.mat, reps){
 }
 
 reps.in <- 100
-sir.sim.batch <- sir.sim(param.mat[351:400, ], reps = reps.in)
+sir.sim.batch <- sir.sim(param.mat[1:50, ], reps = reps.in)
 
 param.mat.with.sims <- matrix(NA, nrow = 50, ncol = dim(param.mat)[2] + reps.in)
 for(i in 1:dim(param.mat.with.sims)[1]){
-  param.mat.with.sims[i, ] <- unlist(c(param.mat[i + 350, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
+  param.mat.with.sims[i, ] <- unlist(c(param.mat[i, ], as.vector(unlist(sir.sim.batch$fade.out[[i]]))))
 }
 
 param.mat.with.sims
 
-write.csv(param.mat.with.sims, "./Data/SimmedSIRs/ParamMatSims2_351_400.csv")
+write.csv(param.mat.with.sims, "./Data/SimmedSIRs/ParamMatSims3_1_50.csv")
 
 plot(sir.sim.batch$sir.test.sim[[1]][[1]])
 plot(sir.sim.batch$sir.test.sim[[2]][[1]])
@@ -517,14 +517,15 @@ gamma.001 <- subset(full.simmed.data, full.simmed.data$gamma == 0.001)
 
 get.ccs <- function(data, gamma.in){
   # split data on levels of Ro
-  CCS <- rep(NA, length(levels(factor(data$Ro))))
+  CCS <- min.n.pos <- rep(NA, length(levels(factor(data$Ro))))
   Nvals <- levels(factor(data$N))
   for(j in 1:length(levels(factor(data$Ro)))){
     k <- subset(data, Ro == levels(factor(data$Ro))[j])
-    CCS[j] <- k$N[which.min(abs((unlist(k$Q50)) - 365))]
+    min.n.pos[j] <- which.min(abs((unlist(k$Q50)) - 365))
+    CCS[j] <- k$N[min.n.pos[j]]
   }
-  plot.data <- as.data.frame(cbind(CCS, levels(factor(data$Ro)), rep(gamma.in, length(CCS))))
-  names(plot.data) <- c("CCS", "Ro", "gamma")
+  plot.data <- as.data.frame(cbind(CCS, levels(factor(data$Ro)), rep(gamma.in, length(CCS)), min.n.pos))
+  names(plot.data) <- c("CCS", "Ro", "gamma", "min.n.pos")
   return(plot.data)
 }
 
@@ -535,3 +536,132 @@ gamma.001.ccs <- get.ccs(data = gamma.001, gamma.in = .001)
 plot(as.numeric(as.character(gamma.1.ccs$CCS)) ~ as.numeric(as.character(gamma.1.ccs$Ro)), ylim = c(10, 10000), log = "xy", pch = 16, col = "black", type = "b")
 points(as.numeric(as.character(gamma.001.ccs$CCS)) ~ as.numeric(as.character(gamma.001.ccs$Ro)), pch = 16, col = "red", type = "b")
 points(as.numeric(as.character(gamma.01.ccs$CCS)) ~ as.numeric(as.character(gamma.01.ccs$Ro)), pch = 16, col = "blue", type = "b")
+
+#-- persistence time, Ro by gamma (no CCS) --#
+gamma.1.ro1 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[1])
+gamma.1.ro1.perstime <- as.vector(unlist(gamma.1.ro1[, 5:104]))
+gamma.1.ro1.N <- rep(gamma.1.ro1$N, times = 100)
+
+gamma.1.ro2 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[2])
+gamma.1.ro2.perstime <- as.vector(unlist(gamma.1.ro2[, 5:104]))
+gamma.1.ro2.N <- rep(gamma.1.ro2$N, times = 100)
+
+gamma.1.ro3 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[3])
+gamma.1.ro3.perstime <- as.vector(unlist(gamma.1.ro3[, 5:104]))
+gamma.1.ro3.N <- rep(gamma.1.ro3$N, times = 100)
+
+gamma.1.ro4 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[4])
+gamma.1.ro4.perstime <- as.vector(unlist(gamma.1.ro4[, 5:104]))
+gamma.1.ro4.N <- rep(gamma.1.ro4$N, times = 100)
+
+gamma.1.ro5 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[5])
+gamma.1.ro5.perstime <- as.vector(unlist(gamma.1.ro5[, 5:104]))
+gamma.1.ro5.N <- rep(gamma.1.ro5$N, times = 100)
+
+gamma.1.ro6 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[6])
+gamma.1.ro6.perstime <- as.vector(unlist(gamma.1.ro6[, 5:104]))
+gamma.1.ro6.N <- rep(gamma.1.ro6$N, times = 100)
+
+gamma.1.ro10 <- subset(gamma.1, Ro == levels(factor(gamma.1$Ro))[10])
+gamma.1.ro10.perstime <- as.vector(unlist(gamma.1.ro10[, 5:104]))
+gamma.1.ro10.N <- rep(gamma.1.ro10$N, times = 100)
+
+
+# gamma = 0.01
+gamma.01.ro1 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[1])
+gamma.01.ro1.perstime <- as.vector(unlist(gamma.01.ro1[, 5:104]))
+gamma.01.ro1.N <- rep(gamma.01.ro1$N, times = 100)
+
+gamma.01.ro2 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[2])
+gamma.01.ro2.perstime <- as.vector(unlist(gamma.01.ro2[, 5:104]))
+gamma.01.ro2.N <- rep(gamma.01.ro2$N, times = 100)
+
+gamma.01.ro3 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[3])
+gamma.01.ro3.perstime <- as.vector(unlist(gamma.01.ro3[, 5:104]))
+gamma.01.ro3.N <- rep(gamma.01.ro3$N, times = 100)
+
+gamma.01.ro4 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[4])
+gamma.01.ro4.perstime <- as.vector(unlist(gamma.01.ro4[, 5:104]))
+gamma.01.ro4.N <- rep(gamma.01.ro4$N, times = 100)
+
+gamma.01.ro5 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[5])
+gamma.01.ro5.perstime <- as.vector(unlist(gamma.01.ro5[, 5:104]))
+gamma.01.ro5.N <- rep(gamma.01.ro5$N, times = 100)
+
+gamma.01.ro6 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[6])
+gamma.01.ro6.perstime <- as.vector(unlist(gamma.01.ro6[, 5:104]))
+gamma.01.ro6.N <- rep(gamma.01.ro6$N, times = 100)
+
+gamma.01.ro10 <- subset(gamma.01, Ro == levels(factor(gamma.01$Ro))[10])
+gamma.01.ro10.perstime <- as.vector(unlist(gamma.01.ro10[, 5:104]))
+gamma.01.ro10.N <- rep(gamma.01.ro10$N, times = 100)
+
+
+# gamma = 0.001
+gamma.001.ro1 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[1])
+gamma.001.ro1.perstime <- as.vector(unlist(gamma.001.ro1[, 5:104]))
+gamma.001.ro1.N <- rep(gamma.001.ro1$N, times = 100)
+cbind(gamma.001.ro1.perstime, gamma.001.ro1.N)
+
+gamma.001.ro2 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[2])
+gamma.001.ro2.perstime <- as.vector(unlist(gamma.001.ro2[, 5:104]))
+gamma.001.ro2.N <- rep(gamma.001.ro2$N, times = 100)
+
+gamma.001.ro3 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[3])
+gamma.001.ro3.perstime <- as.vector(unlist(gamma.001.ro3[, 5:104]))
+gamma.001.ro3.N <- rep(gamma.001.ro3$N, times = 100)
+
+gamma.001.ro4 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[4])
+gamma.001.ro4.perstime <- as.vector(unlist(gamma.001.ro4[, 5:104]))
+gamma.001.ro4.N <- rep(gamma.001.ro4$N, times = 100)
+
+gamma.001.ro5 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[5])
+gamma.001.ro5.perstime <- as.vector(unlist(gamma.001.ro5[, 5:104]))
+gamma.001.ro5.N <- rep(gamma.001.ro5$N, times = 100)
+
+gamma.001.ro6 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[6])
+gamma.001.ro6.perstime <- as.vector(unlist(gamma.01.ro6[, 5:104]))
+gamma.001.ro6.N <- rep(gamma.001.ro6$N, times = 100)
+
+gamma.001.ro10 <- subset(gamma.001, Ro == levels(factor(gamma.001$Ro))[10])
+gamma.001.ro10.perstime <- as.vector(unlist(gamma.01.ro10[, 5:104]))
+gamma.001.ro10.N <- rep(gamma.001.ro10$N, times = 100)
+
+# Figure 
+par(mfrow = c(1, 3))
+plot(gamma.1.ro1.perstime ~ gamma.1.ro1.N, main = "gamma = .1", log = "xy", ylab = "Persistence time", xlab = "Population size", ylim = c(2, 5200), xlim = c(100, 100000))
+points(gamma.1.ro2.perstime ~ gamma.1.ro2.N, col = "blue")
+points(gamma.1.ro3.perstime ~ gamma.1.ro3.N, col = "purple")
+points(gamma.1.ro4.perstime ~ gamma.1.ro4.N, col = "red")
+points(gamma.1.ro5.perstime ~ gamma.1.ro5.N, col = "orange")
+points(gamma.1.ro6.perstime ~ gamma.1.ro6.N, col = "yellow")
+points(gamma.1.ro10.perstime ~ gamma.1.ro10.N, col = "green")
+abline(h = 365)
+abline(v = 500, col = "grey40")
+abline(v = 1000, col = "grey40")
+abline(v = 10000, col = "grey40")
+
+plot(gamma.01.ro1.perstime ~ gamma.01.ro1.N, main = "gamma = .01", log = "xy", ylab = "Persistence time", xlab = "Population size", ylim = c(2, 5200), xlim = c(100, 100000))
+points(gamma.01.ro2.perstime ~ gamma.01.ro2.N, col = "blue")
+points(gamma.01.ro3.perstime ~ gamma.01.ro3.N, col = "purple")
+points(gamma.01.ro4.perstime ~ gamma.01.ro4.N, col = "red")
+points(gamma.01.ro5.perstime ~ gamma.01.ro5.N, col = "orange")
+points(gamma.01.ro6.perstime ~ gamma.01.ro6.N, col = "yellow")
+points(gamma.01.ro10.perstime ~ gamma.01.ro10.N, col = "green")
+abline(h = 365)
+abline(v = 500, col = "grey40")
+abline(v = 1000, col = "grey40")
+abline(v = 10000, col = "grey40")
+
+plot(gamma.001.ro1.perstime ~ gamma.001.ro1.N, main = "gamma = .001", log = "xy", ylab = "Persistence time", xlab = "Population size", ylim = c(2, 5200), xlim = c(100, 100000))
+points(gamma.001.ro2.perstime ~ gamma.001.ro2.N, col = "blue")
+points(gamma.001.ro3.perstime ~ gamma.001.ro3.N, col = "purple")
+points(gamma.001.ro4.perstime ~ gamma.001.ro4.N, col = "red")
+points(gamma.001.ro5.perstime ~ gamma.001.ro5.N, col = "orange")
+points(gamma.001.ro6.perstime ~ gamma.001.ro6.N, col = "yellow")
+points(gamma.001.ro10.perstime ~ gamma.001.ro10.N, col = "green")
+abline(h = 365)
+abline(v = 500, col = "grey40")
+abline(v = 1000, col = "grey40")
+abline(v = 10000, col = "grey40")
+

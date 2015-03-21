@@ -1,0 +1,123 @@
+
+    model{
+    
+    #--------------------------#
+    #-- Define priors ---------#
+    #--------------------------#
+    #-- state-space --#
+    # observation error
+    tauy <- pow(sigma.y, -2)
+    sigma.y ~ dunif(0, 50)
+    sigma2.y <- pow(sigma.y, 2)
+    
+    # initial population sizes. switch to Poisson to get integer-valued group sizes
+    for(j in 1:n.pops){ #N[j = pop, t = year, a = age.class]. leave Njuv, Nad, Ntot as 2-D.
+    for(a in 1:18){ # 
+    N[j, 1, a] ~ dpois(10)  # all ages.
+    } #a
+    Nad[j, 1]  <- sum(N[j, 1, 2:18])
+    Njuv[j, 1] <- sum(N[j, 1, 1])
+    Ntot[j, 1] <- Nad[j, 1] + Njuv[j, 1]
+    } #j
+    
+    #-- survival and recapture probabilities for CJS --#
+    #-- NOTE: for CJS, need phi calculated specifically for each individual during each year. 
+    #-- So, CJS phis need to loop over nind and n.years. --#
+    # get phi estimates for each individual (i) 
+        for(s in 1:n.adsurvs){
+        logit(phi.individ.adsurv[s]) <- beta.adsurv[popyr.dis.status.adults[ewe.surv.pop[s], ewe.surv.year[s]], age.class.ind[ewe.surv.age[s]]] + time.re.adsurv[ewe.surv.year[s]]
+        } #s
+        
+        for(w in 1:n.weans){
+        logit(phi.individ.wean[w]) <- beta.wean[popyr.dis.status.lambs[ewe.wean.pop[w], ewe.wean.year[w]], age.class.ind[ewe.wean.age[w]]] + time.re.wean[ewe.wean.year[w]]
+        } #w
+    
+    # get phi estimates for each popyr (j) 
+    for(t in 1:n.years){
+    for(j in 1:n.pops){
+    for(a in 1:n.ages){
+    logit(phi.popyr.adsurv[j, t, a]) <- beta.adsurv[popyr.dis.status.adults[j, t], age.class.ind[a]] + time.re.adsurv[t]
+    logit(phi.popyr.wean[j, t, a]) <- beta.wean[popyr.dis.status.lambs[j, t], age.class.ind[a]] + time.re.wean[t]
+    #-- this logit pulls out the effect for each age-class in pop-year i, using pop-year i's disease status and the time re
+    } #a
+    } #j
+    } #t
+    
+    # Specificy priors on the 2-d matrix of betas (called in the CJS logit survival function) and the time re.
+    for(t in 1:(n.years)){
+    time.re.adsurv[t] ~ dnorm(0, tau.time.adsurv) #-- random system-wide year effect
+    time.re.wean[t] ~ dnorm(0, tau.time.wean) #-- random system-wide year effect
+    }
+    
+    for(d in 1:n.dis.states){
+    for(a in 1:n.age.classes){
+    beta.adsurv[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+    beta.wean[d , a] ~ dnorm(0, 0.01)T(-10, 10)
+    } #a
+    } #d
+    
+    # hyperpriors for time.re's
+    sigma.time.adsurv ~ dunif(0, 10)
+    tau.time.adsurv <- pow(sigma.time.adsurv, -2)
+    sigma.time2.adsurv <- pow(sigma.time.adsurv, 2)
+    
+    sigma.time.wean ~ dunif(0, 10)
+    tau.time.wean <- pow(sigma.time.wean, -2)
+    sigma.time2.wean <- pow(sigma.time.wean, 2)   
+    
+    #----------------------------------------#
+    #-- Likelihoods of the single datasets --#
+    #----------------------------------------#
+    
+    #-------------------------------------------------------------------#
+    #-- 3.1. Likelihood for population count data (state-space model) --#
+    #-------------------------------------------------------------------#
+    # 3.1.1. System process
+    for(j in 1:n.pops){
+    for(t in 2 : (n.years - 1)){
+    # repro probs need to be checked....
+    # loop to get number of offspring produced by each age-class last year
+    for(a in 2:18){
+    Nwean[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], N[j, t, a])  # ewes age first, reproduce second. 
+    }
+    N[j, t, 1] <- sum(Nwean[j, t, 2:18])
+    for(a in 2:18){ # loop for age-specific survival and reproduction numbers
+    N[j, t, a] ~ dbin(phi.popyr.adsurv[j, t, a - 1], N[j, t - 1, a - 1])
+    Njuv.agespec[j, t, a] ~ dbin(phi.popyr.wean[j, t, a], N[j, t, a])
+    } #a
+#    Nad[j, t] <- max(sum(N[j, t, 2:18]) - RemovedEwes[j, t] + AddedEwes[j, t], 1) 
+    Nad[j, t] <- max(sum(N[j, t, 2:18]), 1) 
+    # subtract (known number of) removed ewes from pop count before doing observation (Oad)
+    Njuv[j, t] <- sum(Njuv.agespec[j, t, 2:18])
+    Ntot[j, t] <- Nad[j, t] + Njuv[j, t]
+    } #t
+    
+#     # 3.1.2. Observation process
+#     for (t in 1 : (n.years - 1)){
+#     # add in observation data
+#     Ojuv[j, t] ~ dpois(Njuv[j, t] + 1)
+#     Oad[j, t]  ~ dpois(Nad[j, t] + 1)
+#     y[j, t] <- Ojuv[j, t] + Oad[j, t]
+#     } #t
+     } #j
+    
+    #---------------------------------------------------------------------------------#
+    #-- 3.2. Likelihood for adult survival data: CJS model: see Kery Schaub pg. 180 --#
+    #---------------------------------------------------------------------------------#
+    
+        for(s in 1 : n.adsurvs){
+        z.adsurv[s] ~ dbern(mu.adsurv[s])
+        mu.adsurv[s] <- phi.individ.adsurv[s]
+        } #s
+    
+    #-------------------------------------------------#
+    #-- 3.4. Likelihood for weaning data: CJS model --#
+    #-------------------------------------------------#
+        for(w in 1 : n.weans){
+        # state process
+        z.wean[w] ~ dbern(mu.wean[w])
+        mu.wean[w] <- phi.individ.wean[w]
+        # might be smart to add observation error in here...
+        } #w
+    
+    }
