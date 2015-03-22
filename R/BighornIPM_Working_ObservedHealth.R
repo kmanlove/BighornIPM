@@ -6,9 +6,9 @@ require(runjags)
 
 # 1. Load data.
 
-studysheep <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/RevisedData_11Sept2013/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
-lambs <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/MergedLambData_26Mar2013.csv", header = T)
-compd.data <- read.csv("~/work/Kezia/Research/EcologyPapers/ClustersAssocations_V2/ClustersAssociations/Data/compiled_data_summary_130919.csv", header = T, sep = "")
+studysheep <- read.csv("./Data/Empirical/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
+lambs <- read.csv("./Data/Empirical/MergedLambData_26Mar2013.csv", header = T)
+compd.data <- read.csv("./Data/Empirical/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data <- subset(compd.data, !(Pop == "Imnaha" & year <= 1999))
 #compd.data$PNIndLambs <- ifelse(compd.data$CLASS == c("HEALTHY", "ADULTS"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP"), 2, NA))
 compd.data$PNIndEwes <- compd.data$PNIndLambs <- ifelse(compd.data$CLASS == c("HEALTHY"), 1, ifelse(compd.data$CLASS %in% c("ALL_AGE", "ALL_AGE_SUSP", "LAMBS", "LAMBS_SUSP", "ADULTS"), 2, NA))
@@ -60,15 +60,11 @@ Oad <- tapply(compd.data$Ewes, factor.list, sum) # table observed adults in each
 Ojuv <- tapply(compd.data$Lambs, factor.list, sum) # table observed lambs in each pop-year
 compd.data$NoFemRem.nonas <- ifelse(is.na(compd.data$NoFemRem) == T, 0, compd.data$NoFemRem)
 compd.data$NoFemRel.nonas <- ifelse(is.na(compd.data$NoFemRel) == T, 0, compd.data$NoFemRel)
-#Osls <- round(tapply(compd.data$RadEwesWLambs * compd.data$SumLambSurv, factor.list, sum))
-#RadEwes <- round(tapply(compd.data$RadEwes, factor.list, sum))
 RemovedEwes <- tapply(compd.data$NoFemRem.nonas, factor.list, sum)
 AddedEwes <- tapply(compd.data$NoFemRel.nonas, factor.list, sum)
 for(j in 1:12){
   RemovedEwes[j, ] <- ifelse(is.na(RemovedEwes[j, ]) == T, 0, RemovedEwes[j, ])
   AddedEwes[j, ] <- ifelse(is.na(AddedEwes[j, ]) == T, 0, AddedEwes[j, ])
-  #  Osls[j, ] <- ifelse(is.na(Osls[j, ]) == T, 0, Osls[j, ])
-  #  RadEwes[j, ] <- ifelse(is.na(RadEwes[j, ]) == T, 0, RadEwes[j, ])
 }
 
 n.years <- 2012 - 1996
@@ -163,7 +159,6 @@ ewes.he.aso <- subset(ewes.with.teeth, (Population == "Asotin" & ENTRY_BIOYR <= 
 ewes.he.bcan <- subset(ewes.with.teeth, (Population == "BigCanyon" & ENTRY_BIOYR <= 1999 & DEAD == 1))
 ewes.he.muir <- subset(ewes.with.teeth, (Population == "MuirCreek" & ENTRY_BIOYR <= 1999 & DEAD == 1))
 ewes.he.imn <- subset(ewes.with.teeth,  (Population == "Imnaha" & ENTRY_BIOYR <= 1999 & DEAD == 1))
-
 
 
 #----------------------------------#
@@ -405,10 +400,10 @@ observedhealth.coda <- coda.samples(observedhealth.call,
 
 summary(observedhealth.coda)
 convg.diags <- gelman.diag(observedhealth.coda)
-#write.csv(convg.diags[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/GelmanRubinDiags_26Dec2014.csv")
+#write.csv(convg.diags[[1]], "./Data/Posteriors/IPM/MoviDef/GelmanRubinDiags_26Dec2014.csv")
 
 coda.summary.obj.observedhealth <- summary(observedhealth.coda)
-#write.csv(coda.summary.obj.11[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/PosteriorQuantiles_26Dec2014.csv")
+#write.csv(coda.summary.obj.11[[2]], "./Data/Posteriors/IPM/MoviDef/PosteriorQuantiles_26Dec2014.csv")
 row.names(coda.summary.obj.observedhealth[[2]])
 
 beta.posts.adsurv.observedhealth <- coda.summary.obj.observedhealth[[2]][1:18, ]
