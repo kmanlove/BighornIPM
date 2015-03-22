@@ -1,15 +1,13 @@
 #---------------------------------------------#
 #-- Code for recruitment vs. adult survival --#
 #---------------------------------------------#
-# require(rjags)
-# require(runjags)
 require(popbio)
 require(Matrix)
 require(MASS)
-source("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Code/BighornIPM_GIT/BighornSimSourceFunctions.R")
-load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/MoviDef/ObservedHealthPost_18Feb2015.RData")
-#load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_09Jan2015.RData")
-#load("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
+source("./R/BighornSimSourceFunctions.R")
+load("./Data/Posteriors/IPM/MoviDef/ObservedHealthPost_18Feb2015.RData")
+#load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_09Jan2015.RData")
+#load("./Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
 ipm11.coda <- MoviStatus.coda
 ipm11.coda <- ObservedHealthStatus.coda
 ipm11.coda <- ObservedHealthStatusCollarsOnly.coda
@@ -29,7 +27,7 @@ age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6)
 
 # plot betas out
 plot.cols <- c("white", "black", "grey60")
-#svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure2_Posteriors_MoviDef_05Jan2015.svg", width = 3, height = 2, pointsize = 8)
+#svg("./Plots/FigsV1/MoviDefFigs_05Jan2015/Figure2_Posteriors_MoviDef_05Jan2015.svg", width = 3, height = 2, pointsize = 8)
 par(mfrow = c(1, 2), las = 1)
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 15), ylab = "Probability of survival", xlab = "", xaxt = "n")
 for(i in 3:15){
@@ -62,7 +60,7 @@ age.class.ind <- c(1, 2, rep(3, 17), 4)
 
 # plot betas out
 plot.cols <- c("white", "black", "grey60")
-#svg("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure2_Posteriors_MoviDef_05Jan2015.svg", width = 3, height = 2, pointsize = 8)
+#svg("./Plots/FigsV1/MoviDefFigs_05Jan2015/Figure2_Posteriors_MoviDef_05Jan2015.svg", width = 3, height = 2, pointsize = 8)
 par(mfrow = c(1, 2), las = 1)
 plot(-1, -1, ylim = c(0, 1), xlim = c(3, 9), ylab = "Probability of survival", xlab = "Age class", xaxt = "n")
 for(i in 3:9){
@@ -116,8 +114,8 @@ for(i in 1:reps){
   log.lambda.s.he[i, ] <- he.project$log.lambda.s
 }  
 
-#write.csv(popsize.he, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
-#popsize.he <- as.matrix(read.csv("~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
+#write.csv(popsize.he, "./Data/PostIPMSims/Healthy/HealthyPopsize_30Sept2014.csv", row.names = F)
+#popsize.he <- as.matrix(read.csv("./Data/Simulations/Healthy/HealthyPopsize_30Sept2014.csv"))
 
 he.quants <- which(popsize.he[, timesteps - 1] %in% as.numeric(quantile(popsize.he[, timesteps - 1], c(0.025, .25, .75, 0.975), type = 3)))
 he.med <- which(popsize.he[, timesteps - 1] %in% as.numeric(quantile(popsize.he[, timesteps - 1], .5, type = 3)))
@@ -1242,13 +1240,13 @@ for(i in 1:length.in){
 
 par(mfrow = c(1, 2))
 
-svg(filename = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.1.svg", width = 7, height = 8)
+svg(filename = "./Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.1.svg", width = 7, height = 8)
 pupilplot(log(abs(ratio.ic.1)), cp = NULL, col = grey(seq(0, 1, length.out = 101)), addContours = FALSE, cscale = TRUE)
 dev.off()
-svg(filename = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.3.svg", width = 7, height = 8)
+svg(filename = "./Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.3.svg", width = 7, height = 8)
 pupilplot(log(abs(ratio.ic)), cp = NULL, col = grey(seq(0, 1, length.out = 101)), addContours = FALSE, cscale = TRUE)
 dev.off()
-svg(filename = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.5.svg", width = 7, height = 8)
+svg(filename = "./Plots/FigsV1/MoviDefFigs_05Jan2015/Figure5_HeatIntroCost.5.svg", width = 7, height = 8)
 pupilplot(log(abs(ratio.ic.5)), cp = NULL, col = grey(seq(0, 1, length.out = 101)), addContours = FALSE, cscale = TRUE)
 dev.off()                                             
 
