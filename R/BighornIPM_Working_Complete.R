@@ -8,9 +8,9 @@ require(runjags)
 require(grofit)
 
 # 1. Load data.
-studysheep <- read.csv("./Data/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
-lambs <- read.csv("./Data/MergedLambData_26Mar2013.csv", header = T)
-compd.data <- read.csv("./Data/compiled_data_summary_130919.csv", header = T, sep = "")
+studysheep <- read.csv("./Data/Empirical/Study_sheep_toothage_original_012612.csv", header = T, sep = "\t")
+lambs <- read.csv("./Data/Empirical/MergedLambData_26Mar2013.csv", header = T)
+compd.data <- read.csv("./Data/Empirical/compiled_data_summary_130919.csv", header = T, sep = "")
 compd.data <- subset(compd.data, !(Pop == "Imnaha" & year <= 1999))
 compd.data$PNIndLambs <- with(compd.data, 
                            ifelse(CLASS == c("HEALTHY"), 1, 
@@ -84,7 +84,7 @@ for (j in 1:dim(RemovedEwes)[1])
 
 count.data <- as.data.frame(cbind(rep(levels(factor(compd.data$year)), each = length(levels(compd.data$Pop))), rep(as.character(levels(factor(compd.data$Pop))), times = length(levels(factor(compd.data$year)))), as.vector(Oad), as.vector(Ojuv), as.vector(RemovedEwes), as.vector(AddedEwes)))
 names(count.data) <- c("Year", "Pop", "Observed Ewes", "Observed Lambs", "Removed Ewes", "Added Ewes")
-# write.csv(count.data, "./Data/MoviDefCountData_27Jan2015.csv") # NOTE that this path has changed. 
+# write.csv(count.data, "./Data/Empirical/MoviDefCountData_27Jan2015.csv") # NOTE that this path has changed. 
 
 n.years <- 2012 - 1996
 
@@ -174,8 +174,8 @@ ewe.surv.status <- ifelse(as.numeric(age.spec.ewe.surv$ewe.surv.status) == 2, 1,
 ewe.surv.year   <- age.spec.ewe.surv$years - 1996
 ewe.surv.pop    <- age.spec.ewe.surv$pop
 
-# write.csv(age.spec.ewe.surv, "./Data/EweSurvData_TeethAndLeq3_MoviDef.csv") # NOTE: path has changed
-# write.csv(age.spec.ewe.surv, "~./Data/EweSurvData_TeethAndLeq3_ObservedHealthDef.csv") # NOTE: path has changed
+# write.csv(age.spec.ewe.surv, "./Data/Empirical/EweSurvData_TeethAndLeq3_MoviDef.csv") # NOTE: path has changed
+# write.csv(age.spec.ewe.surv, "~./Data/Empirical/EweSurvData_TeethAndLeq3_ObservedHealthDef.csv") # NOTE: path has changed
 
 # create vector with occasion of marking:
 get.first <- function(x) min (which (x != 0))
@@ -296,7 +296,7 @@ ewe.wean.success <- as.numeric(as.character(age.spec.ewe.wean$wean.status))
 table(age.spec.ewe.wean$pop.name, age.spec.ewe.wean$wean.status)
 table(age.spec.ewe.wean$age.class1, age.spec.ewe.wean$wean.pn.status)
 
-# write.csv(age.spec.ewe.wean, "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/EweWeanData_TeethAndLeq3_MoviDef.csv")
+# write.csv(age.spec.ewe.wean, "./Data/Empirical/EweWeanData_TeethAndLeq3_MoviDef.csv")
 
 #------------------------------------#
 #-- IPM -----------------------------#
@@ -572,11 +572,11 @@ ObservedHealthStatus.coda <- coda.samples(ObservedHealthStatus.call,
 
 summary(ObservedHealthStatus.coda)
 convg.diags.ObservedHealth <- gelman.diag(ObservedHealthStatus.coda)
-# write.csv(convg.diags.ObservedHealth[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/GelmanRubinDiags_09Jan2015.csv")
-# save(ObservedHealthStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_18Feb2015.RData")
+# write.csv(convg.diags.ObservedHealth[[1]], "./Data/Posteriors/IPM/ObservedHealthDef/GelmanRubinDiags_09Jan2015.csv")
+# save(ObservedHealthStatus.coda, file = "./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_18Feb2015.RData")
 # 
 # coda.summary.obj.ObservedHealthStatus <- summary(ObservedHealthStatus.coda)
-# write.csv(coda.summary.obj.ObservedHealthStatus[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/PosteriorQuantiles_09Jan2015.csv")
+# write.csv(coda.summary.obj.ObservedHealthStatus[[2]], "./Data/Posteriors/IPM/ObservedHealthDef/PosteriorQuantiles_09Jan2015.csv")
 # row.names(coda.summary.obj.movi.toothageANDaentry[[2]])
 # 
 # beta.posts.adsurv.ObservedHealthStatus <- coda.summary.obj.ObservedHealthStatus[[2]][1:18, ]
@@ -674,11 +674,11 @@ convg.diags.ObservedHealth <- gelman.diag(ObservedHealthStatus.coda)
 # 
 # summary(Jo.ObservedHealthStatus.coda)
 # convg.diags.Jo.ObservedHealth <- gelman.diag(Jo.ObservedHealthStatus.coda)
-# write.csv(convg.diags.Jo.ObservedHealth[[1]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/Jo.GelmanRubinDiags_09Jan2015.csv")
-# save(Jo.ObservedHealthStatus.coda, file = "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
+# write.csv(convg.diags.Jo.ObservedHealth[[1]], "./Data/Posteriors/IPM/ObservedHealthDef/Jo.GelmanRubinDiags_09Jan2015.csv")
+# save(Jo.ObservedHealthStatus.coda, file = "./Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
 # 
 # coda.summary.obj.Jo.ObservedHealthStatus <- summary(Jo.ObservedHealthStatus.coda)
-# write.csv(coda.summary.obj.Jo.ObservedHealthStatus[[2]], "~/work/Kezia/Research/EcologyPapers/RecruitmentVsAdultSurv/Data/Posteriors/IPM/ObservedHealthDef/Jo.PosteriorQuantiles_09Jan2015.csv")
+# write.csv(coda.summary.obj.Jo.ObservedHealthStatus[[2]], "./Data/Posteriors/IPM/ObservedHealthDef/Jo.PosteriorQuantiles_09Jan2015.csv")
 # #row.names(coda.summary.obj.movi.toothageANDaentry[[2]])
 # 
 # beta.posts.adsurv.ObservedHealthStatus <- coda.summary.obj.ObservedHealthStatus[[2]][1:18, ]
