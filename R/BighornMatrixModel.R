@@ -4,7 +4,8 @@
 require(popbio)
 require(Matrix)
 require(MASS)
-#source("./R/BighornSimSourceFunctions.R")
+
+# source in all KRM functions
 source("./R/AddTransFun.R")
 source("./R/GenTimeFun.R")
 source("./R/HealthyProjectFun.R")
