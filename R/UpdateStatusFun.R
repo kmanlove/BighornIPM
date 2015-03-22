@@ -2,11 +2,13 @@ UpdateStatusFun <- function(alpha, gamma, current.state){
   # updates environmental state between steps in Markov population projection model
   #
   # Args:
+  #
   # alpha = pathogen introduction rate
   # gamma = pathogen fade-out rate
   # current state = character indicating disease status in population at year t
   #
-  # Retruns:
+  # Returns:
+  #
   # current.state.new = list containing character vector of length 1 which label of 
   # new state ("healthy", "spillover", "infected")
   current.state.new <- rep(NA, 1)
