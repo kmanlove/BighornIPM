@@ -1,122 +1,121 @@
 #-- simulation source functions --#
 
-# function to update environmental state
-update.status.fun <- function(alpha, gamma, current.state){
-  current.state.new <- rep(NA, 1)
-  if(current.state == "healthy"){
-    gets.infected <- rbinom(1, 1, alpha)
-    current.state.new[1] <- ifelse(gets.infected == 0, "healthy", "spillover")
-  }
-#  else if(current.state == "infected"){
-    else if(current.state == "spillover"){
-      gets.infected <- rbinom(1, 1, alpha)
-      fade.out <- rbinom(1, 1, gamma)
-      current.state.new[1] <- ifelse(gets.infected == 1, "spillover", ifelse((gets.infected == 0 & fade.out == 1), "healthy", "infected"))
-  } else if(current.state == "infected"){
-    gets.infected <- rbinom(1, 1, alpha)
-    fade.out <- rbinom(1, 1, gamma)
-    current.state.new[1] <- ifelse(gets.infected == 1, "spillover", ifelse((gets.infected == 0 & fade.out == 1), "healthy", "infected"))
-  }
-  return(list(current.state.new = current.state.new))
-}
-
-# function to update Leslie matrix parameters
-update.leslie.fun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
-  chain <- ceiling(runif(1, 0, tot.chains))
-  post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
-  names(post.draw) <- posterior.names
-
-  post.draw$beta.wean.1.2 <- exp(post.draw$beta.wean.1.2) / (1 + exp(post.draw$beta.wean.1.2))
-  post.draw$beta.wean.1.3 <- exp(post.draw$beta.wean.1.3) / (1 + exp(post.draw$beta.wean.1.3))
-  post.draw$beta.wean.1.4 <- exp(post.draw$beta.wean.1.4) / (1 + exp(post.draw$beta.wean.1.4))
-  post.draw$beta.wean.1.5 <- exp(post.draw$beta.wean.1.5) / (1 + exp(post.draw$beta.wean.1.5))
-  post.draw$beta.wean.1.6 <- exp(post.draw$beta.wean.1.6) / (1 + exp(post.draw$beta.wean.1.6))
-  post.draw$beta.adsurv.1.2 <- exp(post.draw$beta.adsurv.1.2) / (1 + exp(post.draw$beta.adsurv.1.2))
-  post.draw$beta.adsurv.1.3 <- exp(post.draw$beta.adsurv.1.3) / (1 + exp(post.draw$beta.adsurv.1.3))
-  post.draw$beta.adsurv.1.4 <- exp(post.draw$beta.adsurv.1.4) / (1 + exp(post.draw$beta.adsurv.1.4))
-  post.draw$beta.adsurv.1.5 <- exp(post.draw$beta.adsurv.1.5) / (1 + exp(post.draw$beta.adsurv.1.5))
-  post.draw$beta.adsurv.1.6 <- exp(post.draw$beta.adsurv.1.6) / (1 + exp(post.draw$beta.adsurv.1.6))
-
-  post.draw$beta.wean.2.2 <- exp(post.draw$beta.wean.2.2) / (1 + exp(post.draw$beta.wean.2.2))
-  post.draw$beta.wean.2.3 <- exp(post.draw$beta.wean.2.3) / (1 + exp(post.draw$beta.wean.2.3))
-  post.draw$beta.wean.2.4 <- exp(post.draw$beta.wean.2.4) / (1 + exp(post.draw$beta.wean.2.4))
-  post.draw$beta.wean.2.5 <- exp(post.draw$beta.wean.2.5) / (1 + exp(post.draw$beta.wean.2.5))
-  post.draw$beta.adsurv.2.2 <- exp(post.draw$beta.adsurv.2.2) / (1 + exp(post.draw$beta.adsurv.2.2))
-  post.draw$beta.adsurv.2.3 <- exp(post.draw$beta.adsurv.2.3) / (1 + exp(post.draw$beta.adsurv.2.3))
-  post.draw$beta.adsurv.2.4 <- exp(post.draw$beta.adsurv.2.4) / (1 + exp(post.draw$beta.adsurv.2.4))
-  post.draw$beta.adsurv.2.5 <- exp(post.draw$beta.adsurv.2.5) / (1 + exp(post.draw$beta.adsurv.2.5))
-  
-  if(current.state == "healthy"){
-    repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 1), rep((post.draw$beta.wean.1.3  * sex.ratio), 5), rep((post.draw$beta.wean.1.4  * sex.ratio), 6), rep((post.draw$beta.wean.1.5  * sex.ratio), 6))    
-    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5))    
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
-  }
-  else if(current.state == "infected"){
-    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
-    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 5), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 5))    
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-  } 
-  else if(current.state == "spillover"){
-    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
-    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5)) * (1 - intro.cost)
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs)))) 
-  }
-  return(leslie)
-}
-
-# Johnson age-structure version of update.leslie.fun
-johnson.update.leslie.fun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
-  chain <- ceiling(runif(1, 0, tot.chains))
-  post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
-  names(post.draw) <- posterior.names
-  
-  post.draw$beta.wean.1.2 <- exp(post.draw$beta.wean.1.2) / (1 + exp(post.draw$beta.wean.1.2))
-  post.draw$beta.wean.1.3 <- exp(post.draw$beta.wean.1.3) / (1 + exp(post.draw$beta.wean.1.3))
-  post.draw$beta.wean.1.4 <- exp(post.draw$beta.wean.1.4) / (1 + exp(post.draw$beta.wean.1.4))
-#  post.draw$beta.wean.1.5 <- exp(post.draw$beta.wean.1.5) / (1 + exp(post.draw$beta.wean.1.5))
-#  post.draw$beta.wean.1.6 <- exp(post.draw$beta.wean.1.6) / (1 + exp(post.draw$beta.wean.1.6))
-  post.draw$beta.adsurv.1.2 <- exp(post.draw$beta.adsurv.1.2) / (1 + exp(post.draw$beta.adsurv.1.2))
-  post.draw$beta.adsurv.1.3 <- exp(post.draw$beta.adsurv.1.3) / (1 + exp(post.draw$beta.adsurv.1.3))
-  post.draw$beta.adsurv.1.4 <- exp(post.draw$beta.adsurv.1.4) / (1 + exp(post.draw$beta.adsurv.1.4))
-#  post.draw$beta.adsurv.1.5 <- exp(post.draw$beta.adsurv.1.5) / (1 + exp(post.draw$beta.adsurv.1.5))
-#  post.draw$beta.adsurv.1.6 <- exp(post.draw$beta.adsurv.1.6) / (1 + exp(post.draw$beta.adsurv.1.6))
-  
-  post.draw$beta.wean.2.2 <- exp(post.draw$beta.wean.2.2) / (1 + exp(post.draw$beta.wean.2.2))
-  post.draw$beta.wean.2.3 <- exp(post.draw$beta.wean.2.3) / (1 + exp(post.draw$beta.wean.2.3))
-  post.draw$beta.wean.2.4 <- exp(post.draw$beta.wean.2.4) / (1 + exp(post.draw$beta.wean.2.4))
-#  post.draw$beta.wean.2.5 <- exp(post.draw$beta.wean.2.5) / (1 + exp(post.draw$beta.wean.2.5))
-  post.draw$beta.adsurv.2.2 <- exp(post.draw$beta.adsurv.2.2) / (1 + exp(post.draw$beta.adsurv.2.2))
-  post.draw$beta.adsurv.2.3 <- exp(post.draw$beta.adsurv.2.3) / (1 + exp(post.draw$beta.adsurv.2.3))
-  post.draw$beta.adsurv.2.4 <- exp(post.draw$beta.adsurv.2.4) / (1 + exp(post.draw$beta.adsurv.2.4))
-#  post.draw$beta.adsurv.2.5 <- exp(post.draw$beta.adsurv.2.5) / (1 + exp(post.draw$beta.adsurv.2.5))
-  
-  if(current.state == "healthy"){
-#    repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 1), rep((post.draw$beta.wean.1.3  * sex.ratio), 5), rep((post.draw$beta.wean.1.4  * sex.ratio), 6), rep((post.draw$beta.wean.1.5  * sex.ratio), 6))    
-#    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5))    
-#    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
-    repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 1), rep((post.draw$beta.wean.1.3  * sex.ratio), 17))  
-    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 16))
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
-  }
-  else if(current.state == "infected"){
-#    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
-#    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 5), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 5))    
-#    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 17))    
-    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 16))    
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
-  } 
-  else if(current.state == "spillover"){
-#    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
-#    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5)) * (1 - intro.cost)
-#    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs)))) 
-    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 17))    
-    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 16)) * (1 - intro.cost)
-    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs)))) 
-  }
-  return(leslie)
-}
-
+# # function to update environmental state
+# update.status.fun <- function(alpha, gamma, current.state){
+#   current.state.new <- rep(NA, 1)
+#   if(current.state == "healthy"){
+#     gets.infected <- rbinom(1, 1, alpha)
+#     current.state.new[1] <- ifelse(gets.infected == 0, "healthy", "spillover")
+#   }
+# #  else if(current.state == "infected"){
+#     else if(current.state == "spillover"){
+#       gets.infected <- rbinom(1, 1, alpha)
+#       fade.out <- rbinom(1, 1, gamma)
+#       current.state.new[1] <- ifelse(gets.infected == 1, "spillover", ifelse((gets.infected == 0 & fade.out == 1), "healthy", "infected"))
+#   } else if(current.state == "infected"){
+#     gets.infected <- rbinom(1, 1, alpha)
+#     fade.out <- rbinom(1, 1, gamma)
+#     current.state.new[1] <- ifelse(gets.infected == 1, "spillover", ifelse((gets.infected == 0 & fade.out == 1), "healthy", "infected"))
+#   }
+#   return(list(current.state.new = current.state.new))
+# }
+# 
+# # function to update Leslie matrix parameters
+# update.leslie.fun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
+#   chain <- ceiling(runif(1, 0, tot.chains))
+#   post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
+#   names(post.draw) <- posterior.names
+# 
+#   post.draw$beta.wean.1.2 <- exp(post.draw$beta.wean.1.2) / (1 + exp(post.draw$beta.wean.1.2))
+#   post.draw$beta.wean.1.3 <- exp(post.draw$beta.wean.1.3) / (1 + exp(post.draw$beta.wean.1.3))
+#   post.draw$beta.wean.1.4 <- exp(post.draw$beta.wean.1.4) / (1 + exp(post.draw$beta.wean.1.4))
+#   post.draw$beta.wean.1.5 <- exp(post.draw$beta.wean.1.5) / (1 + exp(post.draw$beta.wean.1.5))
+#   post.draw$beta.wean.1.6 <- exp(post.draw$beta.wean.1.6) / (1 + exp(post.draw$beta.wean.1.6))
+#   post.draw$beta.adsurv.1.2 <- exp(post.draw$beta.adsurv.1.2) / (1 + exp(post.draw$beta.adsurv.1.2))
+#   post.draw$beta.adsurv.1.3 <- exp(post.draw$beta.adsurv.1.3) / (1 + exp(post.draw$beta.adsurv.1.3))
+#   post.draw$beta.adsurv.1.4 <- exp(post.draw$beta.adsurv.1.4) / (1 + exp(post.draw$beta.adsurv.1.4))
+#   post.draw$beta.adsurv.1.5 <- exp(post.draw$beta.adsurv.1.5) / (1 + exp(post.draw$beta.adsurv.1.5))
+#   post.draw$beta.adsurv.1.6 <- exp(post.draw$beta.adsurv.1.6) / (1 + exp(post.draw$beta.adsurv.1.6))
+# 
+#   post.draw$beta.wean.2.2 <- exp(post.draw$beta.wean.2.2) / (1 + exp(post.draw$beta.wean.2.2))
+#   post.draw$beta.wean.2.3 <- exp(post.draw$beta.wean.2.3) / (1 + exp(post.draw$beta.wean.2.3))
+#   post.draw$beta.wean.2.4 <- exp(post.draw$beta.wean.2.4) / (1 + exp(post.draw$beta.wean.2.4))
+#   post.draw$beta.wean.2.5 <- exp(post.draw$beta.wean.2.5) / (1 + exp(post.draw$beta.wean.2.5))
+#   post.draw$beta.adsurv.2.2 <- exp(post.draw$beta.adsurv.2.2) / (1 + exp(post.draw$beta.adsurv.2.2))
+#   post.draw$beta.adsurv.2.3 <- exp(post.draw$beta.adsurv.2.3) / (1 + exp(post.draw$beta.adsurv.2.3))
+#   post.draw$beta.adsurv.2.4 <- exp(post.draw$beta.adsurv.2.4) / (1 + exp(post.draw$beta.adsurv.2.4))
+#   post.draw$beta.adsurv.2.5 <- exp(post.draw$beta.adsurv.2.5) / (1 + exp(post.draw$beta.adsurv.2.5))
+#   
+#   if(current.state == "healthy"){
+#     repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 1), rep((post.draw$beta.wean.1.3  * sex.ratio), 5), rep((post.draw$beta.wean.1.4  * sex.ratio), 6), rep((post.draw$beta.wean.1.5  * sex.ratio), 6))    
+#     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5))    
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
+#   }
+#   else if(current.state == "infected"){
+#     repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
+#     survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 5), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 5))    
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
+#   } 
+#   else if(current.state == "spillover"){
+#     repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
+#     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5)) * (1 - intro.cost)
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs)))) 
+#   }
+#   return(leslie)
+# }
+# 
+# # Johnson age-structure version of update.leslie.fun
+# johnson.update.leslie.fun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
+#   chain <- ceiling(runif(1, 0, tot.chains))
+#   post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
+#   names(post.draw) <- posterior.names
+#   
+#   post.draw$beta.wean.1.2 <- exp(post.draw$beta.wean.1.2) / (1 + exp(post.draw$beta.wean.1.2))
+#   post.draw$beta.wean.1.3 <- exp(post.draw$beta.wean.1.3) / (1 + exp(post.draw$beta.wean.1.3))
+#   post.draw$beta.wean.1.4 <- exp(post.draw$beta.wean.1.4) / (1 + exp(post.draw$beta.wean.1.4))
+# #  post.draw$beta.wean.1.5 <- exp(post.draw$beta.wean.1.5) / (1 + exp(post.draw$beta.wean.1.5))
+# #  post.draw$beta.wean.1.6 <- exp(post.draw$beta.wean.1.6) / (1 + exp(post.draw$beta.wean.1.6))
+#   post.draw$beta.adsurv.1.2 <- exp(post.draw$beta.adsurv.1.2) / (1 + exp(post.draw$beta.adsurv.1.2))
+#   post.draw$beta.adsurv.1.3 <- exp(post.draw$beta.adsurv.1.3) / (1 + exp(post.draw$beta.adsurv.1.3))
+#   post.draw$beta.adsurv.1.4 <- exp(post.draw$beta.adsurv.1.4) / (1 + exp(post.draw$beta.adsurv.1.4))
+# #  post.draw$beta.adsurv.1.5 <- exp(post.draw$beta.adsurv.1.5) / (1 + exp(post.draw$beta.adsurv.1.5))
+# #  post.draw$beta.adsurv.1.6 <- exp(post.draw$beta.adsurv.1.6) / (1 + exp(post.draw$beta.adsurv.1.6))
+#   
+#   post.draw$beta.wean.2.2 <- exp(post.draw$beta.wean.2.2) / (1 + exp(post.draw$beta.wean.2.2))
+#   post.draw$beta.wean.2.3 <- exp(post.draw$beta.wean.2.3) / (1 + exp(post.draw$beta.wean.2.3))
+#   post.draw$beta.wean.2.4 <- exp(post.draw$beta.wean.2.4) / (1 + exp(post.draw$beta.wean.2.4))
+# #  post.draw$beta.wean.2.5 <- exp(post.draw$beta.wean.2.5) / (1 + exp(post.draw$beta.wean.2.5))
+#   post.draw$beta.adsurv.2.2 <- exp(post.draw$beta.adsurv.2.2) / (1 + exp(post.draw$beta.adsurv.2.2))
+#   post.draw$beta.adsurv.2.3 <- exp(post.draw$beta.adsurv.2.3) / (1 + exp(post.draw$beta.adsurv.2.3))
+#   post.draw$beta.adsurv.2.4 <- exp(post.draw$beta.adsurv.2.4) / (1 + exp(post.draw$beta.adsurv.2.4))
+# #  post.draw$beta.adsurv.2.5 <- exp(post.draw$beta.adsurv.2.5) / (1 + exp(post.draw$beta.adsurv.2.5))
+#   
+#   if(current.state == "healthy"){
+# #    repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 1), rep((post.draw$beta.wean.1.3  * sex.ratio), 5), rep((post.draw$beta.wean.1.4  * sex.ratio), 6), rep((post.draw$beta.wean.1.5  * sex.ratio), 6))    
+# #    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5))    
+# #    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
+#     repros <- c(0, rep((post.draw$beta.wean.1.2 * sex.ratio), 1), rep((post.draw$beta.wean.1.3  * sex.ratio), 17))  
+#     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 16))
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
+#   }
+#   else if(current.state == "infected"){
+# #    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
+# #    survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 5), rep(post.draw$beta.adsurv.2.4, 6), rep(post.draw$beta.adsurv.2.5, 5))    
+# #    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
+#     repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 17))    
+#     survs <- c(1, rep(post.draw$beta.adsurv.2.2, 1), rep(post.draw$beta.adsurv.2.3, 16))    
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
+#   } 
+#   else if(current.state == "spillover"){
+# #    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 5), rep((post.draw$beta.wean.2.4  * sex.ratio), 6), rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
+# #    survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 5), rep(post.draw$beta.adsurv.1.4, 6), rep(post.draw$beta.adsurv.1.5, 5)) * (1 - intro.cost)
+# #    leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs)))) 
+#     repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), rep((post.draw$beta.wean.2.3  * sex.ratio), 17))    
+#     survs <- c(1, rep(post.draw$beta.adsurv.1.2, 1), rep(post.draw$beta.adsurv.1.3, 16)) * (1 - intro.cost)
+#     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs)))) 
+#   }
+#   return(leslie)
+# }
 
 project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, intro.cost, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, fixed.start.time){
   N <- matrix(NA, nrow = length(ages.init), ncol = timesteps)
@@ -126,7 +125,7 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
   disease.status[1:10] <- "healthy"
   if(johnson == F){
   for(i in 1:10){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+    new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
     tot.pop.size[i] <- sum(N[ , i])
     if(i == 1){
@@ -138,9 +137,9 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
   if(fixed.start.time == T){
     for(i in c(11)){
       disease.status[i] <- "spillover"
-      new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+      new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
       N[, i + 1] <- t(N[ , i]) %*% new.leslie  
-      disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
+      disease.status[i + 1] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
       tot.pop.size[i] <- sum(N[ , i])
       if(i == 1){
         log.lambda.s[i] <- NA
@@ -149,9 +148,9 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
       }
     }
     for(i in 12:(timesteps - 1)){
-      new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+      new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
       N[, i + 1] <- t(N[ , i]) %*% new.leslie  
-      disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
+      disease.status[i + 1] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
       tot.pop.size[i] <- sum(N[ , i])
       if(i == 1){
         log.lambda.s[i] <- NA
@@ -161,10 +160,10 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
     }
   } else{
   for(i in 11:(timesteps - 1)){
-    disease.status[11] <- update.status.fun(alpha, gamma, current.state = disease.status[10]$current.state.new[1])
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+    disease.status[11] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[10]$current.state.new[1])
+    new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
-    disease.status[i + 1] <- update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
+    disease.status[i + 1] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
     tot.pop.size[i] <- sum(N[ , i])
     if(i == 1){
       log.lambda.s[i] <- NA
@@ -176,7 +175,7 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
   }
   else{
     for(i in 1:10){
-      new.leslie <- johnson.update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+      new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
       N[, i + 1] <- t(N[ , i]) %*% new.leslie  
       tot.pop.size[i] <- sum(N[ , i])
       if(i == 1){
@@ -188,7 +187,7 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
     if(fixed.start.time == T){
       for(i in c(11)){
         disease.status[i] <- "spillover"
-        new.leslie <- johnson.update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+        new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
         tot.pop.size[i] <- sum(N[ , i])
@@ -199,7 +198,7 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
         }
       }
       for(i in 12:(timesteps - 1)){
-        new.leslie <- johnson.update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+        new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
         tot.pop.size[i] <- sum(N[ , i])
@@ -212,7 +211,7 @@ project.fun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma, 
     } else{
       for(i in 11:(timesteps - 1)){
         disease.status[11] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[10]$current.state.new[1])
-        new.leslie <- johnson.update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+        new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
         tot.pop.size[i] <- sum(N[ , i])
@@ -236,7 +235,7 @@ healthy.project.fun <- function(timesteps, sex.ratio, ages.init, alpha, gamma, i
   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
   disease.status <- rep("healthy", timesteps)
   for(i in 1:(timesteps - 1)){
-    new.leslie <- update.leslie.fun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+    new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
     N[, i + 1] <- t(N[ , i]) %*% new.leslie  
     tot.pop.size[i] <- sum(N[ , i])
     if(i == 1){
@@ -299,9 +298,9 @@ vec.permut.fun <- function(n.ages, n.classes, reps, alpha, gamma, intro.cost, se
      }
      
     # B is block diagonal, with 2 19x19 blocks for the 2 environmental states.
-    healthy.leslie <- update.leslie.fun(current.state = "healthy", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
-    spillover.leslie <-  update.leslie.fun(current.state = "spillover", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
-    endemic.leslie <-  update.leslie.fun(current.state = "infected", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+    healthy.leslie <- UpdateLeslieFun(current.state = "healthy", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+    spillover.leslie <- UpdateLeslieFun(current.state = "spillover", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+    endemic.leslie <- UpdateLeslieFun(current.state = "infected", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
     leslie.list <- list(healthy.leslie, spillover.leslie, endemic.leslie)
     B <- bdiag(leslie.list)
     
@@ -358,7 +357,7 @@ addTrans <- function(color,trans)
 
 # function to calculate generation time (following Caswell 2001 pg 126-128 + 112 (for definition of N))
 GenTimeFun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
-  leslie <- update.leslie.fun(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+  leslie <- UpdateLeslieFun(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
   Tmat <- rbind(rep(0, dim(leslie)[1]), leslie[2:dim(leslie)[1], ])
   Fmat <- rbind(leslie[1, ], matrix(0, nrow = dim(Tmat)[1] - 1, ncol = dim(Tmat)[1]))
   I <- diag(rep(1, dim(Tmat)[1]))
@@ -372,7 +371,7 @@ GenTimeFun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, jo
 
 # Johnson age-structure vsn of GenTimeFun
 Jo.GenTimeFun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
-  leslie <- johnson.update.leslie.fun(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+  leslie <- JohnsonUpdateLeslieFun(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
   Tmat <- rbind(rep(0, dim(leslie)[1]), leslie[2:dim(leslie)[1], ])
   Fmat <- rbind(leslie[1, ], matrix(0, nrow = dim(Tmat)[1] - 1, ncol = dim(Tmat)[1]))
   I <- diag(rep(1, dim(Tmat)[1]))
@@ -401,9 +400,9 @@ TuljarFun1 <- function(alpha, gamma){
 TuljarFun2 <- function(alpha, gamma, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
   Tuljar1.out <- TuljarFun1(alpha, gamma)
 
-  L.healthy <- update.leslie.fun(current.state = "healthy", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
-  L.sp <- update.leslie.fun(current.state = "spillover", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
-  L.infected <- update.leslie.fun(current.state = "infected", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+  L.healthy <- UpdateLeslieFun(current.state = "healthy", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+  L.sp <- UpdateLeslieFun(current.state = "spillover", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
+  L.infected <- UpdateLeslieFun(current.state = "infected", sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
 
   b <- L.healthy * Tuljar1.out$w.naught[1] + L.sp * Tuljar1.out$w.naught[2] + L.infected * Tuljar1.out$w.naught[3]
   
