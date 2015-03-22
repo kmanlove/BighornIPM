@@ -1,4 +1,6 @@
-UpdateLeslieFun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost){
+UpdateLeslieFun <- function(current.state, sex.ratio, samples.to.draw, tot.chains, 
+                            joint.posterior.coda, posterior.names, intro.cost)
+{
   # function to update Leslie matrix parameters with new draws from posterior of 
   # designated environmental state
   #
