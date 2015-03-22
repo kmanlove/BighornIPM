@@ -9,6 +9,7 @@ Structure
 The project consists of the follow components:
 
 --------
+
 1. A conceptual comparison of diseases with negative and positive autocorrelations, and how this maps to host vital rates when vital rates are tied to disease presence. 
 
 2. An empirical examination of autocorrelation patterns in disease status among Hells Canyon bighorn sheep.
@@ -20,4 +21,5 @@ The project consists of the follow components:
 5. A matrix model comparison of equilibrium bighorn population dynamics in the presence and absence of disease.
 
 6. A simulation study with Markovian transitions between host disease states through time.
+
 ---------
