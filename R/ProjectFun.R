@@ -31,9 +31,9 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
   N[, 1] <- ages.init
   tot.pop.size <- log.lambda.s <- rep(NA, length = timesteps)
   disease.status <- rep(NA, timesteps)
-  disease.status[1:10] <- "healthy"
+  disease.status[1:30] <- "healthy"
   if(johnson == F){
-    for(i in 1:10){
+    for(i in 1:30){
       new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
       N[, i + 1] <- t(N[ , i]) %*% new.leslie  
       tot.pop.size[i] <- sum(N[ , i])
@@ -44,7 +44,7 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
       }
     }
     if(fixed.start.time == T){
-      for(i in c(11)){
+      for(i in c(31)){
         disease.status[i] <- "spillover"
         new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
@@ -56,7 +56,7 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
           log.lambda.s[i] <- log(tot.pop.size[i] / tot.pop.size[i - 1])
         }
       }
-      for(i in 12:(timesteps - 1)){
+      for(i in 32:(timesteps - 1)){
         new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
@@ -68,8 +68,8 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
         }
       }
     } else{
-      for(i in 11:(timesteps - 1)){
-        disease.status[11] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[10]$current.state.new[1])
+      for(i in 31:(timesteps - 1)){
+        disease.status[31] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[30]$current.state.new[1])
         new.leslie <- UpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- UpdateStatusFun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
@@ -83,7 +83,7 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
     }
   }
   else{
-    for(i in 1:10){
+    for(i in 1:30){
       new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
       N[, i + 1] <- t(N[ , i]) %*% new.leslie  
       tot.pop.size[i] <- sum(N[ , i])
@@ -94,7 +94,7 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
       }
     }
     if(fixed.start.time == T){
-      for(i in c(11)){
+      for(i in c(31)){
         disease.status[i] <- "spillover"
         new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
@@ -106,7 +106,7 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
           log.lambda.s[i] <- log(tot.pop.size[i] / tot.pop.size[i - 1])
         }
       }
-      for(i in 12:(timesteps - 1)){
+      for(i in 32:(timesteps - 1)){
         new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
@@ -118,8 +118,8 @@ ProjectFun <- function(johnson, timesteps, sex.ratio, ages.init, alpha, gamma,
         }
       }
     } else{
-      for(i in 11:(timesteps - 1)){
-        disease.status[11] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[10]$current.state.new[1])
+      for(i in 31:(timesteps - 1)){
+        disease.status[31] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[30]$current.state.new[1])
         new.leslie <- JohnsonUpdateLeslieFun(current.state = disease.status[i], sex.ratio, samples.to.draw, tot.chains, joint.posterior.coda, posterior.names, intro.cost)
         N[, i + 1] <- t(N[ , i]) %*% new.leslie  
         disease.status[i + 1] <- johnson.update.status.fun(alpha, gamma, current.state = disease.status[i])$current.state.new[1]
