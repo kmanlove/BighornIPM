@@ -19,7 +19,7 @@ UpdateLeslieFun <- function(current.state, sex.ratio, samples.to.draw, tot.chain
   #
   # leslie = new leslie matrix
   
-  chain <- ceiling(runif(1, 0, tot.chains))
+  chain <- ceiling(runif(1, 0, as.numeric(as.character(tot.chains))))
   post.draw <- as.data.frame(t(joint.posterior.coda[[chain]][sample(x = samples.to.draw, size = 1), ]))
   names(post.draw) <- posterior.names
   
@@ -54,8 +54,9 @@ UpdateLeslieFun <- function(current.state, sex.ratio, samples.to.draw, tot.chain
                rep(post.draw$beta.adsurv.1.5, 5))    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, dim(diag(survs))[1])))
   }
-  else if(current.state == "infected"){
-    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), 
+  if(current.state == "infected"){
+#    else if(current.state == "infected"){
+      repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), 
                 rep((post.draw$beta.wean.2.3  * sex.ratio), 5), 
                 rep((post.draw$beta.wean.2.4  * sex.ratio), 6), 
                 rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
@@ -65,8 +66,9 @@ UpdateLeslieFun <- function(current.state, sex.ratio, samples.to.draw, tot.chain
                rep(post.draw$beta.adsurv.2.5, 5))    
     leslie <- rbind(repros, cbind(diag(c(survs)), rep(0, length(survs))))
   } 
-  else if(current.state == "spillover"){
-    repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), 
+  if(current.state == "spillover"){
+#    else if(current.state == "spillover"){
+      repros <- c(0, rep((post.draw$beta.wean.2.2 * sex.ratio), 1), 
                 rep((post.draw$beta.wean.2.3  * sex.ratio), 5), 
                 rep((post.draw$beta.wean.2.4  * sex.ratio), 6), 
                 rep((post.draw$beta.wean.2.5 * sex.ratio), 6))    
