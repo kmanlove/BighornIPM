@@ -29,7 +29,10 @@ source("./R/PlotPostDemogAttributes.R")
 source("./R/PlotPopSizeByExpTimeToReintroFadeout.R")
 source("./R/PlotSimsVaryAlphaGamma.R")
 source("./R/UnstrProjectFun.R")
+source("./R/SimRedVsWhiteNoise.R")
 source("./R/PlotRedVsWhiteNoise.R")
+source("./R/FitRedVsWhiteNoiseCPs.R")
+source("./R/InchaustiSpectralColor.R")
 
 #load("./Data/Posteriors/IPM/MoviDef/ObservedHealthPost_18Feb2015.RData")
 load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_18Feb2015.RData")
@@ -95,7 +98,7 @@ yearstoreintro<- seq(1, 15)
 PlotPopSizeByExpTimeToReintroFadeout(timesteps, reps, yearstofadeout, yearstoreintro)
 
 timesteps <- 60
-reps <- 10
+reps <- 100
 alpha.range <- c(1, 100)
 gamma.range <- c(1, 100)
 alpha.steps <- 10
@@ -108,6 +111,44 @@ ages.init.in <- round(age.struct.he, 2)
 
 PlotSimsVaryAlphaGamma(timesteps, reps, alpha.range, gamma.range, alpha.steps,
                        gamma.steps, samples.to.use.in, pop.size, ages.init.in)
+
+SimTest <- SimRedVsWhiteNoise(timesteps,
+                              reps,
+                              alpha.range,
+                              gamma.range,
+                              alpha.steps,
+                              gamma.steps,
+                              samples.to.use.in,
+                              pop.size, 
+                              ages.init.in)
+
+
+FitRedVsWhiteNoiseCPs(RedVsWhiteOut = SimTest, reps)
+
+# Spectral power
+bb <- subset(compd.data, Pop == "BlackButte")
+bb.pre95 <- subset(bb, year <= 1994)
+bb.post95 <- subset(bb, year >= 1995)
+aso <- subset(compd.data, Pop == "Asotin")
+bcan <- subset(compd.data, Pop == "BigCanyon")
+imn <- subset(compd.data, Pop == "Imnaha")
+los <- subset(compd.data, Pop == "Lostine")
+muir <- subset(compd.data, Pop == "MuirCreek")
+mtnview <- subset(compd.data, Pop == "MountainView")
+rb <- subset(compd.data, Pop == "Redbird")
+wen <- subset(compd.data, Pop == "Wenaha")
+
+bbpre95.spect.power <- InchaustiSpectralColor(data = bb.pre95)
+bbpost95.spect.power <- InchaustiSpectralColor(data = bb.post95[-dim(bb.post95)[1], ])
+bb.spect.power <- InchaustiSpectralColor(data = bb[-dim(bb)[1], ])
+aso.spect.power <- InchaustiSpectralColor(data = aso[-c(1:5, dim(aso)[1]), ])
+bcan.spect.power <- InchaustiSpectralColor(data = bcan[-c(dim(bcan)[1]), ])
+imn.spect.power <- InchaustiSpectralColor(data = imn[-c(dim(imn)[1]), ])
+los.spect.power <- InchaustiSpectralColor(data = los[-c(1:9, dim(los)[1]), ])
+muir.spect.power <- InchaustiSpectralColor(data = muir[-c(dim(muir)[1]), ])
+mtnview.spect.power <- InchaustiSpectralColor(data = mtnview[-c(1:24, dim(mtnview)[1]), ])
+rb.spect.power <- InchaustiSpectralColor(data = rb[-c(1:9, dim(rb)[1]), ])
+wen.spect.power <- InchaustiSpectralColor(data = wen[-c(1:3), ])
 
 # #---------------------------------------#
 # #-- Johnson age-structure --------------#
