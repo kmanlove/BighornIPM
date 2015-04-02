@@ -122,13 +122,14 @@ SimTest <- SimRedVsWhiteNoise(timesteps,
                               pop.size, 
                               ages.init.in)
 
-
+require(SiZer)
 FitRedVsWhiteNoiseCPs(RedVsWhiteOut = SimTest, reps)
 
 # Spectral power
+compd.data <- read.csv("./Data/compiled_data_summary_130919.csv", header = T, sep = ",")
+compd.data$NoFemRem <- ifelse(compd.data$Pop == "BigCanyon" & compd.data$year == 2011, 0, compd.data$NoFemRem)
+compd.data$NoFemRel <- ifelse(compd.data$Pop == "Lostine" & compd.data$year >= 2000, 0, compd.data$NoFemRel)
 bb <- subset(compd.data, Pop == "BlackButte")
-bb.pre95 <- subset(bb, year <= 1994)
-bb.post95 <- subset(bb, year >= 1995)
 aso <- subset(compd.data, Pop == "Asotin")
 bcan <- subset(compd.data, Pop == "BigCanyon")
 imn <- subset(compd.data, Pop == "Imnaha")
@@ -137,18 +138,125 @@ muir <- subset(compd.data, Pop == "MuirCreek")
 mtnview <- subset(compd.data, Pop == "MountainView")
 rb <- subset(compd.data, Pop == "Redbird")
 wen <- subset(compd.data, Pop == "Wenaha")
+lhc <- subset(compd.data, Pop == "LowerHells")
+uhc <- subset(compd.data, Pop == "UHCOR")
+sm <- subset(compd.data, Pop == "SheepMountain")
+myers <- subset(compd.data, Pop == "MyersCreek")
 
-bbpre95.spect.power <- InchaustiSpectralColor(data = bb.pre95)
-bbpost95.spect.power <- InchaustiSpectralColor(data = bb.post95[-dim(bb.post95)[1], ])
-bb.spect.power <- InchaustiSpectralColor(data = bb[-dim(bb)[1], ])
-aso.spect.power <- InchaustiSpectralColor(data = aso[-c(1:5, dim(aso)[1]), ])
-bcan.spect.power <- InchaustiSpectralColor(data = bcan[-c(dim(bcan)[1]), ])
-imn.spect.power <- InchaustiSpectralColor(data = imn[-c(dim(imn)[1]), ])
-los.spect.power <- InchaustiSpectralColor(data = los[-c(1:9, dim(los)[1]), ])
-muir.spect.power <- InchaustiSpectralColor(data = muir[-c(dim(muir)[1]), ])
-mtnview.spect.power <- InchaustiSpectralColor(data = mtnview[-c(1:24, dim(mtnview)[1]), ])
-rb.spect.power <- InchaustiSpectralColor(data = rb[-c(1:9, dim(rb)[1]), ])
-wen.spect.power <- InchaustiSpectralColor(data = wen[-c(1:3), ])
+aso.spect.power <- InchaustiSpectralColor(data = aso[-c(1:5, dim(aso)[1]), ], PopEst = F)
+bb.spect.power <- InchaustiSpectralColor(data = bb[-dim(bb)[1], ], PopEst = F)
+bcan.spect.power <- InchaustiSpectralColor(data = bcan[-c(dim(bcan)[1]), ], PopEst = F)
+imn.spect.power <- InchaustiSpectralColor(data = imn[-c(dim(imn)[1]), ], PopEst = F)
+los.spect.power <- InchaustiSpectralColor(data = los[-c(1:8, dim(los)[1]), ], PopEst = F)
+lhc.spect.power <- InchaustiSpectralColor(data = lhc[-c(dim(lhc)[1]), ], PopEst = F)
+muir.spect.power <- InchaustiSpectralColor(data = muir[-c(dim(muir)[1]), ], PopEst = T)
+mtnview.spect.power <- InchaustiSpectralColor(data = mtnview[-dim(mtnview)[1], ], PopEst = T)
+myers.spect.power <- InchaustiSpectralColor(data = myers[-dim(myers)[1], ], PopEst = T)
+rb.spect.power <- InchaustiSpectralColor(data = rb[-c(1:9, dim(rb)[1]), ], PopEst = T)
+sm.spect.power <- InchaustiSpectralColor(data = sm[-c(1:2, dim(sm)[1]), ], PopEst = T)
+uhc.spect.power <- InchaustiSpectralColor(data = uhc[-c(1:9, dim(uhc)[1]), ], PopEst = T)
+wen.spect.power <- InchaustiSpectralColor(data = wen[-c(dim(wen)[1]), ], PopEst = T)
+
+redness.exps <- c(aso.spect.power$redness.exp,
+                  bb.spect.power$redness.exp,
+                  bcan.spect.power$redness.exp,
+                  imn.spect.power$redness.exp,
+                  los.spect.power$redness.exp,
+                  lhc.spect.power$redness.exp,
+                  muir.spect.power$redness.exp,
+                  mtnview.spect.power$redness.exp,
+                  myers.spect.power$redness.exp,
+                  rb.spect.power$redness.exp,
+                  sm.spect.power$redness.exp,
+                  uhc.spect.power$redness.exp,
+                  wen.spect.power$redness.exp)
+
+# pre-pn spectra
+asopre <- subset(compd.data, Pop == "Asotin" & year <= 2010)
+bbpre95 <- subset(compd.data, Pop == "BlackButte" & year <= 1994)
+rbpre95 <- subset(compd.data, Pop == "Redbird" & year <= 1994)
+  # only 4 years
+wenpre95 <- subset(compd.data, Pop == "Wenaha" & year <= 1994)
+imnpre95 <- subset(compd.data, Pop == "Imnaha" & year <= 1994)
+lhcpre95 <- subset(compd.data, Pop == "LowerHells" & year <= 1994)
+lospre85 <- subset(compd.data, Pop == "Lostine" & year <= 1984)
+mtnviewpre92 <- subset(compd.data, Pop == "MountainView" & year <= 1992)
+smpre95 <- subset(compd.data, Pop == "SheepMountain" & year <= 1994)
+  # only 3 consecutive observations. 
+uhcorpre95 <- subset(compd.data, Pop == "UHCOR" & year <= 1994)
+brcpre95 <- subset(compd.data, Pop == "BearCreek" & year <= 1995)
+
+aso.spect.power.pre95 <- InchaustiSpectralColor(data = asopre, PopEst = T)
+bb.spect.power.pre95 <- InchaustiSpectralColor(data = bbpre95, PopEst = T)
+brc.spect.power.pre95 <- InchaustiSpectralColor(data = brcpre95[-c(1:10),], PopEst = T)
+imn.spect.power.pre95 <- InchaustiSpectralColor(data = imnpre95, PopEst = T)
+lhc.spect.power.pre95 <- InchaustiSpectralColor(data = lhcpre95, PopEst = T)
+los.spect.power.pre85 <- InchaustiSpectralColor(data = lospre85, PopEst = T)
+mtnview.spect.power.pre92 <- InchaustiSpectralColor(data = mtnviewpre92, PopEst = T)
+uhc.spect.power.pre95 <- InchaustiSpectralColor(data = uhcorpre95[-c(1:9), ], PopEst = T)
+wen.spect.power.pre95 <- InchaustiSpectralColor(data = wenpre95, PopEst = T)
+
+
+pre95.redness <- c(aso.spect.power.pre95$redness.exp,
+                   bb.spect.power.pre95$redness.exp,
+                   brc.spect.power.pre95$redness.exp,
+                   imn.spect.power.pre95$redness.exp,
+                   los.spect.power.pre85$redness.exp,
+                   lhc.spect.power.pre95$redness.exp,
+                   uhc.spect.power.pre95$redness.exp,
+                   mtnview.spect.power.pre95$redness.exp,
+                   wen.spect.power.pre95$redness.exp)
+pre95.redness
+
+# post-pn spectra
+
+bbpost95 <- subset(compd.data, Pop == "BlackButte" & year >= 1996)
+rbpost95 <- subset(compd.data, Pop == "Redbird" & year >= 1996)
+# only 4 years
+wenpost95 <- subset(compd.data, Pop == "Wenaha" & year >= 1996)
+imnpost00 <- subset(compd.data, Pop == "Imnaha" & year >= 2000)
+lhcpost95 <- subset(compd.data, Pop == "LowerHells" & year >= 1996)
+lospost95 <- subset(compd.data, Pop == "Lostine" & year >= 1995)
+mtnviewpost95 <- subset(compd.data, Pop == "MountainView" & year >= 1997)
+smpost95 <- subset(compd.data, Pop == "SheepMountain" & year >= 2000)
+uhcorpost95 <- subset(compd.data, Pop == "UHCOR" & year >= 1998)
+bcanpost01 <- subset(compd.data, Pop == "BigCanyon" & year >= 2001)
+muirpost01 <- subset(compd.data, Pop == "MuirCreek" & year >= 2001)
+myerspost02 <- subset(compd.data, Pop == "MyersCreek" & year >= 2003)
+
+bb.spect.power.post95 <- InchaustiSpectralColor(data = bbpost95[-dim(bbpost95)[1], ], PopEst = T)
+bcan.spect.power.post <- InchaustiSpectralColor(data = bcanpost01[-c(dim(bcanpost01)[1]), ], PopEst = T)
+imn.spect.power.post95 <- InchaustiSpectralColor(data = imnpost00[-dim(imnpost00)[1], ], PopEst = T)
+lhc.spect.power.post95 <- InchaustiSpectralColor(data = lhcpost95[-dim(lhcpost95)[1], ], PopEst = T)
+los.spect.power.post95 <- InchaustiSpectralColor(data = lospost95[-dim(lospost95)[1], ], PopEst = T)
+muir.spect.power.post <- InchaustiSpectralColor(data = muirpost01[-c(dim(muirpost01)[1]), ], PopEst = T)
+mtnview.spect.power.post95 <- InchaustiSpectralColor(data = mtnviewpost95[-dim(mtnviewpost95)[1], ], PopEst = T)
+myers.spect.power.post <- InchaustiSpectralColor(data =myerspost02[-dim(myerspost02)[1], ], PopEst = T)
+rb.spect.power.post <- InchaustiSpectralColor(data = rbpost95[-c(dim(rbpost95)[1]), ], PopEst = T)
+sm.spect.power.post <- InchaustiSpectralColor(data = smpost95[-c(dim(smpost95)[1]), ], PopEst = T)
+uhc.spect.power.post <- InchaustiSpectralColor(data = uhcorpost95[-c(dim(uhcorpost95)[1]), ], PopEst = T)
+wen.spect.power.post95 <- InchaustiSpectralColor(data = wenpost95[-dim(wenpost95)[1], ], PopEst = T)
+
+post95.redness <- c(bb.spect.power.post95$redness.exp,
+                    bcan.spect.power.post$redness.exp,
+                   imn.spect.power.post95$redness.exp,
+                   lhc.spect.power.post95$redness.exp,
+                   los.spect.power.post95$redness.exp,
+                   muir.spect.power.post$redness.exp,
+                   mtnview.spect.power.post95$redness.exp,
+                   myers.spect.power.post$redness.exp,
+                   rb.spect.power.post$redness.exp,
+                   sm.spect.power.post$redness.exp,
+                   uhc.spect.power.post$redness.exp,
+                   wen.spect.power.post95$redness.exp)
+post95.redness
+
+par(mfrow = c(1, 3))
+boxplot(redness.exps, ylim = c(-1.4, 1.4), col = "grey60", main = "Full")
+boxplot(pre95.redness, ylim = c(-1.4, 1.4), col = "grey60", main = "Pre")
+boxplot(post95.redness, ylim = c(-1.4, 1.4), col = "grey60", main = "Post")
+
+wilcox.test(c(pre95.redness, post95.redness) ~ factor(c(rep(1, length(pre95.redness)), rep(2, length(post95.redness)))))
 
 # #---------------------------------------#
 # #-- Johnson age-structure --------------#
