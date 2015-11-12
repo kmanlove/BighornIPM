@@ -5,6 +5,7 @@ require(popbio)
 require(Matrix)
 require(MASS)
 require(coda)
+require(AICcmodavg)
 
 # source in all KRM functions
 source("./R/AddTransFun.R")
@@ -26,6 +27,7 @@ source("./R/VecPermutFun.R")
 source("./R/PlotPostVitalRates.R")
 source("./R/PlotHealthyProjection.R")
 source("./R/PlotPostDemogAttributes.R")
+source("./R/PlotPostDemogAttributes_ConfVsn.R")
 source("./R/PlotPopSizeByExpTimeToReintroFadeout.R")
 source("./R/PlotSimsVaryAlphaGamma.R")
 source("./R/UnstrProjectFun.R")
@@ -34,32 +36,54 @@ source("./R/PlotRedVsWhiteNoise.R")
 source("./R/FitRedVsWhiteNoiseCPs.R")
 source("./R/InchaustiSpectralColor.R")
 
-#load("./Data/Posteriors/IPM/MoviDef/ObservedHealthPost_18Feb2015.RData")
-load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPost_18Feb2015.RData")
-#load("./Data/Posteriors/IPM/ObservedHealthDef/Jo.ObservedHealthPost_09Jan2015.RData")
-#ipm11.coda <- MoviStatus.coda
-ipm11.coda <- ObservedHealthStatus.coda
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_02Oct2015.RData")
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_LinCombo_23Oct2015.RData")
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_LinCombo_28Oct2015.RData")
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_09Oct2015_noage_knownages.RData")
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_03Nov2015.RData")
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_04Nov2015B.RData")
+# load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_05Nov2015B.RData")
+
 
 #------------------------#
 #-- Figures -------------#
 #------------------------#
+
+# Figure 1 c,d
+source("./R/PostInvasionRecrStatusPlots.R")
+PostInvasionRecrStatusPlots(compd.data)
+
+# Figure 2: changepoints 
+source("./R/EweChangepointPlots.R")
+EweChangepointPlot(compd.data)
+
+# Read in IPM output and prep.
+load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_05Nov2015C.RData")
+ipm11.coda <- ObservedHealthStatus.coda
+convg.diags.ObservedHealth <- gelman.diag(ipm11.coda)
 coda.summary.obj.11 <- summary(ipm11.coda)
-row.names(coda.summary.obj.11[[2]])
+coda.names <- row.names(coda.summary.obj.11[[2]])
 
+# get posterior CIs:
 beta.posts.adsurv <- coda.summary.obj.11[[2]][1:18, ]
-beta.posts.wean <- coda.summary.obj.11[[2]][19:36, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][22:39, ]
+adsurv.lbs <- exp(beta.posts.adsurv[ , 1]) / (1 + exp(beta.posts.adsurv[ ,1]))
+adsurv.ubs <- exp(beta.posts.adsurv[ , 5]) / (1 + exp(beta.posts.adsurv[ ,5]))
+wean.lbs <- exp(beta.posts.wean[ , 1]) / (1 + exp(beta.posts.wean[ ,1]))
+wean.ubs <- exp(beta.posts.wean[ , 5]) / (1 + exp(beta.posts.wean[ ,5]))
 
-# reminder of age-structure for IPM:
+# age-structure for IPM:
 age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
 
+# Fig 3: posterior vital rates
 PlotPostVitalRates(beta.posts.ad.surv, beta.posts.wean, write = F, write.path = NA)
 
 timesteps <- 60
-reps <- 100
+reps <- 50
 ages.init <- c(75, 55, rep(50, 8), rep(25, 5), rep(7, 4))
 alpha <- .1
 gamma <- 1
-samples.to.draw <- seq(2500:5000)
+samples.to.draw <- seq(40000:50000)
 tot.chains <- 3
 joint.posterior.coda <- ipm11.coda
 
@@ -68,27 +92,123 @@ posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "b
                      "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
                      "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", 
                      "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
+                     "beta.overwinter.1", "beta.overwinter.2", "beta.overwinter.3",                     
                      "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
                      "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
                      "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5",
-                     "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6", "sigma.time.adsurv", "sigma.time.wean"
+                     "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6",
+                     coda.names[40:421]
 )
 
-PlotHealthyProjection(timesteps, ages.init, alpha, gamma, samples.to.draw,
-                      tot.chains, joint.posterior.coda, posterior.names, reps)
+demog.store <- PostDemogAttributes <- PlotPostDemogAttributes(reps = 500, 
+                                                              joint.posterior.coda = ipm11.coda, 
+                                                              samples.to.draw = samples.to.draw,
+                                                              tot.chains = 3, 
+                                                              posterior.names = posterior.names, 
+                                                              sex.ratio = .5, 
+                                                              age.class.ind = age.class.ind)
 
-joint.posterior.coda <- ipm11.coda
-age.class.ind <- c(1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6) 
-
-PlotPostDemogAttributes(reps = 1000, 
-                        joint.posterior.coda, 
-                        samples.to.draw = 2500:5000,
-                        tot.chains = 3, 
-                        posterior.names = posterior.names, 
-                        sex.ratio = .5, 
-                        age.class.ind = age.class.ind)
-
+# # get posterior CIs (linear combo):
+# beta.posts.adsurv <- coda.summary.obj.11[[2]][3:20, ]
+# beta.posts.wean <- coda.summary.obj.11[[2]][24:41, ]
+# 
+# adsurv.lbs <- exp(coda.summary.obj.11[[2]][1, 1] + beta.posts.adsurv[ , 1]) / (1 + exp(coda.summary.obj.11[[2]][1, 1]+ beta.posts.adsurv[ ,1]))
+# adsurv.ubs <- exp(coda.summary.obj.11[[2]][1, 5] + beta.posts.adsurv[ , 5]) / (1 + exp(coda.summary.obj.11[[2]][1, 5] + beta.posts.adsurv[ ,5]))
+# 
+# wean.lbs <- exp(coda.summary.obj.11[[2]][2, 1] + beta.posts.wean[ , 1]) / (1 + exp(coda.summary.obj.11[[2]][2, 1] + beta.posts.wean[ ,1]))
+# wean.ubs <- exp(coda.summary.obj.11[[2]][2, 5] + beta.posts.wean[ , 5]) / (1 + exp(coda.summary.obj.11[[2]][2, 5] + beta.posts.wean[ ,5]))
+# 
+# # calculate raw linear combinations
+# hq_2 <- quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 6]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 6])), c(0.025, 0.5, 0.975))
+# hq_3 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 9]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 9])), c(0.025, 0.5, 0.975))
+# hq_8 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 12]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 12])), c(0.025, 0.5, 0.975))
+# hq_13 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 15]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 15])), c(0.025, 0.5, 0.975))
+# hq_old <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 18]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 18])), c(0.025, 0.5, 0.975))
+# 
+# pq_2 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 7]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 7])), c(0.025, 0.5, 0.975))
+# pq_3 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 10]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 10])), c(0.025, 0.5, 0.975))
+# pq_8 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 13]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 13])), c(0.025, 0.5, 0.975))
+# pq_13 <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 16]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 16])), c(0.025, 0.5, 0.975))
+# pq_old <-quantile(exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 19]) / (1 + exp(ipm11.coda[[1]][ , 1] + ipm11.coda[[1]][, 19])), c(0.025, 0.5, 0.975))
+# 
+# whq_2 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 27]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 27])), c(0.025, 0.5, 0.975))
+# whq_3 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 30]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 30])), c(0.025, 0.5, 0.975))
+# whq_8 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 33]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 33])), c(0.025, 0.5, 0.975))
+# whq_13 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 36]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 36])), c(0.025, 0.5, 0.975))
+# 
+# wpq_2 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 28]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 28])), c(0.025, 0.5, 0.975))
+# wpq_3 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 31]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 31])), c(0.025, 0.5, 0.975))
+# wpq_8 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 34]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 34])), c(0.025, 0.5, 0.975))
+# wpq_13 <-quantile(exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 37]) / (1 + exp(ipm11.coda[[1]][ , 2] + ipm11.coda[[1]][, 37])), c(0.025, 0.5, 0.975))
+# 
+# par(mfrow = c(1, 2))
+# plot(x = 0, y = 0, xlim = c(0, 5), ylim = c(0, 1), cex = 0)
+# segments(x0 = 1, x1 = 1, y0 = hq_2[1], y1 = hq_2[3], col = "black", lty = 1)
+# segments(x0 = 1.1, x1 = 0.9, y0 = hq_2[2], y1 = hq_2[2], col = "black", lty = 1)
+# segments(x0 = 1.3, x1 = 1.3, y0 = pq_2[1], y1 = pq_2[3], col = "grey60", lty = 2)
+# segments(x0 = 1.2, x1 = 1.4, y0 = pq_2[2], y1 = pq_2[2], col = "grey60", lty = 2)
+# segments(x0 = 2, x1 = 2, y0 = hq_3[1], y1 = hq_3[3], col = "black", lty = 1)
+# segments(x0 = 2.1, x1 = 1.9, y0 = hq_3[2], y1 = hq_3[2], col = "black", lty = 1)
+# segments(x0 = 2.3, x1 = 2.3, y0 = pq_3[1], y1 = pq_3[3], col = "grey60", lty = 2)
+# segments(x0 = 2.2, x1 = 2.4, y0 = pq_3[2], y1 = pq_3[2], col = "grey60", lty = 2)
+# segments(x0 = 3, x1 = 3, y0 = hq_8[1], y1 = hq_8[3], col = "black", lty = 1)
+# segments(x0 = 3.1, x1 = 2.9, y0 = hq_8[2], y1 = hq_8[2], col = "black", lty = 1)
+# segments(x0 = 3.3, x1 = 3.3, y0 = pq_8[1], y1 = pq_8[3], col = "grey60", lty = 2)
+# segments(x0 = 3.2, x1 = 3.4, y0 = pq_8[2], y1 = pq_8[2], col = "grey60", lty = 2)
+# segments(x0 = 4, x1 = 4, y0 = hq_13[1], y1 = hq_13[3], col = "black", lty = 1)
+# segments(x0 = 4.1, x1 = 3.9, y0 = hq_13[2], y1 = hq_13[2], col = "black", lty = 1)
+# segments(x0 = 4.3, x1 = 4.3, y0 = pq_13[1], y1 = pq_13[3], col = "grey60", lty = 2)
+# segments(x0 = 4.2, x1 = 4.4, y0 = pq_13[2], y1 = pq_13[2], col = "grey60", lty = 2)
+# abline(h = 0.92)
+# 
+# plot(x = 0, y = 0, xlim = c(0, 5), ylim = c(0, 1), cex = 0)
+# segments(x0 = 1, x1 = 1, y0 = whq_2[1], y1 = whq_2[3], col = "black", lty = 1)
+# segments(x0 = 1.1, x1 = 0.9, y0 = whq_2[2], y1 = whq_2[2], col = "black", lty = 1)
+# segments(x0 = 1.3, x1 = 1.3, y0 = wpq_2[1], y1 = wpq_2[3], col = "grey60", lty = 2)
+# segments(x0 = 1.2, x1 = 1.4, y0 = wpq_2[2], y1 = wpq_2[2], col = "grey60", lty = 2)
+# segments(x0 = 2, x1 = 2, y0 = whq_3[1], y1 = whq_3[3], col = "black", lty = 1)
+# segments(x0 = 2.1, x1 = 1.9, y0 = whq_3[2], y1 = whq_3[2], col = "black", lty = 1)
+# segments(x0 = 2.3, x1 = 2.3, y0 = wpq_3[1], y1 = wpq_3[3], col = "grey60", lty = 2)
+# segments(x0 = 2.2, x1 = 2.4, y0 = wpq_3[2], y1 = wpq_3[2], col = "grey60", lty = 2)
+# segments(x0 = 3, x1 = 3, y0 = whq_8[1], y1 = whq_8[3], col = "black", lty = 1)
+# segments(x0 = 3.1, x1 = 2.9, y0 = whq_8[2], y1 = whq_8[2], col = "black", lty = 1)
+# segments(x0 = 3.3, x1 = 3.3, y0 = wpq_8[1], y1 = wpq_8[3], col = "grey60", lty = 2)
+# segments(x0 = 3.2, x1 = 3.4, y0 = wpq_8[2], y1 = wpq_8[2], col = "grey60", lty = 2)
+# segments(x0 = 4, x1 = 4, y0 = whq_13[1], y1 = whq_13[3], col = "black", lty = 1)
+# segments(x0 = 4.1, x1 = 3.9, y0 = whq_13[2], y1 = whq_13[2], col = "black", lty = 1)
+# segments(x0 = 4.3, x1 = 4.3, y0 = wpq_13[1], y1 = wpq_13[3], col = "grey60", lty = 2)
+# segments(x0 = 4.2, x1 = 4.4, y0 = wpq_13[2], y1 = wpq_13[2], col = "grey60", lty = 2)
+# abline(h = 0.92)
+#
+# posterior.names <- c("beta.0.ad", "beta.0.wean", "beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1", "beta.adsurv.1.2", 
+#                      "beta.adsurv.2.2", "beta.adsurv.3.2", "beta.adsurv.1.3", "beta.adsurv.2.3",
+#                      "beta.adsurv.3.3", "beta.adsurv.1.4", "beta.adsurv.2.4", "beta.adsurv.3.4",  
+#                      "beta.adsurv.1.5", "beta.adsurv.2.5", "beta.adsurv.3.5", 
+#                      "beta.adsurv.1.6", "beta.adsurv.2.6", "beta.adsurv.3.6",
+#                      "beta.overwinter.1", "beta.overwinter.2", "beta.overwinter.3",                     
+#                      "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+#                      "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
+#                      "beta.wean.2.3", "beta.wean.3.3", "beta.wean.1.4", "beta.wean.2.4", 
+#                      "beta.wean.3.4", "beta.wean.1.5", "beta.wean.2.5", "beta.wean.3.5",
+#                      "beta.wean.1.6", "beta.wean.2.6", "beta.wean.3.6", 
+#                      "sigma.time.adsurv", "sigma.time.wean"
+# )
+# 
+# PlotHealthyProjection(timesteps, ages.init, alpha, gamma, samples.to.draw,
+#                       tot.chains, joint.posterior.coda, posterior.names, reps)
+# # 
+# 
+# 
+# demog.store.conf <- PostDemogAttributes_ConfVsn <- PlotPostDemogAttributes_ConfVsn(reps = 5000, 
+#                                                               joint.posterior.coda, 
+#                                                               samples.to.draw = samples.to.draw,
+#                                                               tot.chains = 3, 
+#                                                               posterior.names = posterior.names, 
+#                                                               sex.ratio = .5, 
+#                                                               age.class.ind = age.class.ind)
+# 
+# 
 
 timesteps <- 40
 reps <- 10
@@ -98,19 +218,18 @@ yearstoreintro<- seq(1, 15)
 PlotPopSizeByExpTimeToReintroFadeout(timesteps, reps, yearstofadeout, yearstoreintro)
 
 timesteps <- 60
-reps <- 100
+reps <- 50
 alpha.range <- c(1, 100)
 gamma.range <- c(1, 100)
 alpha.steps <- 10
 gamma.steps <- 10
-samples.to.use.in <- seq(2500, 5000)
-pop.size <- 500
+pop.size <- 20
 # need to output age.struct.he and store it somewhere. 
 age.struct.he <- c(.3, .1, .05, .05, .05, .05, .05, .05, .05, .05, rep(.03, 6), .01, .01, 0)
 ages.init.in <- round(age.struct.he, 2)
 
 PlotSimsVaryAlphaGamma(timesteps, reps, alpha.range, gamma.range, alpha.steps,
-                       gamma.steps, samples.to.use.in, pop.size, ages.init.in)
+                       gamma.steps, samples.to.draw, pop.size, ages.init.in)
 
 SimTest <- SimRedVsWhiteNoise(timesteps,
                               reps,
@@ -121,6 +240,183 @@ SimTest <- SimRedVsWhiteNoise(timesteps,
                               samples.to.use.in,
                               pop.size, 
                               ages.init.in)
+
+#---------------------------------------------#
+#-- results with no age classes --------------#
+#---------------------------------------------#
+load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_02Oct2015_noage.RData")
+load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_02Oct2015_noage_knownages.RData")
+load("./Data/Posteriors/IPM/ObservedHealthDef/ObservedHealthPostNew_09Oct2015_noage_knownages.RData")
+ipm11.coda <- ObservedHealthStatus.coda
+
+coda.summary.obj.11 <- summary(ipm11.coda)
+row.names(coda.summary.obj.11[[2]])
+
+posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1",
+                     "beta.overwinter.1", "beta.overwinter.2", "beta.overwinter.3",                     
+                     "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",  
+                     "beta.wean.1.2",  "beta.wean.2.2", "beta.wean.3.2", "beta.wean.1.3",  
+                     "sigma.time.adsurv", "sigma.time.wean"
+)
+
+source("./R/UpdateLeslieFun_NoAge.R")
+source("./R/PlotPostDemogAttributes_NoAge.R")
+demog.out <- PlotPostDemogAttributes_NoAge(reps = 200, 
+                           joint.posterior.coda,
+                           samples.to.draw = samples.to.draw,
+                           tot.chains = 3, 
+                           posterior.names = posterior.names, 
+                           sex.ratio = .5, 
+                           age.class.ind = age.class.ind)
+
+
+posterior.names <- c("beta.adsurv.1.1", "beta.adsurv.2.1", "beta.adsurv.3.1",
+                     "beta.overwinter.1", "beta.overwinter.2", "beta.overwinter.3",                     
+                     "beta.wean.1.1", "beta.wean.2.1", "beta.wean.3.1",
+                     "Asotin", "BigCanyon", "BlackButte", "Imnaha", "Lostine",   
+                     "MountainView", "MuirCreek", "MyersCreek", "Redbird", "Wenaha",
+                     "sigma.pop.adsurv", "sigma.pop.wean",
+                     "sigma.time.adsurv", "sigma.time.wean"
+)
+
+source("./R/UpdateLeslieFun_NoAge_PopSpecific.R")
+source("./R/PopSpecificDemogAttributes.R")
+require(popbio)
+aso.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                        joint.posterior.coda,
+                                        samples.to.draw = samples.to.draw,
+                                        tot.chains = 3, 
+                                        posterior.names = posterior.names, 
+                                        sex.ratio = .5, 
+                                        age.class.ind = age.class.ind,
+                                        PopName = "Asotin")
+
+
+aso.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                     joint.posterior.coda,
+                                     samples.to.draw = samples.to.draw,
+                                     tot.chains = 3, 
+                                     posterior.names = posterior.names, 
+                                     sex.ratio = .5, 
+                                     age.class.ind = age.class.ind,
+                                     PopName = "Asotin")
+
+bb.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                        joint.posterior.coda,
+                                        samples.to.draw = samples.to.draw,
+                                        tot.chains = 3, 
+                                        posterior.names = posterior.names, 
+                                        sex.ratio = .5, 
+                                        age.class.ind = age.class.ind,
+                                        PopName = "BlackButte")
+
+bcan.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                       joint.posterior.coda,
+                                       samples.to.draw = samples.to.draw,
+                                       tot.chains = 3, 
+                                       posterior.names = posterior.names, 
+                                       sex.ratio = .5, 
+                                       age.class.ind = age.class.ind,
+                                       PopName = "BigCanyon")
+
+imn.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                         joint.posterior.coda,
+                                         samples.to.draw = samples.to.draw,
+                                         tot.chains = 3, 
+                                         posterior.names = posterior.names, 
+                                         sex.ratio = .5, 
+                                         age.class.ind = age.class.ind,
+                                         PopName = "Imnaha")
+
+los.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                        joint.posterior.coda,
+                                        samples.to.draw = samples.to.draw,
+                                        tot.chains = 3, 
+                                        posterior.names = posterior.names, 
+                                        sex.ratio = .5, 
+                                        age.class.ind = age.class.ind,
+                                        PopName = "Lostine")
+
+muir.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                        joint.posterior.coda,
+                                        samples.to.draw = samples.to.draw,
+                                        tot.chains = 3, 
+                                        posterior.names = posterior.names, 
+                                        sex.ratio = .5, 
+                                        age.class.ind = age.class.ind,
+                                        PopName = "MuirCreek")
+
+myers.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                         joint.posterior.coda,
+                                         samples.to.draw = samples.to.draw,
+                                         tot.chains = 3, 
+                                         posterior.names = posterior.names, 
+                                         sex.ratio = .5, 
+                                         age.class.ind = age.class.ind,
+                                         PopName = "MyersCreek")
+
+rb.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                          joint.posterior.coda,
+                                          samples.to.draw = samples.to.draw,
+                                          tot.chains = 3, 
+                                          posterior.names = posterior.names, 
+                                          sex.ratio = .5, 
+                                          age.class.ind = age.class.ind,
+                                          PopName = "Redbird")
+wen.demog <- PopSpecificDemogAttributes(reps = 200, 
+                                       joint.posterior.coda,
+                                       samples.to.draw = samples.to.draw,
+                                       tot.chains = 3, 
+                                       posterior.names = posterior.names, 
+                                       sex.ratio = .5, 
+                                       age.class.ind = age.class.ind,
+                                       PopName = "Wenaha")
+
+
+beta.posts.adsurv <- coda.summary.obj.11[[2]][1:3, ]
+beta.posts.wean <- coda.summary.obj.11[[2]][7:9, ]
+
+# get posterior CIs:
+adsurv.lbs <- exp(beta.posts.adsurv[ , 1]) / (1 + exp(beta.posts.adsurv[ ,1]))
+adsurv.ubs <- exp(beta.posts.adsurv[ , 5]) / (1 + exp(beta.posts.adsurv[ ,5]))
+
+wean.lbs <- exp(beta.posts.wean[ , 1]) / (1 + exp(beta.posts.wean[ ,1]))
+wean.ubs <- exp(beta.posts.wean[ , 5]) / (1 + exp(beta.posts.wean[ ,5]))
+
+# reminder of age-structure for IPM:
+age.class.ind <- rep(1, 20) 
+
+source("./R/PlotPostVitalRates_NoAge.R")
+PlotPostVitalRates_NoAge(beta.posts.ad.surv, beta.posts.wean, write = F, write.path = NA)
+
+timesteps <- 60
+reps <- 50
+ages.init <- c(75, 55, rep(50, 8), rep(25, 5), rep(7, 4))
+alpha <- .1
+gamma <- 1
+#samples.to.draw <- seq(2500:5000)
+samples.to.draw <- seq(1000:2000)
+tot.chains <- 3
+joint.posterior.coda <- ipm11.coda
+
+
+# PlotHealthyProjection(timesteps, ages.init, alpha, gamma, samples.to.draw,
+#                       tot.chains, joint.posterior.coda, posterior.names, reps)
+joint.posterior.coda <- ipm11.coda
+
+demog.store <- PostDemogAttributes <- PlotPostDemogAttributes_NoAge(reps = 500, 
+                                                              joint.posterior.coda, 
+                                                              samples.to.draw = samples.to.draw,
+                                                              tot.chains = 3, 
+                                                              posterior.names = posterior.names, 
+                                                              sex.ratio = .5, 
+                                                              age.class.ind = age.class.ind)
+
+
+#---------------------------------------------#
+#-- end no-age results -----------------------#
+#---------------------------------------------#
+
 
 require(SiZer)
 FitRedVsWhiteNoiseCPs(RedVsWhiteOut = SimTest, reps)
